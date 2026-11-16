@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
 import { dominoGeometry } from "./dominoGeometry"
@@ -25,7 +26,9 @@ export function PipsGrid(
   const regionInset = (dominoGeometry.inset - offset) / U
   const regionRadius = dominoGeometry.radius + offset
   const regions = board.regions.flatMap((region, i) =>
-    region.type === "empty" ? [] : [{ region, i }],
+    region.type === "empty"
+      ? []
+      : [{ region, i, shape: roundedPath(outline(region.cells, regionInset), regionRadius) }],
   )
 
   return (
@@ -52,21 +55,17 @@ export function PipsGrid(
             className="fill-muted stroke-muted"
             strokeWidth="0.8"
           />
-          {regions.map(({ region, i }) => (
-            <path
-              key={i}
-              d={roundedPath(outline(region.cells, regionInset), regionRadius)}
-              style={{ fill: regionFill(i) }}
-            />
+          {regions.map(({ i, shape }) => (
+            <path key={i} d={shape} style={{ fill: regionFill(i) }} />
           ))}
         </>
       ) : layer === "overlay" ? (
         <>
           {/* Outlines sit above the dominoes so a covered region keeps its shape. */}
-          {regions.map(({ region, i }) => (
+          {regions.map(({ i, shape }) => (
             <path
               key={i}
-              d={roundedPath(outline(region.cells, regionInset), regionRadius)}
+              d={shape}
               className="fill-none"
               style={{ stroke: regionStroke(i) }}
               strokeWidth={REGION_STROKE_WIDTH}
@@ -99,10 +98,11 @@ export function PipsGrid(
           ))}
         </>
       ) : (
-        regions.map(({ region, i }) => (
+        regions.map(({ region, i, shape }) => (
           <RegionBadge
             key={i}
             region={region}
+            shape={shape}
             color={regionStroke(i)}
             broken={regionStatus(region, placements, board) === "broken"}
           />
@@ -171,8 +171,9 @@ function regionStroke(
 /** The rule label at a region's last cell. */
 function RegionBadge(
   /** The component props. */
-  { region, color, broken }: RegionBadgeProps,
+  { region, shape, color, broken }: RegionBadgeProps,
 ) {
+  const mask = `pips-notch-${useId().replace(/[^\w-]/g, "")}`
   const [r, c] = region.cells.reduce((last, cell) =>
     cell[0] > last[0] || (cell[0] === last[0] && cell[1] > last[1]) ? cell : last,
   )
@@ -193,11 +194,18 @@ function RegionBadge(
       aria-hidden={broken ? undefined : true}
       className={cn(broken && "pips-warning")}
     >
-      <path
-        d={BADGE_PATH}
-        transform={`translate(${x} ${y})`}
-        style={{ fill: broken ? "#ff0000" : color }}
-      />
+      {/* Notch the diamond along the inner edge of its region's outline, so the board shows through. */}
+      <mask id={mask} maskUnits="userSpaceOnUse" x={x - 3} y={y - 3} width="6" height="6">
+        <rect x={x - 3} y={y - 3} width="6" height="6" fill="white" />
+        <path d={shape} fill="black" stroke="white" strokeWidth={REGION_STROKE_WIDTH} />
+      </mask>
+      <g mask={`url(#${mask})`}>
+        <path
+          d={BADGE_PATH}
+          transform={`translate(${x} ${y})`}
+          style={{ fill: broken ? "#ff0000" : color }}
+        />
+      </g>
       <text
         x={x}
         y={y}
@@ -225,12 +233,12 @@ const REGION_STROKE_WIDTH = 0.45
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
-/** The rounded 4.2-unit diamond, with a rounded square notch cut from its upper left so the board shows through. */
+/** The rounded 4.2-unit diamond. */
 const BADGE_PATH =
-  "M-0.8,-1.97 L-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
+  "M-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
   "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +
   "L0.389,2.581 A0.55,0.55 0 0 1 -0.389,2.581 " +
-  "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 L-1.97,-0.8 H-1.2 A0.4,0.4 0 0 0 -0.8,-1.2 Z"
+  "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 Z"
 
 /** Region hues, cycled by region. */
 const REGION_COLORS = [
@@ -249,6 +257,8 @@ const REGION_COLORS = [
 type RegionBadgeProps = {
   /** The rule and its cells. */
   region: PipsRegion
+  /** The region's outline path, whose inside the diamond leaves uncovered. */
+  shape: string
   /** The region's outline color. */
   color: string
   /** Whether to show the active warning. */

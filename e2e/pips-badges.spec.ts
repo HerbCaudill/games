@@ -18,7 +18,7 @@ test("centers each diamond exactly on its region cell's bottom-right corner", as
       .locator("svg text")
       .filter({ hasText: new RegExp(`^${label}$`) })
       .locator("..")
-      .locator("path")
+      .locator("g[mask] > path")
       .boundingBox())!
     const cell = (await page
       .getByRole("gridcell", { name: `Row ${row}, column 2`, exact: true })
@@ -48,7 +48,7 @@ test("keeps a solid pure-red error diamond above placed and dragged dominoes", a
   const warning = page.getByRole("img", { name: "Broken constraint: 5", exact: true })
   await expect(warning).toBeVisible()
   await expect(warning.locator("text")).toHaveCSS("fill", "rgb(255, 255, 255)")
-  const box = (await warning.locator("path").boundingBox())!
+  const box = (await warning.locator("g[mask] > path").boundingBox())!
   // This patch is inside the diamond's left edge and overlaps the placed domino.
   const clip = {
     x: box.x + box.width * 0.2,
