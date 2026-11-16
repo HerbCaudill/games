@@ -135,6 +135,7 @@ export function PipsTable(
             slots.map(([x, y], i) => (
               <div
                 key={i}
+                hidden={Boolean(placements[i] || spots[i] || drag?.index === i)}
                 className="bg-muted absolute rounded-md"
                 style={{
                   left: origin[0] + (x - 1) * size + INSET,
