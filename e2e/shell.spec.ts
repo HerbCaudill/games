@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test"
+import { mockApi } from "./fixtures"
 
-test("displays hello message", async ({ page }) => {
-  await page.goto("/")
-  await expect(page.getByRole("heading", { name: /Hello,/ })).toBeVisible()
+test.beforeEach(async ({ page }) => {
+  await mockApi(page)
 })
 
 test("keeps the header still while long content scrolls", async ({ page }) => {

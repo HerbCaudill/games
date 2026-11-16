@@ -1,0 +1,46 @@
+import { IconBackspace } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
+
+/** A letter keyboard for touch screens, so the system keyboard never covers the grid. */
+export function OnScreenKeyboard({ onKey, rebus }: Props) {
+  return (
+    <div className="bg-muted grid gap-1.5 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pointer-fine:hidden">
+      {ROWS.map((row, r) => (
+        <div key={r} className="flex justify-center gap-1">
+          {row.map(key => (
+            <button
+              key={key}
+              type="button"
+              onPointerDown={event => {
+                event.preventDefault()
+                onKey(key)
+              }}
+              aria-label={key === "Backspace" ? "Delete" : key === "Rebus" ? "Rebus" : key}
+              className={cn(
+                "flex h-11 flex-1 items-center justify-center rounded-md bg-card text-base font-medium shadow-sm active:bg-border",
+                key.length > 1 && "max-w-16 flex-[1.5] text-xs",
+                key === "Rebus" && rebus && "bg-(--game-crossword) text-white",
+              )}
+            >
+              {key === "Backspace" ? <IconBackspace className="size-5" /> : key}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// CONSTANTS
+
+/** Key rows. */
+const ROWS = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["Rebus", ..."ZXCVBNM", "Backspace"]]
+
+// TYPES
+
+type Props = {
+  /** Called with a letter, `Backspace` or `Rebus`. */
+  onKey: (key: string) => void
+  /** Whether rebus mode is on. */
+  rebus: boolean
+}

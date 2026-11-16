@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react"
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { App } from "./App"
 
 describe("App", () => {
-  it("renders hello message", () => {
+  it("shows the game menu at the root", () => {
     render(<App />)
-    expect(screen.getByText(/Hello,/)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Crossword/ })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Letter Boxed/ })).toBeInTheDocument()
   })
 })

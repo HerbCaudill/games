@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -52,72 +51,82 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #f7f5f0;
+  --foreground: #1d2433;
+  --card: #ffffff;
+  --card-foreground: #1d2433;
+  --popover: #ffffff;
+  --popover-foreground: #1d2433;
+  --primary: #1f2a44;
+  --primary-foreground: #f7f5f0;
+  --secondary: #ece8df;
+  --secondary-foreground: #1d2433;
+  --muted: #ece8df;
+  --muted-foreground: #6a6f7b;
+  --accent: #ece8df;
+  --accent-foreground: #1d2433;
+  --destructive: #c0392b;
+  --border: #ddd7ca;
+  --input: #ddd7ca;
+  --ring: #8a93a6;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --game-crossword: #2f5d8a;
+  --game-pips: #c8553d;
+  --game-spelling-bee: #d99a1e;
+  --game-connections: #7a4e8c;
+  --game-letter-boxed: #23877b;
+
+  /* Connections groups, easiest first. */
+  --group-0: #9fd4b4;
+  --group-1: #f4c58f;
+  --group-2: #ee9ca7;
+  --group-3: #9fb0d9;
+
+  /* Crossword squares. */
+  --xw-cursor: #f2c94c;
+  --xw-word: #cfe0f1;
+  --xw-shade: #dcdcdc;
+  --xw-wrong: #c0392b;
+  --xw-revealed: #2f5d8a;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #14171f;
+  --foreground: #e9e6df;
+  --card: #1c2029;
+  --card-foreground: #e9e6df;
+  --popover: #1c2029;
+  --popover-foreground: #e9e6df;
+  --primary: #e9e6df;
+  --primary-foreground: #14171f;
+  --secondary: #262b36;
+  --secondary-foreground: #e9e6df;
+  --muted: #262b36;
+  --muted-foreground: #9aa0ad;
+  --accent: #262b36;
+  --accent-foreground: #e9e6df;
+  --destructive: #e5675a;
+  --border: #323846;
+  --input: #323846;
+  --ring: #6b7385;
+
+  --game-crossword: #6f9fd0;
+  --game-pips: #e07b63;
+  --game-spelling-bee: #e9b443;
+  --game-connections: #b388c6;
+  --game-letter-boxed: #4fb8aa;
+
+  --group-0: #3f7a5a;
+  --group-1: #8a6534;
+  --group-2: #8c4a55;
+  --group-3: #4b5c8a;
+
+  --xw-cursor: #8a6d1c;
+  --xw-word: #2c4560;
+  --xw-shade: #3a3f4b;
+  --xw-wrong: #ff7a6b;
+  --xw-revealed: #8fb8e6;
 }
 
 @layer base {

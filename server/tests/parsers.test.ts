@@ -56,6 +56,14 @@ describe("parseCrossword", () => {
     expect(cells[3]?.shaded).toBe(true)
   })
 
+  it("keeps only simple formatting tags in clue HTML", () => {
+    const tricky = structuredClone(raw)
+    tricky.body[0].clues[0].text = [
+      { plain: "x", formatted: '<i class="a">Fine</i><script>bad()</script><img src=x onerror=y>' },
+    ]
+    expect(parseCrossword(tricky).clues[0].html).toBe("<i>Fine</i>bad()")
+  })
+
   it("reads clues with directions and formatted text", () => {
     const { clues } = parseCrossword(raw)
     expect(clues.map(c => `${c.label}${c.direction[0]}`)).toEqual(["1a", "3a", "1d", "2d"])

@@ -1,21 +1,20 @@
-/** Start with an immobile toolbar and independently scrolling content. */
+import { GameScreen } from "./components/GameScreen"
+import { Home } from "./components/Home"
+import { GAMES } from "./constants"
+import { nytToday } from "./lib/nytToday"
+import { useRoute } from "./lib/useRoute"
+
+/** Route between the game menu and each game. */
 export function App(
   /** No external configuration. */
   _props: Props,
 ) {
-  return (
-    <div className="app-shell">
-      <header className="app-header">
-        <img src="/icon.svg" alt="" className="size-8 shrink-0" />
-        <span className="min-w-0 truncate font-semibold">Games</span>
-      </header>
-      <main className="app-content">
-        <div className="flex min-h-full items-center justify-center p-4">
-          <h1 className="text-center text-3xl font-bold sm:text-4xl">Hello, Games</h1>
-        </div>
-      </main>
-    </div>
-  )
+  const { path, params } = useRoute()
+  const today = nytToday()
+  const date = params.get("date") ?? today
+  const game = GAMES.find(g => path === `/${g.id}`)
+  if (game) return <GameScreen game={game} date={date} isToday={date === today} />
+  return <Home date={date} isToday={date === today} />
 }
 
 type Props = Record<string, never>

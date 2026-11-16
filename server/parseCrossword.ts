@@ -21,7 +21,7 @@ export function parseCrossword(
       label: clue.label,
       text: clue.text.map(t => t.plain).join(" "),
       html: clue.text.some(t => t.formatted)
-        ? clue.text.map(t => t.formatted ?? escapeHtml(t.plain)).join(" ")
+        ? clue.text.map(t => (t.formatted ? cleanHtml(t.formatted) : escapeHtml(t.plain))).join(" ")
         : undefined,
       cells: clue.cells,
     })),
@@ -43,6 +43,16 @@ function parseCell(
   }
 }
 
+/** Keep only simple formatting tags, without attributes, so clue HTML is safe to render. */
+function cleanHtml(
+  /** Clue HTML from NYT. */
+  html: string,
+) {
+  return html.replace(/<(\/?)([a-z0-9]+)[^>]*>/gi, (_, slash: string, tag: string) =>
+    ALLOWED_TAGS.has(tag.toLowerCase()) ? `<${slash}${tag.toLowerCase()}>` : "",
+  )
+}
+
 /** Escape plain clue text so it can sit beside formatted fragments. */
 function escapeHtml(
   /** Plain text. */
@@ -52,6 +62,9 @@ function escapeHtml(
 }
 
 // CONSTANTS
+
+/** Formatting tags allowed in clue HTML. */
+const ALLOWED_TAGS = new Set(["i", "b", "em", "strong", "sub", "sup", "s", "u", "br"])
 
 /** NYT cell type for a circled square. */
 const CIRCLED = 2
