@@ -194,6 +194,13 @@ export function PipsTable(
             origin={origin}
             cursor={cursor}
           />
+          <PipsGrid
+            board={board}
+            placements={placements}
+            layer="badges"
+            size={size}
+            origin={origin}
+          />
         </div>
       )}
     </div>

@@ -1,12 +1,34 @@
 import { expect, test } from "@playwright/test"
+import sharp from "sharp"
 import { mockApi } from "./mockApi"
 
-test("constraint badges leave a crossing domino's pips and outline intact", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await mockApi(page)
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/pips?date=2026-11-16")
   await page.getByRole("tab", { name: "hard", exact: true }).click()
+})
 
+test("centers each diamond exactly on its region cell's bottom-right corner", async ({ page }) => {
+  for (const [label, row] of [
+    ["5", 1],
+    ["=", 2],
+  ] as const) {
+    const diamond = (await page
+      .locator("svg text")
+      .filter({ hasText: new RegExp(`^${label}$`) })
+      .locator("..")
+      .locator("path")
+      .boundingBox())!
+    const cell = (await page
+      .getByRole("gridcell", { name: `Row ${row}, column 2`, exact: true })
+      .boundingBox())!
+    expect(diamond.x + diamond.width / 2).toBeCloseTo(cell.x + cell.width, 1)
+    expect(diamond.y + diamond.height / 2).toBeCloseTo(cell.y + cell.height, 1)
+  }
+})
+
+test("keeps a solid pure-red error diamond above placed and dragged dominoes", async ({ page }) => {
   for (const [name, col, turns] of [
     ["Domino 2–1", 2, 3],
     ["Domino 3–1", 1, 1],
@@ -25,23 +47,29 @@ test("constraint badges leave a crossing domino's pips and outline intact", asyn
 
   const warning = page.getByRole("img", { name: "Broken constraint: 5", exact: true })
   await expect(warning).toBeVisible()
-  const domino = page.getByRole("button", { name: "Domino 2–1", exact: true })
-  await expect
-    .poll(async () => {
-      const box = (await domino.boundingBox())!
-      return box.height / box.width
-    })
-    .toBeCloseTo(2)
-  const box = (await domino.boundingBox())!
-  // Include the straight outlines and pips beside the badge, excluding transparent tile margins.
+  await expect(warning.locator("text")).toHaveCSS("fill", "rgb(255, 255, 255)")
+  const box = (await warning.locator("path").boundingBox())!
+  // This patch is inside the diamond's left edge and overlaps the placed domino.
   const clip = {
-    x: box.x + box.width * 0.07,
-    y: box.y + box.width * 0.3,
-    width: box.width * 0.86,
-    height: box.width * 1.4,
+    x: box.x + box.width * 0.2,
+    y: box.y + box.height * 0.45,
+    width: 2,
+    height: 2,
   }
-  const withWarning = await page.screenshot({ clip, animations: "disabled" })
-  await warning.evaluate(element => element.setAttribute("visibility", "hidden"))
-  const withoutWarning = await page.screenshot({ clip, animations: "disabled" })
-  expect(withWarning.equals(withoutWarning)).toBe(true)
+  const placed = await page.screenshot({ clip, animations: "disabled" })
+  const { channels } = await sharp(placed).stats()
+  expect(channels.slice(0, 3).map(channel => [channel.min, channel.max])).toEqual([
+    [255, 255],
+    [0, 0],
+    [0, 0],
+  ])
+
+  const domino = page.getByRole("button", { name: "Domino 2–1", exact: true })
+  const start = (await domino.boundingBox())!
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 8 })
+  const dragged = await page.screenshot({ clip, animations: "disabled" })
+  expect(dragged.equals(placed)).toBe(true)
+  await page.mouse.up()
 })

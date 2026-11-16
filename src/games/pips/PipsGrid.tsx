@@ -8,9 +8,8 @@ import { type Placements, type Point } from "./logic/types"
 import "./pips.css"
 
 /**
- * One layer of the board, drawn to scale over the board's cells. The base layer has the shaded
- * cells, region fills and tucked-under rule badges, including broken-constraint warnings;
- * the overlay has outlines and the keyboard cursor.
+ * One layer of the board, drawn to scale over the board's cells. The base has shaded cells
+ * and region fills; the overlay has outlines and the keyboard cursor; badges sit above play.
  */
 export function PipsGrid(
   /** The component props. */
@@ -27,7 +26,11 @@ export function PipsGrid(
   return (
     <svg
       viewBox={`${-PAD} ${-PAD} ${cols * U + 2 * PAD} ${rows * U + 2 * PAD}`}
-      className={cn("pointer-events-none absolute select-none", layer === "overlay" && "z-20")}
+      className={cn(
+        "pointer-events-none absolute select-none",
+        layer === "overlay" && "z-20",
+        layer === "badges" && "z-40",
+      )}
       style={{
         left: origin[0] - PAD * scale,
         top: origin[1] - PAD * scale,
@@ -51,17 +54,8 @@ export function PipsGrid(
               style={{ fill: regionFill(i) }}
             />
           ))}
-          {regions.map(({ region, i }) => (
-            <RegionBadge
-              key={i}
-              region={region}
-              color={regionStroke(i)}
-              shade={regionFill(i)}
-              broken={regionStatus(region, placements, board) === "broken"}
-            />
-          ))}
         </>
-      ) : (
+      ) : layer === "overlay" ? (
         <>
           {/* Outlines sit above the dominoes so a covered region keeps its shape. */}
           {regions.map(({ region, i }) => (
@@ -99,6 +93,16 @@ export function PipsGrid(
             />
           ))}
         </>
+      ) : (
+        regions.map(({ region, i }) => (
+          <RegionBadge
+            key={i}
+            region={region}
+            color={regionStroke(i)}
+            shade={regionFill(i)}
+            broken={regionStatus(region, placements, board) === "broken"}
+          />
+        ))
       )}
     </svg>
   )
@@ -175,8 +179,8 @@ function RegionBadge(
     unequal: "≠",
     empty: "",
   }[region.type]
-  const x = c * U + U + 0.8
-  const y = r * U + U + 0.8
+  const x = (c + 1) * U
+  const y = (r + 1) * U
   return (
     <g
       role={broken ? "img" : undefined}
@@ -184,16 +188,12 @@ function RegionBadge(
       aria-hidden={broken ? undefined : true}
       className={cn(broken && "pips-warning")}
     >
-      {/* Extend the lighter region fill into its corner; both shapes stay below dominoes. */}
+      {/* Keep the lighter region shade visible through the diamond's square notch. */}
       <rect x={x - 1.97} y={y - 1.97} width="1.17" height="1.17" style={{ fill: shade }} />
       <path
         d={BADGE_PATH}
         transform={`translate(${x} ${y})`}
-        style={{
-          fill: broken ? "white" : color,
-          stroke: broken ? "#c0392b" : undefined,
-        }}
-        strokeWidth={broken ? 0.3 : undefined}
+        style={{ fill: broken ? "#ff0000" : color }}
       />
       <text
         x={x}
@@ -201,7 +201,7 @@ function RegionBadge(
         dy="0.8"
         textAnchor="middle"
         style={{
-          fill: broken ? "#c0392b" : "white",
+          fill: "white",
           font: `700 ${label.length > 2 ? 1.8 : 2.4}px var(--font-sans)`,
         }}
       >
@@ -222,7 +222,7 @@ const REGION_INSET = 0.07
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
-/** The rounded 4.2-unit diamond, with its upper-left bite ending at the cell corner. */
+/** The rounded 4.2-unit diamond, with its existing upper-left square bite. */
 const BADGE_PATH =
   "M-0.8,-1.97 L-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
   "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +
@@ -260,7 +260,7 @@ type Props = {
   /** Where each domino sits. */
   placements: Placements
   /** Which layer to draw. */
-  layer: "base" | "overlay"
+  layer: "base" | "overlay" | "badges"
   /** Cell size in pixels. */
   size: number
   /** Top-left corner of the board's first cell, in pixels. */
