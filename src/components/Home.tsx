@@ -43,8 +43,11 @@ export function Home(
                   className="bg-card hover:bg-muted focus-visible:ring-ring/50 flex items-center gap-4 rounded-xl border p-4 transition-colors outline-none focus-visible:ring-3"
                 >
                   <span
-                    className="grid size-12 shrink-0 place-items-center rounded-lg text-white"
-                    style={{ background: game.color }}
+                    className="grid size-12 shrink-0 place-items-center rounded-lg"
+                    style={{
+                      background: game.color,
+                      color: `var(--game-${game.id}-foreground, #000000)`,
+                    }}
                   >
                     <GameGlyph game={game.id} className="size-7" />
                   </span>

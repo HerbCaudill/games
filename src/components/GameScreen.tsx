@@ -32,7 +32,10 @@ export function GameScreen(
           <IconChevronLeft />
         </Button>
         <GameGlyph game={game.id} className="size-6 shrink-0" />
-        <h1 className="min-w-0 truncate font-semibold" style={{ color: game.color }}>
+        <h1
+          className="min-w-0 truncate font-semibold"
+          style={{ color: `color-mix(in srgb, ${game.color}, var(--foreground) 55%)` }}
+        >
           {game.name}
         </h1>
         <span className="text-muted-foreground ml-auto truncate text-sm">

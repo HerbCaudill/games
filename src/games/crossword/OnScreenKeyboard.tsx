@@ -22,7 +22,9 @@ export function OnScreenKeyboard(
               className={cn(
                 "flex h-11 flex-1 items-center justify-center rounded-md bg-card text-base font-medium shadow-sm active:bg-border",
                 key.length > 1 && "max-w-16 flex-[1.5] text-xs",
-                key === "Rebus" && rebus && "bg-(--game-crossword) text-white",
+                key === "Rebus" &&
+                  rebus &&
+                  "bg-(--game-crossword) text-(--game-crossword-foreground)",
               )}
             >
               {key === "Backspace" ? <IconBackspace className="size-5" /> : key}

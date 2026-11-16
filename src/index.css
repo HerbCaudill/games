@@ -71,11 +71,13 @@
   --ring: #8a93a6;
   --radius: 0.625rem;
 
-  --game-crossword: #2f5d8a;
-  --game-pips: #c8553d;
-  --game-spelling-bee: #d99a1e;
-  --game-connections: #7a4e8c;
-  --game-letter-boxed: #23877b;
+  /* Original game identity colors; text uses a darker tint where needed. */
+  --game-crossword: #000000;
+  --game-crossword-foreground: #ffffff;
+  --game-pips: #d3a6ce;
+  --game-spelling-bee: #f7da21;
+  --game-connections: #b4a0ff;
+  --game-letter-boxed: #f5786d;
 
   /* Connections groups, easiest first. */
   --connections-selected: #4a4a4a;
@@ -86,11 +88,11 @@
   --group-3: #ba81c5;
 
   /* Crossword squares. */
-  --xw-cursor: #f2c94c;
-  --xw-word: #cfe0f1;
+  --xw-cursor: #b3b3b3;
+  --xw-word: #e6e6e6;
   --xw-shade: #dcdcdc;
-  --xw-wrong: #c0392b;
-  --xw-revealed: #2f5d8a;
+  --xw-wrong: #333333;
+  --xw-revealed: #555555;
 }
 
 .dark {
@@ -113,17 +115,14 @@
   --input: #323846;
   --ring: #6b7385;
 
-  --game-crossword: #6f9fd0;
-  --game-pips: #e07b63;
-  --game-spelling-bee: #e9b443;
-  --game-connections: #b388c6;
-  --game-letter-boxed: #4fb8aa;
+  --game-crossword: #ffffff;
+  --game-crossword-foreground: #000000;
 
-  --xw-cursor: #8a6d1c;
-  --xw-word: #2c4560;
-  --xw-shade: #3a3f4b;
-  --xw-wrong: #ff7a6b;
-  --xw-revealed: #8fb8e6;
+  --xw-cursor: #666666;
+  --xw-word: #3b3b3b;
+  --xw-shade: #484848;
+  --xw-wrong: #eeeeee;
+  --xw-revealed: #bbbbbb;
 }
 
 @layer base {

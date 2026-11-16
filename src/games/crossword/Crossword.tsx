@@ -117,7 +117,7 @@ export function Crossword(
       </div>
 
       {solved && (
-        <p className="bg-(--game-crossword) px-4 py-2 text-center text-sm font-medium text-white">
+        <p className="bg-(--game-crossword) px-4 py-2 text-center text-sm font-medium text-(--game-crossword-foreground)">
           Solved in {formatDuration(progress.elapsed)}!
         </p>
       )}
