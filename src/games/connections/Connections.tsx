@@ -90,7 +90,7 @@ export function Connections(
                       ? "text-xs sm:text-sm"
                       : "text-sm sm:text-base",
                   selected.includes(word)
-                    ? "bg-(--game-connections) text-white"
+                    ? "bg-(--connections-selected) text-white"
                     : "bg-muted hover:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_6%)]",
                 )}
               >
@@ -155,7 +155,7 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
   return (
     <div
       className={cn(
-        "flex h-16 animate-in flex-col items-center justify-center rounded-lg px-2 text-center zoom-in-95 sm:h-20",
+        "text-(--group-foreground) flex h-16 animate-in flex-col items-center justify-center rounded-lg px-2 text-center zoom-in-95 sm:h-20",
         missed && "opacity-75",
       )}
       style={{ background: `var(--group-${group.level})` }}

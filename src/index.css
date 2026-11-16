@@ -78,10 +78,12 @@
   --game-letter-boxed: #23877b;
 
   /* Connections groups, easiest first. */
-  --group-0: #9fd4b4;
-  --group-1: #f4c58f;
-  --group-2: #ee9ca7;
-  --group-3: #9fb0d9;
+  --connections-selected: #4a4a4a;
+  --group-foreground: #1d2433;
+  --group-0: #f9df6d;
+  --group-1: #a0c35a;
+  --group-2: #b0c4ef;
+  --group-3: #ba81c5;
 
   /* Crossword squares. */
   --xw-cursor: #f2c94c;
@@ -116,11 +118,6 @@
   --game-spelling-bee: #e9b443;
   --game-connections: #b388c6;
   --game-letter-boxed: #4fb8aa;
-
-  --group-0: #3f7a5a;
-  --group-1: #8a6534;
-  --group-2: #8c4a55;
-  --group-3: #4b5c8a;
 
   --xw-cursor: #8a6d1c;
   --xw-word: #2c4560;
