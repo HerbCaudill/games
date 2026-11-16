@@ -1,11 +1,12 @@
 import type { LetterBoxedPuzzle } from "@/types"
+import { cn } from "@/lib/utils"
 import { usedLetters } from "./logic/usedLetters"
 import { type LetterBoxedState } from "./logic/types"
 
 /** The square with three letters on each side and the paths drawn between them. */
 export function LetterBox(
   /** The component props. */
-  { puzzle, state, onLetter }: Props,
+  { puzzle, state, onLetter, acceptedWordIndex }: Props,
 ) {
   const spots = new Map(
     puzzle.sides.flatMap((side, s) => [...side].map((letter, i) => [letter, spot(s, i)] as const)),
@@ -33,7 +34,11 @@ export function LetterBox(
         <polyline
           key={i}
           points={path(word)}
-          className="fill-none stroke-(--game-letter-boxed)"
+          className={cn(
+            "fill-none stroke-(--game-letter-boxed)",
+            i === acceptedWordIndex && "letter-boxed-accepted-path",
+          )}
+          pathLength="1"
           strokeWidth="1.6"
           strokeLinejoin="round"
           opacity={0.55}
@@ -130,4 +135,6 @@ type Props = {
   state: LetterBoxedState
   /** Called when a letter is tapped. */
   onLetter: (letter: string) => void
+  /** Word submitted this visit; restored progress stays still. */
+  acceptedWordIndex: number | null
 }

@@ -1,0 +1,30 @@
+.letter-boxed-accepted-path {
+  animation: letter-boxed-accept 700ms ease-out;
+}
+
+@keyframes letter-boxed-accept {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    stroke-width: 2.6;
+    opacity: 1;
+  }
+  75% {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    stroke-width: 2.6;
+    opacity: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    stroke-width: 1.6;
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-boxed-accepted-path {
+    animation: none;
+  }
+}

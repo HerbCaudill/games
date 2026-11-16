@@ -5,6 +5,8 @@ import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useToast } from "@/lib/useToast"
+import { statusKey } from "@/lib/statusKey"
+import { writeStored } from "@/lib/writeStored"
 import type { LetterBoxedPuzzle } from "@/types"
 import { LetterBox } from "./LetterBox"
 import { addLetter } from "./logic/addLetter"
@@ -13,6 +15,7 @@ import { isSolved } from "./logic/isSolved"
 import { removeLetter } from "./logic/removeLetter"
 import { submitWord } from "./logic/submitWord"
 import { type LetterBoxedState } from "./logic/types"
+import "./letter-boxed.css"
 
 /** Letter Boxed: chain words that use every letter around the square. */
 export function LetterBoxed(
@@ -24,6 +27,7 @@ export function LetterBoxed(
     initialState,
   )
   const [showSolution, setShowSolution] = useState(false)
+  const [acceptedWordIndex, setAcceptedWordIndex] = useState<number | null>(null)
   const toast = useToast()
   const solved = isSolved(state, puzzle)
   useGameStatus(
@@ -33,11 +37,23 @@ export function LetterBoxed(
   )
 
   const add = (letter: string) => !solved && setState(s => addLetter(s, letter, puzzle))
-  const remove = () => !solved && setState(removeLetter)
+  const remove = () => {
+    if (solved) return
+    setAcceptedWordIndex(null)
+    setState(removeLetter)
+  }
+  /** Clear this puzzle's progress and all solution feedback. */
+  const restart = () => {
+    setState(initialState())
+    setShowSolution(false)
+    setAcceptedWordIndex(null)
+    writeStored(statusKey("letter-boxed", puzzle.date), "new")
+  }
   const submit = () => {
     if (solved) return
     const result = submitWord(state, puzzle)
     if (result.error) return toast.show(result.error)
+    setAcceptedWordIndex(state.words.length)
     setState(result.state)
   }
 
@@ -60,7 +76,12 @@ export function LetterBoxed(
         {state.words.length ? state.words.join(" – ") : `Try to solve in ${puzzle.par} words`}
       </p>
 
-      <LetterBox puzzle={puzzle} state={state} onLetter={add} />
+      <LetterBox
+        puzzle={puzzle}
+        state={state}
+        onLetter={add}
+        acceptedWordIndex={acceptedWordIndex}
+      />
 
       {solved ? (
         <div className="flex flex-col items-center gap-2 text-center">
@@ -78,24 +99,27 @@ export function LetterBoxed(
             </Button>
           )}
         </div>
-      ) : (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="rounded-full px-4"
-            onClick={() => setState(initialState())}
-            disabled={!state.words.length && !state.current}
-          >
-            Restart
-          </Button>
-          <Button variant="outline" className="rounded-full px-4" onClick={remove}>
-            Delete
-          </Button>
-          <Button className="rounded-full px-4" onClick={submit}>
-            Enter
-          </Button>
-        </div>
-      )}
+      ) : null}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="rounded-full px-4"
+          onClick={restart}
+          disabled={!state.words.length && !state.current}
+        >
+          Restart
+        </Button>
+        {!solved && (
+          <>
+            <Button variant="outline" className="rounded-full px-4" onClick={remove}>
+              Delete
+            </Button>
+            <Button className="rounded-full px-4" onClick={submit}>
+              Enter
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   )
 }
