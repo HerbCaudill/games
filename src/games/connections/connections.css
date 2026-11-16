@@ -1,0 +1,20 @@
+.connections-feedback [role="status"] {
+  animation: connections-toast 1600ms ease both;
+}
+
+@keyframes connections-toast {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connections-feedback [role="status"] {
+    animation: none;
+  }
+}

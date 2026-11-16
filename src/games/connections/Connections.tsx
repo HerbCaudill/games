@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
 import { shuffle } from "@/lib/shuffle"
@@ -14,6 +14,8 @@ import { MAX_MISTAKES } from "./logic/constants"
 import { remainingWords } from "./logic/remainingWords"
 import { submitGuess } from "./logic/submitGuess"
 import { type ConnectionsState } from "./logic/types"
+import { useConnectionsAnimation } from "./useConnectionsAnimation"
+import "./connections.css"
 
 /** Connections: sort sixteen words into four groups of four. */
 export function Connections(
@@ -25,6 +27,10 @@ export function Connections(
     () => initialState(puzzle),
   )
   const [selected, setSelected] = useState<string[]>([])
+  const grid = useRef<HTMLDivElement>(null)
+  const submitting = useRef(false)
+  const [busy, setBusy] = useState(false)
+  const animate = useConnectionsAnimation()
   const toast = useToast()
   const over = isOver(state, puzzle)
   const won = state.solved.length === puzzle.groups.length
@@ -45,19 +51,33 @@ export function Connections(
     setSelected(s =>
       s.includes(word) ? s.filter(w => w !== word) : s.length < 4 ? [...s, word] : s,
     )
-  const submit = () => {
-    if (selected.length !== 4 || over) return
+  const submit = async () => {
+    if (selected.length !== 4 || over || submitting.current) return
+    submitting.current = true
+    setBusy(true)
     const { state: next, result } = submitGuess(state, selected, puzzle)
-    setState(next)
-    if (result === "correct") setSelected([])
     if (result === "one-away") toast.show("One away…")
     if (result === "already-guessed") toast.show("Already guessed!")
     if (result === "wrong" && next.mistakes >= MAX_MISTAKES) toast.show("Next time!")
+    if (result === "wrong" || result === "one-away")
+      await animate(
+        [
+          ...(grid.current?.querySelectorAll<HTMLButtonElement>("button[aria-pressed=true]") ?? []),
+        ].map(element => ({
+          element,
+          keyframes: [0, -7, 7, -5, 5, 0].map(x => ({ transform: `translateX(${x}px)` })),
+          options: { duration: 320, easing: "ease-in-out" },
+        })),
+      )
+    setState(next)
+    if (result === "correct") setSelected([])
+    submitting.current = false
+    setBusy(false)
   }
   const mix = () => setState(s => ({ ...s, order: shuffle(s.order) }))
 
   useKeydown(event => {
-    if (over) return
+    if (over || submitting.current) return
     if (event.key === "Enter") submit()
     else if (event.key.toLowerCase() === "s") mix()
     else if (event.key.toLowerCase() === "d") setSelected([])
@@ -66,7 +86,7 @@ export function Connections(
   })
 
   return (
-    <div className="relative mx-auto flex max-w-xl flex-col gap-4 p-4 sm:pt-8">
+    <div className="connections-feedback relative mx-auto flex max-w-xl flex-col gap-4 p-4 sm:pt-8">
       <Toast message={toast.message} />
       <p className="text-muted-foreground text-center text-sm">Create four groups of four!</p>
 
@@ -75,12 +95,19 @@ export function Connections(
           <SolvedGroup key={i} group={puzzle.groups[i]} missed={!state.solved.includes(i)} />
         ))}
         {!over && (
-          <div className="grid grid-cols-4 gap-2" role="group" aria-label="Words">
+          <div
+            ref={grid}
+            className="grid grid-cols-4 gap-2"
+            role="group"
+            aria-label="Words"
+            aria-busy={busy}
+          >
             {words.map(word => (
               <button
                 key={word}
                 type="button"
                 aria-pressed={selected.includes(word)}
+                disabled={busy}
                 onClick={() => toggle(word)}
                 className={cn(
                   "flex h-16 items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/60 sm:h-20",
@@ -116,6 +143,7 @@ export function Connections(
               variant="outline"
               className="rounded-full px-4"
               onClick={mix}
+              disabled={busy}
               title="Shuffle (S)"
             >
               Shuffle
@@ -124,7 +152,7 @@ export function Connections(
               variant="outline"
               className="rounded-full px-4"
               onClick={() => setSelected([])}
-              disabled={!selected.length}
+              disabled={busy || !selected.length}
               title="Deselect all (D)"
             >
               Deselect all
@@ -132,7 +160,7 @@ export function Connections(
             <Button
               className="rounded-full px-4"
               onClick={submit}
-              disabled={selected.length !== 4}
+              disabled={busy || selected.length !== 4}
               title="Submit (Enter)"
             >
               Submit
