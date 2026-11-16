@@ -1,5 +1,8 @@
 import type { GameId } from "./types"
 
+/** Stroke width at the home list's native 32px glyph size, also used by its tile border. */
+export const GAME_GLYPH_STROKE_WIDTH = 2
+
 /** The games, in menu order, with their display details. */
 export const GAMES: GameInfo[] = [
   {

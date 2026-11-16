@@ -1,5 +1,5 @@
 import { IconCheck } from "@tabler/icons-react"
-import { GAMES } from "@/constants"
+import { GAME_GLYPH_STROKE_WIDTH, GAMES } from "@/constants"
 import { formatDate } from "@/lib/formatDate"
 import { readGameStatus } from "@/lib/readGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -46,10 +46,13 @@ export function Home(
                     className="grid size-12 shrink-0 place-items-center rounded-lg"
                     style={{
                       background: game.id === "crossword" ? "#fff" : game.color,
-                      border: game.id === "crossword" ? "1px solid #000" : undefined,
+                      border:
+                        game.id === "crossword"
+                          ? `${GAME_GLYPH_STROKE_WIDTH}px solid #000`
+                          : undefined,
                     }}
                   >
-                    <GameGlyph game={game.id} className="size-7" />
+                    <GameGlyph game={game.id} className="size-8" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold">{game.name}</span>

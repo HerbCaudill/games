@@ -1,4 +1,5 @@
 import type { GameId } from "@/types"
+import { GAME_GLYPH_STROKE_WIDTH } from "@/constants"
 
 /** A small drawing that stands for a game. */
 export function GameGlyph(
@@ -7,11 +8,13 @@ export function GameGlyph(
 ) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 32 32"
       className={className}
       aria-hidden="true"
       color="#000"
       fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={GAME_GLYPH_STROKE_WIDTH}
     >
       {GLYPHS[game]}
     </svg>
@@ -24,59 +27,37 @@ export function GameGlyph(
 const GLYPHS: Record<GameId, React.ReactNode> = {
   crossword: (
     <>
-      <path d="M3 3h18v18H3z" fill="#fff" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M3 9h18M3 15h18M9 3v18M15 3v18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path d="M3 3h6v6H3zM15 15h6v6h-6z" />
+      <path d="M4 4h24v24H4z" fill="#fff" />
+      <path d="M4 12h24M4 20h24M12 4v24M20 4v24" fill="none" />
+      <path d="M4 4h8v8H4zM20 20h8v8h-8z" stroke="none" />
     </>
   ),
   pips: (
     <>
-      <rect
-        x="2"
-        y="7"
-        width="20"
-        height="10"
-        rx="2.5"
-        fill="#fff"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path d="M12 7v10" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="7" cy="12" r="1.6" />
-      <circle cx="15" cy="10" r="1.4" />
-      <circle cx="19" cy="14" r="1.4" />
+      <rect x="2" y="9" width="28" height="14" rx="3.5" fill="#fff" />
+      <path d="M16 9v14" fill="none" />
+      <circle cx="9" cy="16" r="2" stroke="none" />
+      <circle cx="22" cy="13" r="1.8" stroke="none" />
+      <circle cx="26" cy="19" r="1.8" stroke="none" />
     </>
   ),
-  "spelling-bee": (
-    <>
-      <path d="M12 2.5 20.2 7.25v9.5L12 21.5l-8.2-4.75v-9.5z" fill="#fff" />
-      <path
-        d="M12 2.5 20.2 7.25v9.5L12 21.5l-8.2-4.75v-9.5zM12 7.5 8.1 9.75v4.5L12 16.5l3.9-2.25v-4.5z"
-        fillRule="evenodd"
-      />
-    </>
-  ),
+  "spelling-bee": <path d="M16 3 27.3 9.5v13L16 29 4.7 22.5v-13z" fill="#fff" />,
   connections: (
     <>
-      <rect x="3" y="3" width="8" height="8" rx="1.5" />
-      <rect x="13" y="3" width="8" height="8" rx="1.5" fill="#fff" stroke="currentColor" />
-      <rect x="3" y="13" width="8" height="8" rx="1.5" fill="#fff" stroke="currentColor" />
-      <rect x="13" y="13" width="8" height="8" rx="1.5" />
+      <rect x="4" y="4" width="10" height="10" rx="2" />
+      <rect x="18" y="4" width="10" height="10" rx="2" fill="#fff" />
+      <rect x="4" y="18" width="10" height="10" rx="2" fill="#fff" />
+      <rect x="18" y="18" width="10" height="10" rx="2" />
     </>
   ),
   "letter-boxed": (
     <>
-      <rect x="4" y="4" width="16" height="16" fill="#fff" stroke="currentColor" strokeWidth="2" />
-      <path d="M8 4 20 12 12 20 4 9" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="8" cy="4" r="2" />
-      <circle cx="20" cy="12" r="2" />
-      <circle cx="12" cy="20" r="2" />
-      <circle cx="4" cy="9" r="2" />
+      <rect x="5" y="5" width="22" height="22" fill="#fff" />
+      <path d="M10 5 27 16 16 27 5 12" fill="none" />
+      <circle cx="10" cy="5" r="2.5" stroke="none" />
+      <circle cx="27" cy="16" r="2.5" stroke="none" />
+      <circle cx="16" cy="27" r="2.5" stroke="none" />
+      <circle cx="5" cy="12" r="2.5" stroke="none" />
     </>
   ),
 }
