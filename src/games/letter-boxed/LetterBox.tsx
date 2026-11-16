@@ -104,7 +104,7 @@ function spot(
   /** Position along the side. */
   i: number,
 ): [number, number] {
-  const along = 25 * (i + 1)
+  const along = (100 * (2 * i + 1)) / 6
   return (
     [
       [along, 0],
