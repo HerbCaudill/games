@@ -45,8 +45,8 @@ export function Home(
                   <span
                     className="grid size-12 shrink-0 place-items-center rounded-lg"
                     style={{
-                      background: game.color,
-                      color: `var(--game-${game.id}-foreground, #000000)`,
+                      background: game.id === "crossword" ? "#fff" : game.color,
+                      border: game.id === "crossword" ? "1px solid #000" : undefined,
                     }}
                   >
                     <GameGlyph game={game.id} className="size-7" />

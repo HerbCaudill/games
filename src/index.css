@@ -51,7 +51,8 @@
 }
 
 :root {
-  --background: #f7f5f0;
+  color-scheme: light;
+  --background: #ffffff;
   --foreground: #1d2433;
   --card: #ffffff;
   --card-foreground: #1d2433;
@@ -75,7 +76,8 @@
   --game-crossword: #000000;
   --game-crossword-foreground: #ffffff;
   --game-pips: #d3a6ce;
-  --game-spelling-bee: #f7da21;
+  /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
+  --game-spelling-bee: oklch(0.87 0.17 90);
   --game-connections: #b4a0ff;
   --game-letter-boxed: #f5786d;
 
@@ -93,36 +95,6 @@
   --xw-shade: #dcdcdc;
   --xw-wrong: #333333;
   --xw-revealed: #555555;
-}
-
-.dark {
-  --background: #14171f;
-  --foreground: #e9e6df;
-  --card: #1c2029;
-  --card-foreground: #e9e6df;
-  --popover: #1c2029;
-  --popover-foreground: #e9e6df;
-  --primary: #e9e6df;
-  --primary-foreground: #14171f;
-  --secondary: #262b36;
-  --secondary-foreground: #e9e6df;
-  --muted: #262b36;
-  --muted-foreground: #9aa0ad;
-  --accent: #262b36;
-  --accent-foreground: #e9e6df;
-  --destructive: #e5675a;
-  --border: #323846;
-  --input: #323846;
-  --ring: #6b7385;
-
-  --game-crossword: #ffffff;
-  --game-crossword-foreground: #000000;
-
-  --xw-cursor: #666666;
-  --xw-word: #3b3b3b;
-  --xw-shade: #484848;
-  --xw-wrong: #eeeeee;
-  --xw-revealed: #bbbbbb;
 }
 
 @layer base {
