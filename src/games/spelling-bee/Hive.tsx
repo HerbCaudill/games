@@ -36,10 +36,10 @@ export function Hive(
           <text
             x={x}
             y={y}
-            dy="0.36"
+            dy="0.36em"
             textAnchor="middle"
             className={isCenter ? "fill-white" : "fill-foreground"}
-            style={{ font: "600 1px var(--font-sans)", textTransform: "uppercase" }}
+            style={{ font: "600 0.667px var(--font-sans)", textTransform: "uppercase" }}
           >
             {letter}
           </text>
