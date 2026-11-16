@@ -1,4 +1,5 @@
 import type { Domino } from "@/types"
+import { dominoGeometry } from "./dominoGeometry"
 import { PipDots } from "./PipDots"
 
 /** A domino lying flat, first half on the left, filling its box. Its parent turns it. */
@@ -13,9 +14,9 @@ export function DominoTile(
         y={INSET}
         width={2 * U - 2 * INSET}
         height={U - 2 * INSET}
-        rx="1.8"
+        rx={dominoGeometry.radius}
         className="fill-card stroke-foreground"
-        strokeWidth="0.35"
+        strokeWidth={dominoGeometry.strokeWidth}
       />
       <line
         x1={U}
@@ -34,10 +35,10 @@ export function DominoTile(
 // CONSTANTS
 
 /** Size of one half. */
-const U = 10
+const U = dominoGeometry.unit
 
 /** Gap between the domino's edge and its cells' edges. */
-const INSET = 0.9
+const INSET = dominoGeometry.inset
 
 // TYPES
 

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
+import { dominoGeometry } from "./dominoGeometry"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
@@ -19,6 +20,10 @@ export function PipsGrid(
   const rows = Math.max(...cells.map(([r]) => r)) + 1
   const cols = Math.max(...cells.map(([, c]) => c)) + 1
   const scale = size / U
+  // Separate the visible stroke edges by one CSS pixel, keeping their corner centers aligned.
+  const offset = (dominoGeometry.strokeWidth + REGION_STROKE_WIDTH) / 2 + 1 / scale
+  const regionInset = (dominoGeometry.inset - offset) / U
+  const regionRadius = dominoGeometry.radius + offset
   const regions = board.regions.flatMap((region, i) =>
     region.type === "empty" ? [] : [{ region, i }],
   )
@@ -50,7 +55,7 @@ export function PipsGrid(
           {regions.map(({ region, i }) => (
             <path
               key={i}
-              d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
+              d={roundedPath(outline(region.cells, regionInset), regionRadius)}
               style={{ fill: regionFill(i) }}
             />
           ))}
@@ -61,10 +66,10 @@ export function PipsGrid(
           {regions.map(({ region, i }) => (
             <path
               key={i}
-              d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
+              d={roundedPath(outline(region.cells, regionInset), regionRadius)}
               className="fill-none"
               style={{ stroke: regionStroke(i) }}
-              strokeWidth="0.45"
+              strokeWidth={REGION_STROKE_WIDTH}
               strokeDasharray="1.4 1"
               strokeLinecap="round"
             />
@@ -125,7 +130,8 @@ function roundedPath(
             const [x, y] = [p[0] * U, p[1] * U]
             const into = toward(p, prev, radius)
             const out = toward(p, next, radius)
-            return `${i ? "L" : "M"}${x + into[0]},${y + into[1]}Q${x},${y} ${x + out[0]},${y + out[1]}`
+            const sweep = into[0] * out[1] - into[1] * out[0] < 0 ? 1 : 0
+            return `${i ? "L" : "M"}${x + into[0]},${y + into[1]}A${radius},${radius} 0 0 ${sweep} ${x + out[0]},${y + out[1]}`
           })
           .join("") + "Z",
     )
@@ -214,10 +220,10 @@ function RegionBadge(
 // CONSTANTS
 
 /** Cell size. */
-const U = 10
+const U = dominoGeometry.unit
 
-/** How far region shapes sit inside their cells' edges, in cells. */
-const REGION_INSET = 0.07
+/** Region outline width, in SVG units. */
+const REGION_STROKE_WIDTH = 0.45
 
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
