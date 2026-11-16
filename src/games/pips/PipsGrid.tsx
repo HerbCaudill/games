@@ -27,6 +27,7 @@ export function PipsGrid(
   const regions = board.regions.flatMap((region, i) =>
     region.type === "empty" ? [] : [{ region, i }],
   )
+  const covered = new Set(placements.flatMap(cells => cells ?? []).map(cellKey))
 
   return (
     <svg
@@ -105,6 +106,7 @@ export function PipsGrid(
             region={region}
             color={regionStroke(i)}
             shade={regionFill(i)}
+            covered={covered}
             broken={regionStatus(region, placements, board) === "broken"}
           />
         ))
@@ -172,7 +174,7 @@ function regionStroke(
 /** The rule label at a region's last cell. */
 function RegionBadge(
   /** The component props. */
-  { region, color, shade, broken }: RegionBadgeProps,
+  { region, color, shade, covered, broken }: RegionBadgeProps,
 ) {
   const [r, c] = region.cells.reduce((last, cell) =>
     cell[0] > last[0] || (cell[0] === last[0] && cell[1] > last[1]) ? cell : last,
@@ -187,6 +189,7 @@ function RegionBadge(
   }[region.type]
   const x = (c + 1) * U
   const y = (r + 1) * U
+  const onDomino = covered.has(cellKey([r, c]))
   return (
     <g
       role={broken ? "img" : undefined}
@@ -194,8 +197,17 @@ function RegionBadge(
       aria-hidden={broken ? undefined : true}
       className={cn(broken && "pips-warning")}
     >
-      {/* Keep the lighter region shade visible through the diamond's square notch. */}
-      <rect x={x - 1.97} y={y - 1.97} width="1.17" height="1.17" style={{ fill: shade }} />
+      {/* Show what lies under the diamond's notch: the domino's face, or the lighter region shade. */}
+      <rect
+        data-notch
+        x={x - 1.97}
+        y={y - 1.97}
+        width="1.17"
+        height="1.17"
+        rx={NOTCH_RADIUS}
+        className={cn(onDomino && "fill-card")}
+        style={onDomino ? undefined : { fill: shade }}
+      />
       <path
         d={BADGE_PATH}
         transform={`translate(${x} ${y})`}
@@ -228,12 +240,15 @@ const REGION_STROKE_WIDTH = 0.45
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
-/** The rounded 4.2-unit diamond, with its existing upper-left square bite. */
+/** Corner radius of the diamond's notch. */
+const NOTCH_RADIUS = 0.4
+
+/** The rounded 4.2-unit diamond, with a rounded square bite at its upper left. */
 const BADGE_PATH =
   "M-0.8,-1.97 L-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
   "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +
   "L0.389,2.581 A0.55,0.55 0 0 1 -0.389,2.581 " +
-  "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 L-1.97,-0.8 H-0.8 Z"
+  "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 L-1.97,-0.8 H-1.2 A0.4,0.4 0 0 0 -0.8,-1.2 Z"
 
 /** Region hues, cycled by region. */
 const REGION_COLORS = [
@@ -256,6 +271,8 @@ type RegionBadgeProps = {
   color: string
   /** The lighter region shade visible through the bite. */
   shade: string
+  /** Keys of the cells dominoes cover. */
+  covered: Set<string>
   /** Whether to show the active warning. */
   broken: boolean
 }
