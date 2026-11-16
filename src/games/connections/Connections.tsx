@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { flushSync } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
 import { shuffle } from "@/lib/shuffle"
@@ -27,7 +28,10 @@ export function Connections(
     () => initialState(puzzle),
   )
   const [selected, setSelected] = useState<string[]>([])
+  const [displayOrder, setDisplayOrder] = useState<string[]>()
+  const [merging, setMerging] = useState<ConnectionsGroup>()
   const grid = useRef<HTMLDivElement>(null)
+  const mergingBand = useRef<HTMLDivElement>(null)
   const submitting = useRef(false)
   const [busy, setBusy] = useState(false)
   const animate = useConnectionsAnimation()
@@ -55,22 +59,107 @@ export function Connections(
     if (selected.length !== 4 || over || submitting.current) return
     submitting.current = true
     setBusy(true)
+    const tiles = [
+      ...(grid.current?.querySelectorAll<HTMLButtonElement>("button[aria-pressed=true]") ?? []),
+    ]
+    if (
+      !(await animate(
+        tiles.map((element, index) => ({
+          element,
+          keyframes: [0, -10, 0].map(y => ({ transform: `translateY(${y}px)` })),
+          options: { duration: 200, delay: index * 55, easing: "ease-in-out", fill: "both" },
+        })),
+      ))
+    )
+      return
     const { state: next, result } = submitGuess(state, selected, puzzle)
+    if (
+      result === "correct" &&
+      grid.current &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      const allTiles = [...grid.current.querySelectorAll<HTMLButtonElement>("button")]
+      const starts = allTiles.map(element => ({ element, from: element.getBoundingClientRect() }))
+      // Reorder first, then animate from each tile's old position into its new slot.
+      flushSync(() =>
+        setDisplayOrder([
+          ...words.filter(word => selected.includes(word)),
+          ...words.filter(word => !selected.includes(word)),
+        ]),
+      )
+      if (
+        !(await animate(
+          starts.map(({ element, from }) => {
+            const to = element.getBoundingClientRect()
+            return {
+              element,
+              keyframes: [
+                {
+                  transform: `translate(${from.x - to.x}px, ${from.y - to.y}px)`,
+                  zIndex: selected.includes(element.textContent!) ? 1 : 0,
+                },
+                {
+                  transform: "translate(0px, 0px)",
+                  zIndex: selected.includes(element.textContent!) ? 1 : 0,
+                },
+              ],
+              options: { duration: 240, easing: "ease-in-out" },
+            }
+          }),
+        ))
+      )
+        return
+      const group = puzzle.groups[next.solved.at(-1)!]
+      flushSync(() => setMerging(group))
+      const bounds = grid.current.getBoundingClientRect()
+      if (
+        !(await animate([
+          ...tiles.map((element, index) => {
+            const box = element.getBoundingClientRect()
+            const width = bounds.width / 4
+            return {
+              element,
+              keyframes: [
+                { transform: "translateX(0px) scaleX(1)", transformOrigin: "left center" },
+                {
+                  transform: `translateX(${bounds.x + index * width - box.x}px) scaleX(${width / box.width})`,
+                  transformOrigin: "left center",
+                  backgroundColor: `var(--group-${group.level})`,
+                  color: "transparent",
+                  borderRadius: "0px",
+                },
+              ],
+              options: { duration: 200, easing: "ease-in-out", fill: "forwards" as const },
+            }
+          }),
+          {
+            element: mergingBand.current!,
+            keyframes: [{ opacity: 0 }, { opacity: 0, offset: 0.4 }, { opacity: 1 }],
+            options: { duration: 200, fill: "forwards" },
+          },
+        ]))
+      )
+        return
+    }
     if (result === "one-away") toast.show("One away…")
     if (result === "already-guessed") toast.show("Already guessed!")
     if (result === "wrong" && next.mistakes >= MAX_MISTAKES) toast.show("Next time!")
-    if (result === "wrong" || result === "one-away")
-      await animate(
-        [
-          ...(grid.current?.querySelectorAll<HTMLButtonElement>("button[aria-pressed=true]") ?? []),
-        ].map(element => ({
-          element,
-          keyframes: [0, -7, 7, -5, 5, 0].map(x => ({ transform: `translateX(${x}px)` })),
-          options: { duration: 320, easing: "ease-in-out" },
-        })),
+    if (result === "wrong" || result === "one-away") {
+      if (
+        !(await animate(
+          tiles.map(element => ({
+            element,
+            keyframes: [0, -7, 7, -5, 5, 0].map(x => ({ transform: `translateX(${x}px)` })),
+            options: { duration: 320, easing: "ease-in-out" },
+          })),
+        ))
       )
+        return
+    }
     setState(next)
     if (result === "correct") setSelected([])
+    setDisplayOrder(undefined)
+    setMerging(undefined)
     submitting.current = false
     setBusy(false)
   }
@@ -97,12 +186,12 @@ export function Connections(
         {!over && (
           <div
             ref={grid}
-            className="grid grid-cols-4 gap-2"
+            className="relative grid grid-cols-4 gap-2"
             role="group"
             aria-label="Words"
             aria-busy={busy}
           >
-            {words.map(word => (
+            {(displayOrder ?? words).map(word => (
               <button
                 key={word}
                 type="button"
@@ -124,6 +213,15 @@ export function Connections(
                 {word}
               </button>
             ))}
+            {merging && (
+              <div
+                ref={mergingBand}
+                className="pointer-events-none absolute inset-x-0 top-0 opacity-0"
+                aria-hidden="true"
+              >
+                <SolvedGroup group={merging} missed={false} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -183,7 +281,7 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
   return (
     <div
       className={cn(
-        "text-(--group-foreground) flex h-16 animate-in flex-col items-center justify-center rounded-lg px-2 text-center zoom-in-95 sm:h-20",
+        "text-(--group-foreground) flex h-16 flex-col items-center justify-center rounded-lg px-2 text-center sm:h-20",
         missed && "opacity-75",
       )}
       style={{ background: `var(--group-${group.level})` }}

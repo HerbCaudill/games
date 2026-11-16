@@ -3,10 +3,18 @@ import { useEffect, useRef } from "react"
 /** Play a short board animation, skipping motion when requested and cleaning up on exit. */
 export function useConnectionsAnimation() {
   const active = useRef<Animation[]>([])
-  useEffect(() => () => active.current.forEach(animation => animation.cancel()), [])
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      active.current.forEach(animation => animation.cancel())
+    }
+  }, [])
 
   return async (steps: AnimationStep[]) => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (!mounted.current) return false
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true
     const animations = steps.map(({ element, keyframes, options }) =>
       element.animate(keyframes, options),
     )
@@ -14,6 +22,7 @@ export function useConnectionsAnimation() {
     await Promise.all(animations.map(animation => animation.finished.catch(() => undefined)))
     animations.forEach(animation => animation.cancel())
     active.current = active.current.filter(animation => !animations.includes(animation))
+    return mounted.current
   }
 }
 
