@@ -11,7 +11,7 @@ export function backspace(
   puzzle: CrosswordPuzzle,
 ): CrosswordState {
   const clear = (s: CrosswordState, cell: number): CrosswordState =>
-    s.marks[cell] === "revealed"
+    s.marks[cell] === "revealed" || s.marks[cell] === "correct"
       ? s
       : { ...s, entries: replaceAt(s.entries, cell, ""), marks: replaceAt(s.marks, cell, null) }
   if (state.entries[state.cursor]) return clear(state, state.cursor)

@@ -90,10 +90,13 @@
   --group-3: #ba81c5;
 
   /* Crossword squares. */
-  --xw-cursor: #b3b3b3;
-  --xw-word: #e6e6e6;
+  --xw-cursor: var(--game-spelling-bee);
+  --xw-word: #a7d8ff;
+  --xw-highlight-foreground: #1d2433;
   --xw-shade: #dcdcdc;
-  --xw-wrong: #333333;
+  --xw-wrong: #c0392b;
+  --xw-correct: #1865b5;
+  --xw-correct-highlight: #1865b5;
   --xw-revealed: #555555;
 }
 

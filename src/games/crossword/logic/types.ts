@@ -10,10 +10,12 @@ export type CrosswordState = {
   cursor: number
   /** The direction being typed. */
   direction: Direction
+  /** Whether new entries are checked immediately; absent in older saves. */
+  autocheck?: boolean
 }
 
 /** A mark left by checking or revealing. */
-export type Mark = "wrong" | "revealed"
+export type Mark = "wrong" | "correct" | "revealed"
 
 /** How much to check, reveal or clear. */
 export type Scope = "square" | "word" | "puzzle"

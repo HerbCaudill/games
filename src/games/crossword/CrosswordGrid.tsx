@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import type { CrosswordPuzzle } from "@/types"
 import { clueAt } from "./logic/clueAt"
 import { type CrosswordState } from "./logic/types"
@@ -5,17 +6,33 @@ import { type CrosswordState } from "./logic/types"
 /** The crossword grid, drawn to fill its container while keeping squares square. */
 export function CrosswordGrid(
   /** The component props. */
-  { puzzle, state, rebus, onCell }: Props,
+  { puzzle, state, rebus, onCell, onRebus }: Props,
 ) {
   const { width, height } = puzzle
   const word = new Set(clueAt(puzzle, state.cursor, state.direction)?.cells ?? [])
+  const hold = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const origin = useRef({ x: 0, y: 0 })
+
+  /** Cancel a pending long press after release, scrolling or pointer cancellation. */
+  const cancelHold = () => clearTimeout(hold.current)
+  useEffect(() => cancelHold, [])
+
   return (
     <svg
       viewBox={`-0.5 -0.5 ${width * U + 1} ${height * U + 1}`}
       className="block touch-manipulation select-none"
       style={{ width: `min(100cqw, calc(100cqh * ${width / height}))` }}
       role="grid"
+      tabIndex={0}
       aria-label="Crossword grid"
+      onPointerUp={cancelHold}
+      onPointerCancel={cancelHold}
+      onPointerLeave={cancelHold}
+      onPointerMove={event => {
+        if (Math.hypot(event.clientX - origin.current.x, event.clientY - origin.current.y) > 10)
+          cancelHold()
+      }}
+      onContextMenu={event => event.preventDefault()}
     >
       <rect width={width * U} height={height * U} className="fill-foreground" />
       {puzzle.cells.map((cell, i) => {
@@ -25,10 +42,24 @@ export function CrosswordGrid(
         const isCursor = i === state.cursor
         const mark = state.marks[i]
         const entry = isCursor && rebus !== undefined ? rebus : state.entries[i]
+        const highlighted = isCursor || word.has(i)
+        const ink = highlighted ? "var(--xw-highlight-foreground)" : "var(--foreground)"
         return (
           <g
             key={i}
-            onPointerDown={event => (event.preventDefault(), onCell(i))}
+            role="gridcell"
+            aria-label={`Row ${Math.floor(i / width) + 1}, column ${(i % width) + 1}: ${entry || "empty"}${mark ? `, ${mark}` : ""}`}
+            aria-selected={isCursor}
+            aria-readonly={mark === "correct" || mark === "revealed"}
+            onPointerDown={event => {
+              event.preventDefault()
+              event.currentTarget.ownerSVGElement?.focus()
+              cancelHold()
+              onCell(i)
+              if (event.pointerType !== "touch") return
+              origin.current = { x: event.clientX, y: event.clientY }
+              hold.current = setTimeout(() => onRebus(i), 500)
+            }}
             className="cursor-pointer"
           >
             <rect
@@ -61,8 +92,7 @@ export function CrosswordGrid(
               <text
                 x={x + 1}
                 y={y + 3.4}
-                style={{ font: `100 ${U * 0.28}px var(--font-sans)` }}
-                className="fill-foreground"
+                style={{ font: `100 ${U * 0.28}px var(--font-sans)`, fill: ink }}
               >
                 {cell.label}
               </text>
@@ -75,16 +105,20 @@ export function CrosswordGrid(
                 x={x + U / 2}
                 y={y + U * 0.82}
                 textAnchor="middle"
-                textLength={entry.length > 3 ? U - 2 : undefined}
+                textLength={entry.length > 2 ? U - 1.6 : undefined}
                 lengthAdjust="spacingAndGlyphs"
                 style={{
-                  font: `400 ${entry.length > 1 ? Math.max(2.6, 6.2 - entry.length) : U * 0.64}px var(--font-sans)`,
+                  font: `400 ${entry.length > 1 ? Math.max(3, 7 - entry.length * 0.7) : U * 0.64}px var(--font-sans)`,
                   fill:
                     mark === "wrong"
                       ? "var(--xw-wrong)"
-                      : mark === "revealed"
-                        ? "var(--xw-revealed)"
-                        : "var(--foreground)",
+                      : mark === "correct"
+                        ? highlighted
+                          ? "var(--xw-correct-highlight)"
+                          : "var(--xw-correct)"
+                        : mark === "revealed"
+                          ? "var(--xw-revealed)"
+                          : ink,
                 }}
               >
                 {entry}
@@ -123,4 +157,6 @@ type Props = {
   rebus?: string
   /** Called when a square is tapped. */
   onCell: (cell: number) => void
+  /** Start rebus entry after holding a touch cell. */
+  onRebus: (cell: number) => void
 }

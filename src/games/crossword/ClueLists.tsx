@@ -62,7 +62,8 @@ function ClueList({
                 onClick={() => onClue(clue)}
                 className={cn(
                   "flex w-full gap-2 rounded-md border-l-4 border-transparent px-2 py-1 text-left text-sm",
-                  clue.id === active && "border-(--game-crossword) bg-(--xw-word)",
+                  clue.id === active &&
+                    "border-(--game-crossword) bg-(--xw-word) text-(--xw-highlight-foreground)",
                   clue.id === crossing && "border-(--xw-word)",
                   filled && clue.id !== active && "text-muted-foreground",
                 )}

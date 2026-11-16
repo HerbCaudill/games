@@ -7,7 +7,7 @@ export function OnScreenKeyboard(
   { onKey, rebus }: Props,
 ) {
   return (
-    <div className="bg-muted grid gap-1.5 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pointer-fine:hidden">
+    <div className="bg-muted grid gap-1.5 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pointer-coarse:landscape:w-[45%] pointer-coarse:landscape:shrink-0 pointer-coarse:landscape:self-end pointer-fine:hidden">
       {ROWS.map((row, r) => (
         <div key={r} className="flex justify-center gap-1">
           {row.map(key => (
@@ -18,7 +18,9 @@ export function OnScreenKeyboard(
                 event.preventDefault()
                 onKey(key)
               }}
-              aria-label={key === "Backspace" ? "Delete" : key === "Rebus" ? "Rebus" : key}
+              aria-label={
+                key === "Backspace" ? "Delete" : key === "Rebus" && rebus ? "Save rebus" : key
+              }
               className={cn(
                 "flex h-11 flex-1 items-center justify-center rounded-md bg-card text-base font-medium shadow-sm active:bg-border",
                 key.length > 1 && "max-w-16 flex-[1.5] text-xs",
@@ -27,7 +29,13 @@ export function OnScreenKeyboard(
                   "bg-(--game-crossword) text-(--game-crossword-foreground)",
               )}
             >
-              {key === "Backspace" ? <IconBackspace className="size-5" /> : key}
+              {key === "Backspace" ? (
+                <IconBackspace className="size-5" />
+              ) : key === "Rebus" && rebus ? (
+                "Done"
+              ) : (
+                key
+              )}
             </button>
           ))}
         </div>

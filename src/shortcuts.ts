@@ -22,7 +22,8 @@ export const SHORTCUTS: Record<ShortcutContext, ShortcutGroup> = {
       [["Tab"], "Next clue"],
       [["⇧", "Tab"], "Previous clue"],
       [["⌫"], "Delete"],
-      [["Esc"], "Enter several letters in one square"],
+      [["Esc"], "Start a rebus, or cancel rebus entry"],
+      [["Enter"], "Save a rebus, or go to the next clue"],
     ],
   },
   pips: {

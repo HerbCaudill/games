@@ -1,4 +1,5 @@
 import { clueAt } from "./clueAt"
+import { isCorrect } from "./isCorrect"
 import { nextClue } from "./nextClue"
 import { replaceAt } from "./replaceAt"
 import type { CrosswordState } from "./types"
@@ -16,9 +17,14 @@ export function typeEntry(
   const { cursor } = state
   const clue = clueAt(puzzle, cursor, state.direction)
   const wasFull = clue ? clue.cells.every(c => state.entries[c]) : true
-  const locked = state.marks[cursor] === "revealed"
+  const locked = state.marks[cursor] === "revealed" || state.marks[cursor] === "correct"
   const entries = locked ? state.entries : replaceAt(state.entries, cursor, text.toUpperCase())
-  const marks = locked ? state.marks : replaceAt(state.marks, cursor, null)
+  const mark = state.autocheck
+    ? isCorrect(puzzle, cursor, entries[cursor])
+      ? "correct"
+      : "wrong"
+    : null
+  const marks = locked ? state.marks : replaceAt(state.marks, cursor, mark)
   const typed = { ...state, entries, marks }
   if (!clue) return typed
 

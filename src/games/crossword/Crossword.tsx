@@ -1,12 +1,6 @@
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { formatDuration } from "@/lib/formatDuration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -18,17 +12,15 @@ import { ClueText } from "./ClueText"
 import { CrosswordGrid } from "./CrosswordGrid"
 import { arrow } from "./logic/arrow"
 import { backspace } from "./logic/backspace"
-import { check } from "./logic/check"
-import { clear } from "./logic/clear"
 import { clueAt } from "./logic/clueAt"
 import { initialState } from "./logic/initialState"
 import { isSolved } from "./logic/isSolved"
 import { nextClue } from "./logic/nextClue"
-import { reveal } from "./logic/reveal"
 import { selectCell } from "./logic/selectCell"
+import { setAutocheck } from "./logic/setAutocheck"
 import { toggleDirection } from "./logic/toggleDirection"
 import { typeEntry } from "./logic/typeEntry"
-import { type CrosswordState, type Scope } from "./logic/types"
+import { type CrosswordState } from "./logic/types"
 import { OnScreenKeyboard } from "./OnScreenKeyboard"
 
 /** The daily crossword. */
@@ -61,15 +53,26 @@ export function Crossword(
     progress.direction === "across" ? "down" : "across",
   )
 
+  /** Save the whole rebus in its square, then return to normal entry. */
   const commitRebus = () => {
-    if (rebus) update(s => typeEntry(s, puzzle, rebus))
+    if (rebus !== undefined && (rebus || progress.entries[progress.cursor]))
+      update(s => (rebus ? typeEntry(s, puzzle, rebus) : backspace(s, puzzle)))
     setRebus(undefined)
+  }
+
+  /** Start a rebus on a square without changing its direction or editing a locked entry. */
+  const startRebus = (cell = progress.cursor) => {
+    if (progress.marks[cell] === "correct" || progress.marks[cell] === "revealed") return
+    commitRebus()
+    update(s => (s.cursor === cell ? s : selectCell(s, puzzle, cell)))
+    setRebus(progress.entries[cell])
   }
 
   /** Handle a key from the physical or on-screen keyboard; returns whether it was used. */
   const handleKey = (key: string, shift = false) => {
     if (rebus !== undefined) {
-      if (key === "Enter" || key === "Escape" || key === "Rebus") commitRebus()
+      if (key === "Enter" || key === "Rebus") commitRebus()
+      else if (key === "Escape") setRebus(undefined)
       else if (key === "Backspace") setRebus(r => r!.slice(0, -1))
       else if (/^[a-z0-9]$/i.test(key)) setRebus(r => (r! + key).toUpperCase().slice(0, 10))
       else return false
@@ -83,37 +86,61 @@ export function Crossword(
     else if (key === "ArrowRight") update(s => arrow(s, puzzle, 0, 1))
     else if (key === "Tab" || key === "Enter") update(s => nextClue(s, puzzle, shift ? -1 : 1))
     else if (key === " ") update(s => toggleDirection(s, puzzle))
-    else if (key === "Escape" || key === "Rebus") setRebus("")
+    else if (key === "Escape" || key === "Rebus") startRebus()
     else return false
     return true
   }
 
   useKeydown(event => {
+    // Let native toolbar controls keep their Tab, Space and Enter behavior.
+    if (
+      (event.key === "Tab" || event.key === "Enter" || event.key === " ") &&
+      (event.target as HTMLElement | null)?.closest("button, [role='switch']")
+    )
+      return
     if (handleKey(event.key, event.shiftKey)) event.preventDefault()
   })
 
-  const act = (action: typeof check, scope: Scope) => {
-    setRebus(undefined)
-    update(s => action(s, puzzle, scope))
-  }
-
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-1 border-b px-3 py-1.5">
+      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5">
         <span className="text-muted-foreground mr-auto font-mono text-sm tabular-nums">
           {formatDuration(progress.elapsed)}
         </span>
-        <ScopeMenu
-          label="Check"
-          scopes={["square", "word", "puzzle"]}
-          onPick={s => act(check, s)}
-        />
-        <ScopeMenu
-          label="Reveal"
-          scopes={["square", "word", "puzzle"]}
-          onPick={s => act(reveal, s)}
-        />
-        <ScopeMenu label="Clear" scopes={["word", "puzzle"]} onPick={s => act(clear, s)} />
+        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={progress.autocheck ?? false}
+            onChange={event => {
+              commitRebus()
+              update(s => setAutocheck(s, puzzle, event.target.checked))
+            }}
+            className="accent-primary size-4"
+          />
+          Autocheck
+          <span aria-hidden="true" className="text-muted-foreground w-5 text-xs">
+            {progress.autocheck ? "On" : "Off"}
+          </span>
+        </label>
+        <Button
+          variant={rebus === undefined ? "ghost" : "default"}
+          aria-label={rebus === undefined ? "Enter rebus" : "Save rebus"}
+          aria-pressed={rebus !== undefined}
+          disabled={
+            progress.marks[progress.cursor] === "correct" ||
+            progress.marks[progress.cursor] === "revealed"
+          }
+          title={rebus === undefined ? "Rebus (Esc)" : "Save rebus (Enter); cancel (Esc)"}
+          className="min-h-10"
+          onClick={event => {
+            if (rebus === undefined) startRebus()
+            else commitRebus()
+            event.currentTarget.blur()
+          }}
+        >
+          {rebus === undefined ? "Rebus" : "Done"}
+        </Button>
       </div>
 
       {solved && (
@@ -127,53 +154,56 @@ export function Crossword(
         </p>
       )}
 
-      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-4 md:flex-row md:p-4">
-        <div className="flex min-h-0 flex-1 flex-col md:gap-3">
-          <ClueBar
-            text={clue && <ClueText clue={clue} />}
-            label={clue && `${clue.label}${clue.direction === "across" ? "A" : "D"}`}
-            onPrevious={() => update(s => nextClue(s, puzzle, -1))}
-            onNext={() => update(s => nextClue(s, puzzle, 1))}
-            onToggle={() => update(s => toggleDirection(s, puzzle))}
-          />
-          <div
-            className="grid min-h-0 flex-1 place-items-center p-2 md:p-0"
-            style={{ containerType: "size" }}
-          >
-            <CrosswordGrid
+      <div className="flex min-h-0 flex-1 flex-col pointer-coarse:landscape:flex-row">
+        <div className="mx-auto flex min-h-0 w-full max-w-7xl min-w-0 flex-1 flex-col gap-4 md:pointer-fine:flex-row md:pointer-fine:p-4">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col md:pointer-fine:gap-3">
+            <ClueBar
+              text={clue && <ClueText clue={clue} />}
+              label={clue && `${clue.label}${clue.direction === "across" ? "A" : "D"}`}
+              onPrevious={() => update(s => nextClue(s, puzzle, -1))}
+              onNext={() => update(s => nextClue(s, puzzle, 1))}
+              onToggle={() => update(s => toggleDirection(s, puzzle))}
+            />
+            <div
+              className="grid min-h-0 flex-1 content-start justify-items-center p-2 md:p-0"
+              style={{ containerType: "size" }}
+            >
+              <CrosswordGrid
+                puzzle={puzzle}
+                state={progress}
+                rebus={rebus}
+                onRebus={startRebus}
+                onCell={cell => {
+                  commitRebus()
+                  update(s => selectCell(s, puzzle, cell))
+                }}
+              />
+            </div>
+            <p className="text-muted-foreground hidden truncate text-xs md:pointer-fine:block">
+              {puzzle.title && <span className="font-semibold">{puzzle.title} · </span>}
+              By {puzzle.constructors.join(" and ")} · Edited by {puzzle.editor}
+            </p>
+          </div>
+          <aside className="hidden min-h-0 md:w-72 md:flex-col lg:w-[34rem] md:pointer-fine:flex">
+            <ClueLists
               puzzle={puzzle}
-              state={progress}
-              rebus={rebus}
-              onCell={cell => {
+              entries={progress.entries}
+              active={clue?.id}
+              crossing={crossing?.id}
+              onClue={c => {
                 commitRebus()
-                update(s => selectCell(s, puzzle, cell))
+                update(s => ({
+                  ...s,
+                  direction: c.direction,
+                  cursor: c.cells.find(cell => !s.entries[cell]) ?? c.cells[0],
+                }))
               }}
             />
-          </div>
-          <p className="text-muted-foreground hidden truncate text-xs md:block">
-            {puzzle.title && <span className="font-semibold">{puzzle.title} · </span>}
-            By {puzzle.constructors.join(" and ")} · Edited by {puzzle.editor}
-          </p>
+          </aside>
         </div>
-        <aside className="hidden min-h-0 md:flex md:w-72 md:flex-col lg:w-[34rem]">
-          <ClueLists
-            puzzle={puzzle}
-            entries={progress.entries}
-            active={clue?.id}
-            crossing={crossing?.id}
-            onClue={c => {
-              commitRebus()
-              update(s => ({
-                ...s,
-                direction: c.direction,
-                cursor: c.cells.find(cell => !s.entries[cell]) ?? c.cells[0],
-              }))
-            }}
-          />
-        </aside>
-      </div>
 
-      <OnScreenKeyboard rebus={rebus !== undefined} onKey={key => handleKey(key)} />
+        <OnScreenKeyboard rebus={rebus !== undefined} onKey={key => handleKey(key)} />
+      </div>
     </div>
   )
 }
@@ -181,7 +211,7 @@ export function Crossword(
 /** The current clue, with buttons to move between clues; tapping it switches direction. */
 function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
   return (
-    <div className="flex min-h-14 items-stretch bg-(--xw-word) md:rounded-lg">
+    <div className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:rounded-lg">
       <button
         type="button"
         tabIndex={-1}
@@ -207,29 +237,6 @@ function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
   )
 }
 
-/** A menu for Check, Reveal or Clear, offering how much to act on. */
-function ScopeMenu({ label, scopes, onPick }: ScopeMenuProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-        {label}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {scopes.map(scope => (
-          <DropdownMenuItem key={scope} onClick={() => onPick(scope)}>
-            {SCOPE_LABELS[scope]}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-// CONSTANTS
-
-/** Menu labels for each scope. */
-const SCOPE_LABELS: Record<Scope, string> = { square: "Square", word: "Word", puzzle: "Puzzle" }
-
 // TYPES
 
 /** Saved crossword progress. */
@@ -249,15 +256,6 @@ type ClueBarProps = {
   onNext: () => void
   /** Switch direction. */
   onToggle: () => void
-}
-
-type ScopeMenuProps = {
-  /** Menu name. */
-  label: string
-  /** Scopes to offer. */
-  scopes: Scope[]
-  /** Called with the chosen scope. */
-  onPick: (scope: Scope) => void
 }
 
 type Props = {
