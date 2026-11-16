@@ -44,7 +44,8 @@ test("region outlines keep a one-pixel gap around a domino, including its corner
     })
   }, cell.height)
   for (const region of gaps) {
-    expect(Math.min(...region)).toBeCloseTo(1, 2)
-    expect(Math.max(...region)).toBeCloseTo(1, 2)
+    // CSS layout rounds fractional tile positions; allow less than 0.05 CSS pixels of error.
+    expect(Math.min(...region)).toBeCloseTo(1, 1)
+    expect(Math.max(...region)).toBeCloseTo(1, 1)
   }
 })
