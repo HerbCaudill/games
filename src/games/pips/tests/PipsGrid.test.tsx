@@ -5,7 +5,7 @@ import { PipsGrid } from "../PipsGrid"
 
 afterEach(cleanup)
 
-it("identifies a broken constraint and clears the warning when its domino is removed", () => {
+it("identifies broken constraints beneath the dominoes and clears them when removed", () => {
   const board: PipsBoard = {
     id: 1,
     constructors: "Test",
@@ -31,12 +31,12 @@ it("identifies a broken constraint and clears the warning when its domino is rem
           [0, 1],
         ],
       ]}
-      layer="overlay"
+      layer="base"
       size={60}
       origin={[0, 0]}
     />,
   )
   expect(screen.getByRole("img", { name: "Broken constraint: 5" })).toBeVisible()
-  rerender(<PipsGrid board={board} placements={[null]} layer="overlay" size={60} origin={[0, 0]} />)
+  rerender(<PipsGrid board={board} placements={[null]} layer="base" size={60} origin={[0, 0]} />)
   expect(screen.queryByRole("img", { name: "Broken constraint: 5" })).not.toBeInTheDocument()
 })

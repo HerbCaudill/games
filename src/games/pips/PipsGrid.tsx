@@ -9,8 +9,8 @@ import "./pips.css"
 
 /**
  * One layer of the board, drawn to scale over the board's cells. The base layer has the shaded
- * cells, region fills and tucked-under rule badges; the overlay has outlines, broken-constraint
- * warnings and the keyboard cursor.
+ * cells, region fills and tucked-under rule badges, including broken-constraint warnings;
+ * the overlay has outlines and the keyboard cursor.
  */
 export function PipsGrid(
   /** The component props. */
@@ -34,7 +34,7 @@ export function PipsGrid(
         width: (cols * U + 2 * PAD) * scale,
         height: (rows * U + 2 * PAD) * scale,
       }}
-      {...(layer === "base" ? { "aria-hidden": true } : { role: "grid", "aria-label": "Board" })}
+      {...(layer === "overlay" ? { role: "grid", "aria-label": "Board" } : {})}
     >
       {layer === "base" ? (
         <>
@@ -52,7 +52,13 @@ export function PipsGrid(
             />
           ))}
           {regions.map(({ region, i }) => (
-            <RegionBadge key={i} region={region} color={regionStroke(i)} broken={false} />
+            <RegionBadge
+              key={i}
+              region={region}
+              color={regionStroke(i)}
+              shade={regionFill(i)}
+              broken={regionStatus(region, placements, board) === "broken"}
+            />
           ))}
         </>
       ) : (
@@ -69,11 +75,6 @@ export function PipsGrid(
               strokeLinecap="round"
             />
           ))}
-          {regions.map(({ region, i }) =>
-            regionStatus(region, placements, board) === "broken" ? (
-              <RegionBadge key={i} region={region} color={regionStroke(i)} broken />
-            ) : null,
-          )}
           {cursor && (
             <rect
               x={cursor[1] * U + 0.5}
@@ -161,7 +162,7 @@ function regionStroke(
 /** The rule label at a region's last cell. */
 function RegionBadge(
   /** The component props. */
-  { region, color, broken }: RegionBadgeProps,
+  { region, color, shade, broken }: RegionBadgeProps,
 ) {
   const [r, c] = region.cells.reduce((last, cell) =>
     cell[0] > last[0] || (cell[0] === last[0] && cell[1] > last[1]) ? cell : last,
@@ -180,15 +181,14 @@ function RegionBadge(
     <g
       role={broken ? "img" : undefined}
       aria-label={broken ? `Broken constraint: ${label}` : undefined}
+      aria-hidden={broken ? undefined : true}
       className={cn(broken && "pips-warning")}
     >
-      <rect
-        x={x - 2.1}
-        y={y - 2.1}
-        width="4.2"
-        height="4.2"
-        rx="0.55"
-        transform={`rotate(45 ${x} ${y})`}
+      {/* Extend the lighter region fill into its corner; both shapes stay below dominoes. */}
+      <rect x={x - 1.97} y={y - 1.97} width="1.17" height="1.17" style={{ fill: shade }} />
+      <path
+        d={BADGE_PATH}
+        transform={`translate(${x} ${y})`}
         style={{
           fill: broken ? "white" : color,
           stroke: broken ? "#c0392b" : undefined,
@@ -222,6 +222,13 @@ const REGION_INSET = 0.07
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
+/** The rounded 4.2-unit diamond, with its upper-left bite ending at the cell corner. */
+const BADGE_PATH =
+  "M-0.8,-1.97 L-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
+  "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +
+  "L0.389,2.581 A0.55,0.55 0 0 1 -0.389,2.581 " +
+  "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 L-1.97,-0.8 H-0.8 Z"
+
 /** Region hues, cycled by region. */
 const REGION_COLORS = [
   "#e8956b",
@@ -241,6 +248,8 @@ type RegionBadgeProps = {
   region: PipsRegion
   /** The region's outline color. */
   color: string
+  /** The lighter region shade visible through the bite. */
+  shade: string
   /** Whether to show the active warning. */
   broken: boolean
 }
