@@ -98,6 +98,34 @@ test("solves a Pips board by turning and dragging dominoes", async ({ page }) =>
   await expect(page.getByText(/Solved in/)).toBeVisible()
 })
 
+test("leaves a Pips domino where it is dropped, and snaps one dropped half on the board", async ({
+  page,
+}) => {
+  await page.goto("/pips")
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const topLeft = center(
+    (await page.getByRole("gridcell", { name: "Row 1, column 1" }).boundingBox())!,
+  )
+  const topRight = center(
+    (await page.getByRole("gridcell", { name: "Row 1, column 2" }).boundingBox())!,
+  )
+  const cellSize = topRight[0] - topLeft[0]
+
+  // Just below the board, clear of it, it stays put.
+  const aside: [number, number] = [topLeft[0] - 0.5 * cellSize, topLeft[1] + 2.2 * cellSize]
+  await dragTo(page, domino, aside)
+  await expect
+    .poll(async () => distance(center((await domino.boundingBox())!), aside))
+    .toBeLessThan(2)
+
+  // Hanging off the board's right edge, it settles on the top row.
+  await dragTo(page, domino, [topRight[0] + 0.6 * cellSize, topRight[1] + 0.2 * cellSize])
+  const topRow: [number, number] = [(topLeft[0] + topRight[0]) / 2, topLeft[1]]
+  await expect
+    .poll(async () => distance(center((await domino.boundingBox())!), topRow))
+    .toBeLessThan(2)
+})
+
 test("keeps progress after a reload", async ({ page }) => {
   await page.goto("/spelling-bee")
   for (const letter of "moat")
@@ -123,12 +151,33 @@ async function placeDomino(
 ) {
   const domino = page.getByRole("button", { name })
   await domino.click()
-  const from = center((await domino.boundingBox())!)
   const [a, b] = [center((await top.boundingBox())!), center((await bottom.boundingBox())!)]
-  await page.mouse.move(...from)
+  await dragTo(page, domino, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2])
+}
+
+/** Drag something by its center to a point. */
+async function dragTo(
+  /** The page. */
+  page: Page,
+  /** What to drag. */
+  target: Locator,
+  /** Where to drop its center. */
+  to: [number, number],
+) {
+  await page.mouse.move(...center((await target.boundingBox())!))
   await page.mouse.down()
-  await page.mouse.move((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, { steps: 8 })
+  await page.mouse.move(...to, { steps: 8 })
   await page.mouse.up()
+}
+
+/** The distance between two points. */
+function distance(
+  /** One point. */
+  a: [number, number],
+  /** The other. */
+  b: [number, number],
+) {
+  return Math.hypot(a[0] - b[0], a[1] - b[1])
 }
 
 /** The center of a box. */

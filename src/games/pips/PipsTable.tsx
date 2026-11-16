@@ -10,11 +10,11 @@ import { turnTo } from "./logic/turnTo"
 import type { Placements, Point } from "./logic/types"
 
 /**
- * The board and the tray of dominoes, at one scale. Drag a domino to move it; tap it to turn it.
+ * The board and the tray of dominoes, at one scale. Drag a domino anywhere to move it; tap it to turn it.
  */
 export function PipsTable(
   /** The component props. */
-  { board, placements, turns, solved, cursor, selected, onTap, onDrop }: Props,
+  { board, placements, turns, spots, solved, cursor, selected, onTap, onDrop }: Props,
 ) {
   const space = useRef<HTMLDivElement>(null)
   const [room, setRoom] = useState({ width: 0, height: 0 })
@@ -46,10 +46,20 @@ export function PipsTable(
   })
   const { size, board: origin, slots } = layout
 
+  /** A center point kept far enough inside the table for the whole domino to show. */
+  const inBounds = ([x, y]: Point, turn: number): Point => {
+    const [hx, hy] = upright(turn) ? [0.5, 1] : [1, 0.5]
+    const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
+    return [
+      clamp(x, hx - origin[0] / size, (room.width - origin[0]) / size - hx),
+      clamp(y, hy - origin[1] / size, (layout.height - origin[1]) / size - hy),
+    ]
+  }
+
   /** Where a domino's center is, in cell units from the board's corner. */
   const centerOf = (i: number): Point => {
     const pair = placements[i]
-    if (!pair) return slots[i]
+    if (!pair) return inBounds(spots[i] ?? slots[i], turns[i] ?? 0)
     const [a, b] = pair
     return [(a[1] + b[1]) / 2 + 0.5, (a[0] + b[0]) / 2 + 0.5]
   }
@@ -82,7 +92,8 @@ export function PipsTable(
     if (!p.moved) return onTap(p.index)
     const [x, y] = centerOf(p.index)
     const offset = [event.clientX - p.start[0], event.clientY - p.start[1]]
-    onDrop(p.index, [x + offset[0] / size, y + offset[1] / size])
+    const turn = placements[p.index] ? directionOf(placements[p.index]!) : (turns[p.index] ?? 0)
+    onDrop(p.index, inBounds([x + offset[0] / size, y + offset[1] / size], turn))
   }
 
   const cancel = () => {
@@ -169,6 +180,14 @@ export function PipsTable(
   )
 }
 
+/** Whether a turn count leaves a domino standing upright. */
+function upright(
+  /** Quarter turns. */
+  turn: number,
+) {
+  return Math.abs(turn) % 2 === 1
+}
+
 // CONSTANTS
 
 /** How far a pointer can move, in pixels, and still count as a tap. */
@@ -189,6 +208,8 @@ type Props = {
   placements: Placements
   /** Quarter turns clockwise for each domino. */
   turns: number[]
+  /** Where each loose domino lies, in cell units from the board's corner; empty when it is in its tray slot. */
+  spots: (Point | null | undefined)[]
   /** Whether the board is solved, which stops play. */
   solved: boolean
   /** The keyboard cursor, when the keyboard is in use. */

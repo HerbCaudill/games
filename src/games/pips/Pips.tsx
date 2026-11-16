@@ -31,7 +31,7 @@ export function Pips(
   const board = puzzle.boards[difficulty]
   const [progress, setProgress] = usePersistentState<PipsProgress>(
     progressKey(puzzle.date, difficulty),
-    () => ({ placements: board.dominoes.map(() => null), turns: [], elapsed: 0 }),
+    () => ({ placements: board.dominoes.map(() => null), turns: [], spots: [], elapsed: 0 }),
   )
   const { placements } = progress
   const turns = progress.turns ?? []
@@ -56,8 +56,8 @@ export function Pips(
     return pair ? directionOf(pair) : mod4(turns[i] ?? 0)
   }
 
-  /** Save new placements, turning each moved domino to match how it now lies. */
-  const update = (next: Placements) =>
+  /** Save new placements, turning each moved domino to match how it now lies. A domino on the board has no loose spot. */
+  const update = (next: Placements, loose?: { index: number; at: Point }) =>
     setProgress(p => ({
       ...p,
       placements: next,
@@ -65,6 +65,9 @@ export function Pips(
         const turn = p.turns?.[i] ?? 0
         return pair ? turnTo(turn, directionOf(pair)) : turn
       }),
+      spots: next.map((pair, i) =>
+        i === loose?.index ? loose.at : pair ? null : (p.spots?.[i] ?? null),
+      ),
     }))
 
   const turn = (i: number) =>
@@ -88,11 +91,11 @@ export function Pips(
     if (result) update(result.placements)
   }
 
-  /** Put a dragged domino down: on the board where it fits, otherwise back in the tray. */
+  /** Put a dragged domino down: on the board in the nearest spot that fits, or loose where it was dropped. */
   const drop = (i: number, center: Point) => {
     const result = dropDomino(placements, i, center, facing(i), board)
-    if (result) update(result)
-    else if (placements[i]) update(removeDomino(placements, i))
+    if (result.kind === "placed") update(result.placements)
+    else if (result.kind === "loose") update(removeDomino(placements, i), { index: i, at: center })
   }
 
   /** Put the selected domino down at a cell, or pick up the domino already there. */
@@ -189,6 +192,7 @@ export function Pips(
           board={board}
           placements={placements}
           turns={turns}
+          spots={progress.spots ?? []}
           solved={solved}
           cursor={usingKeyboard && !solved ? cursor : undefined}
           selected={usingKeyboard && !solved ? selected : undefined}
@@ -244,6 +248,8 @@ type PipsProgress = {
   placements: Placements
   /** Quarter turns clockwise for each domino; missing in progress saved before dominoes could turn. */
   turns?: number[]
+  /** Where each loose domino lies, in cell units from the board's corner; null when it is in its tray slot. */
+  spots?: (Point | null)[]
   /** Seconds spent. */
   elapsed: number
 }
