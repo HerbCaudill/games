@@ -207,7 +207,7 @@ const U = 10
 const GAP = 0.35
 
 /** Room around the board for badges that hang off its edge. */
-const PAD = 3
+const PAD = 4.5
 
 /** Region tints, cycled by region. */
 const REGION_COLORS = [
