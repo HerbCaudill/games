@@ -5,11 +5,12 @@ import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
 import { regionStatus } from "./logic/regionStatus"
 import { type Placements, type Point } from "./logic/types"
+import "./pips.css"
 
 /**
  * One layer of the board, drawn to scale over the board's cells. The base layer has the shaded
- * cells and region fills; the overlay, which sits above the dominoes, has the region outlines,
- * rule badges and keyboard cursor.
+ * cells, region fills and tucked-under rule badges; the overlay has outlines, broken-constraint
+ * warnings and the keyboard cursor.
  */
 export function PipsGrid(
   /** The component props. */
@@ -50,6 +51,9 @@ export function PipsGrid(
               style={{ fill: regionFill(i) }}
             />
           ))}
+          {regions.map(({ region, i }) => (
+            <RegionBadge key={i} region={region} color={regionStroke(i)} broken={false} />
+          ))}
         </>
       ) : (
         <>
@@ -65,14 +69,11 @@ export function PipsGrid(
               strokeLinecap="round"
             />
           ))}
-          {regions.map(({ region, i }) => (
-            <RegionBadge
-              key={i}
-              region={region}
-              color={regionStroke(i)}
-              broken={regionStatus(region, placements, board) === "broken"}
-            />
-          ))}
+          {regions.map(({ region, i }) =>
+            regionStatus(region, placements, board) === "broken" ? (
+              <RegionBadge key={i} region={region} color={regionStroke(i)} broken />
+            ) : null,
+          )}
           {cursor && (
             <rect
               x={cursor[1] * U + 0.5}
@@ -158,15 +159,10 @@ function regionStroke(
 }
 
 /** The rule label at a region's last cell. */
-function RegionBadge({
-  region,
-  color,
-  broken,
-}: {
-  region: PipsRegion
-  color: string
-  broken: boolean
-}) {
+function RegionBadge(
+  /** The component props. */
+  { region, color, broken }: RegionBadgeProps,
+) {
   const [r, c] = region.cells.reduce((last, cell) =>
     cell[0] > last[0] || (cell[0] === last[0] && cell[1] > last[1]) ? cell : last,
   )
@@ -178,26 +174,36 @@ function RegionBadge({
     unequal: "≠",
     empty: "",
   }[region.type]
-  const x = c * U + U - 1.2
-  const y = r * U + U - 1.2
+  const x = c * U + U + 0.8
+  const y = r * U + U + 0.8
   return (
-    <g>
+    <g
+      role={broken ? "img" : undefined}
+      aria-label={broken ? `Broken constraint: ${label}` : undefined}
+      className={cn(broken && "pips-warning")}
+    >
       <rect
-        x={x - 3.2}
-        y={y - 3.2}
-        width="6.4"
-        height="6.4"
-        rx="1"
+        x={x - 2.1}
+        y={y - 2.1}
+        width="4.2"
+        height="4.2"
+        rx="0.55"
         transform={`rotate(45 ${x} ${y})`}
-        style={{ fill: broken ? "var(--destructive)" : color }}
+        style={{
+          fill: broken ? "white" : color,
+          stroke: broken ? "#c0392b" : undefined,
+        }}
+        strokeWidth={broken ? 0.3 : undefined}
       />
       <text
         x={x}
         y={y}
-        dy="1.15"
+        dy="0.8"
         textAnchor="middle"
-        className="fill-white"
-        style={{ font: `700 ${label.length > 2 ? 2.6 : 3.3}px var(--font-sans)` }}
+        style={{
+          fill: broken ? "#c0392b" : "white",
+          font: `700 ${label.length > 2 ? 1.8 : 2.4}px var(--font-sans)`,
+        }}
       >
         {label}
       </text>
@@ -229,6 +235,15 @@ const REGION_COLORS = [
 ]
 
 // TYPES
+
+type RegionBadgeProps = {
+  /** The rule and its cells. */
+  region: PipsRegion
+  /** The region's outline color. */
+  color: string
+  /** Whether to show the active warning. */
+  broken: boolean
+}
 
 type Props = {
   /** The board. */

@@ -17,23 +17,33 @@ export function PipsTable(
   { board, placements, turns, spots, solved, cursor, selected, onTap, onDrop }: Props,
 ) {
   const space = useRef<HTMLDivElement>(null)
-  const [room, setRoom] = useState({ width: 0, height: 0 })
+  const [room, setRoom] = useState({ width: 0, height: 0, left: 0, top: 0, contentTop: 0 })
   const [drag, setDrag] = useState<{ index: number; offset: Point }>()
   const pointer = useRef<{ index: number; id: number; start: Point; moved: boolean }>(undefined)
 
   useLayoutEffect(() => {
     const el = space.current!
     const measure = () => {
-      const top = el.getBoundingClientRect().top + window.scrollY
-      setRoom({ width: el.clientWidth, height: window.innerHeight - top - BOTTOM_ROOM })
+      const { left, top } = el.getBoundingClientRect()
+      const content = el.closest("main")
+      setRoom({
+        width: el.clientWidth,
+        // Scrolling moves the table, but must not change its scale.
+        height: window.innerHeight - top - (content?.scrollTop ?? 0) - BOTTOM_ROOM,
+        left,
+        top,
+        contentTop: content?.getBoundingClientRect().top ?? 0,
+      })
     }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     window.addEventListener("resize", measure)
+    window.addEventListener("scroll", measure, true)
     return () => {
       observer.disconnect()
       window.removeEventListener("resize", measure)
+      window.removeEventListener("scroll", measure, true)
     }
   }, [])
 
@@ -46,13 +56,21 @@ export function PipsTable(
   })
   const { size, board: origin, slots } = layout
 
-  /** A center point kept far enough inside the table for the whole domino to show. */
+  /** Keep the whole domino inside the viewport, including after rotation or resize. */
   const inBounds = ([x, y]: Point, turn: number): Point => {
     const [hx, hy] = upright(turn) ? [0.5, 1] : [1, 0.5]
     const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
     return [
-      clamp(x, hx - origin[0] / size, (room.width - origin[0]) / size - hx),
-      clamp(y, hy - origin[1] / size, (layout.height - origin[1]) / size - hy),
+      clamp(
+        x,
+        hx - (room.left + origin[0]) / size,
+        (window.innerWidth - room.left - origin[0]) / size - hx,
+      ),
+      clamp(
+        y,
+        hy + (room.contentTop - room.top - origin[1]) / size,
+        (window.innerHeight - room.top - origin[1]) / size - hy,
+      ),
     ]
   }
 
@@ -140,7 +158,8 @@ export function PipsTable(
                 tabIndex={-1}
                 aria-label={`Domino ${domino.join("–")}`}
                 className={cn(
-                  "absolute touch-none rounded-[14%/28%] outline-none",
+                  // Fixed positioning lets loose dominoes escape the content scroller without enlarging it.
+                  "fixed touch-none rounded-[14%/28%] outline-none",
                   solved
                     ? "z-10"
                     : dragging
@@ -150,8 +169,8 @@ export function PipsTable(
                   i === selected && "ring-3 ring-(--game-pips)",
                 )}
                 style={{
-                  left: origin[0] + (x - 1) * size,
-                  top: origin[1] + (y - 0.5) * size,
+                  left: room.left + origin[0] + (x - 1) * size,
+                  top: room.top + origin[1] + (y - 0.5) * size,
                   width: 2 * size,
                   height: size,
                   transform: `translate(${dx}px, ${dy}px) rotate(${turn * 90}deg)`,
