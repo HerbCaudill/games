@@ -1,5 +1,8 @@
 /** The pips for one domino half, drawn in a square at (x, y). */
-export function PipDots({ value, x, y, size }: Props) {
+export function PipDots(
+  /** The component props. */
+  { value, x, y, size }: Props,
+) {
   return (
     <>
       {DOTS[value].map(([dx, dy], i) => (

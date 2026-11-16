@@ -11,7 +11,7 @@ The API needs `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). It is the
 ## Architecture
 
 - `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed.
-- `src/games/<game>/` holds each game. `*Rules.ts` has the pure game logic, tested in `tests/`. The `.tsx` files are the UI.
+- `src/games/<game>/` holds each game. `logic/` has the pure game rules, one function per file, tested in `logic/tests/`. The `.tsx` files are the UI.
 - `src/lib/` holds shared hooks: puzzle loading (`usePuzzle`, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
 - Progress lives in localStorage under `progress:<game>:<date>`, and menu status under `status:<game>:<date>`.
 
@@ -25,7 +25,7 @@ The API needs `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). It is the
 | Connections  | `svc/connections/v2/<date>.json`                     | Any                     |
 | Letter Boxed | `window.gameData` in the `puzzles/letter-boxed` page | Today only              |
 
-Dates follow New York time (`src/lib/nytToday.ts`). Keep real NYT puzzle content out of the repository: tests use the small synthetic puzzles in `e2e/fixtures.ts` and the test files.
+Dates follow New York time (`src/lib/nytToday.ts`). Keep real NYT puzzle content out of the repository: tests use the small synthetic puzzles in `e2e/mockApi.ts` and the test files.
 
 ## Commands
 

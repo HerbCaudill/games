@@ -7,15 +7,6 @@ export function useRoute() {
   return { path: url.pathname, params: url.searchParams }
 }
 
-/** Go to a path within the app. */
-export function navigate(
-  /** Path and optional query. */
-  to: string,
-) {
-  history.pushState(null, "", to)
-  window.dispatchEvent(new PopStateEvent("popstate"))
-}
-
 /** Listen for navigation. */
 function subscribe(
   /** Called when the location changes. */

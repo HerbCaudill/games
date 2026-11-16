@@ -12,7 +12,7 @@
     "test:pw:ui": "playwright test --ui",
     "test:pw:headed": "playwright test --headed",
     "test:pw:pwa": "playwright test --config playwright.pwa.config.ts",
-    "test:all": "pnpm typecheck && pnpm test run && pnpm test:pw --max-failures=1 && pnpm test:pw:pwa",
+    "test:all": "pnpm typecheck && pnpm lint && pnpm test run && pnpm test:pw --max-failures=1 && pnpm test:pw:pwa",
     "typecheck": "tsc -b --noEmit",
     "format": "oxfmt .",
     "icons:generate": "tsx scripts/generate-icons.ts",

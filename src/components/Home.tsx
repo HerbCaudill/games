@@ -1,14 +1,17 @@
 import { IconCheck } from "@tabler/icons-react"
 import { GAMES } from "@/constants"
 import { formatDate } from "@/lib/formatDate"
-import { readGameStatus } from "@/lib/useGameStatus"
+import { readGameStatus } from "@/lib/readGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
-import { navigate } from "@/lib/useRoute"
+import { navigate } from "@/lib/navigate"
 import { GameGlyph } from "./GameGlyph"
 import { ShortcutsButton } from "./ShortcutsButton"
 
 /** The menu of today's games. */
-export function Home({ date, isToday }: Props) {
+export function Home(
+  /** The component props. */
+  { date, isToday }: Props,
+) {
   const query = isToday ? "" : `?date=${date}`
   useKeydown(event => {
     const game = GAMES[Number(event.key) - 1]

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import type { GameId, PuzzleFor } from "@/types"
-import { readStored, writeStored } from "./storage"
+import { readStored } from "./readStored"
+import { writeStored } from "./writeStored"
 
 /** Load a game's puzzle for a date, from the local copy if there is one, otherwise from the API. */
 export function usePuzzle<G extends GameId>(

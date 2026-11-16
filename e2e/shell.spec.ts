@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { mockApi } from "./fixtures"
+import { mockApi } from "./mockApi"
 
 test.beforeEach(async ({ page }) => {
   await mockApi(page)

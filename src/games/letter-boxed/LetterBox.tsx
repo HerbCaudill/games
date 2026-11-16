@@ -1,8 +1,12 @@
 import type { LetterBoxedPuzzle } from "@/types"
-import { usedLetters, type LetterBoxedState } from "./letterBoxedRules"
+import { usedLetters } from "./logic/usedLetters"
+import { type LetterBoxedState } from "./logic/types"
 
 /** The square with three letters on each side and the paths drawn between them. */
-export function LetterBox({ puzzle, state, onLetter }: Props) {
+export function LetterBox(
+  /** The component props. */
+  { puzzle, state, onLetter }: Props,
+) {
   const spots = new Map(
     puzzle.sides.flatMap((side, s) => [...side].map((letter, i) => [letter, spot(s, i)] as const)),
   )

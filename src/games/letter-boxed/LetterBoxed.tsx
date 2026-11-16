@@ -7,17 +7,18 @@ import { usePersistentState } from "@/lib/usePersistentState"
 import { useToast } from "@/lib/useToast"
 import type { LetterBoxedPuzzle } from "@/types"
 import { LetterBox } from "./LetterBox"
-import {
-  addLetter,
-  initialState,
-  isSolved,
-  removeLetter,
-  submitWord,
-  type LetterBoxedState,
-} from "./letterBoxedRules"
+import { addLetter } from "./logic/addLetter"
+import { initialState } from "./logic/initialState"
+import { isSolved } from "./logic/isSolved"
+import { removeLetter } from "./logic/removeLetter"
+import { submitWord } from "./logic/submitWord"
+import { type LetterBoxedState } from "./logic/types"
 
 /** Letter Boxed: chain words that use every letter around the square. */
-export function LetterBoxed({ puzzle }: Props) {
+export function LetterBoxed(
+  /** The component props. */
+  { puzzle }: Props,
+) {
   const [state, setState] = usePersistentState<LetterBoxedState>(
     `progress:letter-boxed:${puzzle.date}`,
     initialState,

@@ -7,14 +7,17 @@ import { Pips } from "@/games/pips/Pips"
 import { SpellingBee } from "@/games/spelling-bee/SpellingBee"
 import { formatDate } from "@/lib/formatDate"
 import { usePuzzle } from "@/lib/usePuzzle"
-import { navigate } from "@/lib/useRoute"
+import { navigate } from "@/lib/navigate"
 import type { GameId, PuzzleFor } from "@/types"
 import { GameGlyph } from "./GameGlyph"
 import { ShortcutsButton } from "./ShortcutsButton"
 import { Button } from "./ui/button"
 
 /** A game with its header, loading and error states. */
-export function GameScreen({ game, date, isToday }: Props) {
+export function GameScreen(
+  /** The component props. */
+  { game, date, isToday }: Props,
+) {
   const load = usePuzzle(game.id, date)
   return (
     <div className="app-shell">

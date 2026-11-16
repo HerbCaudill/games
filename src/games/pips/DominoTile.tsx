@@ -1,9 +1,12 @@
 import type { Domino } from "@/types"
-import { DIRECTIONS } from "./pipsRules"
+import { DIRECTIONS } from "./logic/constants"
 import { PipDots } from "./PipDots"
 
 /** A domino for the tray, turned to face a direction. */
-export function DominoTile({ domino, direction }: Props) {
+export function DominoTile(
+  /** The component props. */
+  { domino, direction }: Props,
+) {
   const [dr, dc] = DIRECTIONS[direction]
   const vertical = dr !== 0
   // Place the first half so the second sits in the given direction from it.

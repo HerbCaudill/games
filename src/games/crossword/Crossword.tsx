@@ -16,26 +16,26 @@ import type { CrosswordPuzzle } from "@/types"
 import { ClueLists } from "./ClueLists"
 import { ClueText } from "./ClueText"
 import { CrosswordGrid } from "./CrosswordGrid"
-import {
-  arrow,
-  backspace,
-  check,
-  clear,
-  clueAt,
-  initialState,
-  isSolved,
-  nextClue,
-  reveal,
-  selectCell,
-  toggleDirection,
-  typeEntry,
-  type CrosswordState,
-  type Scope,
-} from "./crosswordRules"
+import { arrow } from "./logic/arrow"
+import { backspace } from "./logic/backspace"
+import { check } from "./logic/check"
+import { clear } from "./logic/clear"
+import { clueAt } from "./logic/clueAt"
+import { initialState } from "./logic/initialState"
+import { isSolved } from "./logic/isSolved"
+import { nextClue } from "./logic/nextClue"
+import { reveal } from "./logic/reveal"
+import { selectCell } from "./logic/selectCell"
+import { toggleDirection } from "./logic/toggleDirection"
+import { typeEntry } from "./logic/typeEntry"
+import { type CrosswordState, type Scope } from "./logic/types"
 import { OnScreenKeyboard } from "./OnScreenKeyboard"
 
 /** The daily crossword. */
-export function Crossword({ puzzle }: Props) {
+export function Crossword(
+  /** The component props. */
+  { puzzle }: Props,
+) {
   const [progress, setProgress] = usePersistentState<CrosswordProgress>(
     `progress:crossword:${puzzle.date}`,
     () => ({ ...initialState(puzzle), elapsed: 0 }),

@@ -1,8 +1,12 @@
 import type { CrosswordPuzzle } from "@/types"
-import { clueAt, type CrosswordState } from "./crosswordRules"
+import { clueAt } from "./logic/clueAt"
+import { type CrosswordState } from "./logic/types"
 
 /** The crossword grid, drawn to fill its container while keeping squares square. */
-export function CrosswordGrid({ puzzle, state, rebus, onCell }: Props) {
+export function CrosswordGrid(
+  /** The component props. */
+  { puzzle, state, rebus, onCell }: Props,
+) {
   const { width, height } = puzzle
   const word = new Set(clueAt(puzzle, state.cursor, state.direction)?.cells ?? [])
   return (

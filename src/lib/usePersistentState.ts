@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { readStored, writeStored } from "./storage"
+import { readStored } from "./readStored"
+import { writeStored } from "./writeStored"
 
 /** State that is saved to localStorage under a key and restored on the next visit. */
 export function usePersistentState<T>(

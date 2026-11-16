@@ -2,7 +2,10 @@ import { IconBackspace } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
 /** A letter keyboard for touch screens, so the system keyboard never covers the grid. */
-export function OnScreenKeyboard({ onKey, rebus }: Props) {
+export function OnScreenKeyboard(
+  /** The component props. */
+  { onKey, rebus }: Props,
+) {
   return (
     <div className="bg-muted grid gap-1.5 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pointer-fine:hidden">
       {ROWS.map((row, r) => (

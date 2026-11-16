@@ -2,7 +2,7 @@ import { IconCheck, IconRotateClockwise } from "@tabler/icons-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/lib/formatDuration"
-import { readStored } from "@/lib/storage"
+import { readStored } from "@/lib/readStored"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
@@ -11,18 +11,19 @@ import { cn } from "@/lib/utils"
 import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
 import { DominoTile } from "./DominoTile"
 import { PipsGrid } from "./PipsGrid"
-import {
-  boardCells,
-  cellKey,
-  DIRECTIONS,
-  isSolved,
-  placeAt,
-  removeDomino,
-  type Placements,
-} from "./pipsRules"
+import { boardCells } from "./logic/boardCells"
+import { cellKey } from "./logic/cellKey"
+import { DIRECTIONS } from "./logic/constants"
+import { isSolved } from "./logic/isSolved"
+import { placeAt } from "./logic/placeAt"
+import { removeDomino } from "./logic/removeDomino"
+import { type Placements } from "./logic/types"
 
 /** Pips: place every domino so each region's rule holds. */
-export function Pips({ puzzle }: Props) {
+export function Pips(
+  /** The component props. */
+  { puzzle }: Props,
+) {
   const [difficulty, setDifficulty] = usePersistentState<PipsDifficulty>(
     `progress:pips:${puzzle.date}:difficulty`,
     () => "easy",

@@ -1,8 +1,11 @@
 import { cn } from "@/lib/utils"
-import type { Rank } from "./spellingBeeRules"
+import type { Rank } from "./logic/types"
 
 /** The player's rank, score and progress toward the top rank. */
-export function RankMeter({ score, rank }: Props) {
+export function RankMeter(
+  /** The component props. */
+  { score, rank }: Props,
+) {
   // The last rank needs every word, so the track stops one rank short of it, like the original.
   const steps = rank.ranks.slice(0, -1)
   const reached = steps.filter(r => score >= r.score).length - 1

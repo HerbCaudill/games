@@ -1,5 +1,8 @@
 /** A short message floating over the top of a game. */
-export function Toast({ message }: Props) {
+export function Toast(
+  /** The component props. */
+  { message }: Props,
+) {
   if (!message) return null
   return (
     <div

@@ -8,17 +8,18 @@ import { usePersistentState } from "@/lib/usePersistentState"
 import { useToast } from "@/lib/useToast"
 import { cn } from "@/lib/utils"
 import type { ConnectionsGroup, ConnectionsPuzzle } from "@/types"
-import {
-  initialState,
-  isOver,
-  MAX_MISTAKES,
-  remainingWords,
-  submitGuess,
-  type ConnectionsState,
-} from "./connectionsRules"
+import { initialState } from "./logic/initialState"
+import { isOver } from "./logic/isOver"
+import { MAX_MISTAKES } from "./logic/constants"
+import { remainingWords } from "./logic/remainingWords"
+import { submitGuess } from "./logic/submitGuess"
+import { type ConnectionsState } from "./logic/types"
 
 /** Connections: sort sixteen words into four groups of four. */
-export function Connections({ puzzle }: Props) {
+export function Connections(
+  /** The component props. */
+  { puzzle }: Props,
+) {
   const [state, setState] = usePersistentState<ConnectionsState>(
     `progress:connections:${puzzle.date}`,
     () => initialState(puzzle),

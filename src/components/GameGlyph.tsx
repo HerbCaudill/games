@@ -1,7 +1,10 @@
 import type { GameId } from "@/types"
 
 /** A small drawing that stands for a game. */
-export function GameGlyph({ game, className }: Props) {
+export function GameGlyph(
+  /** The component props. */
+  { game, className }: Props,
+) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="currentColor">
       {GLYPHS[game]}

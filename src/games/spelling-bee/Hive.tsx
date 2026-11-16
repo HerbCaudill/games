@@ -1,5 +1,8 @@
 /** The seven letter cells, center letter in the middle. */
-export function Hive({ center, outer, onLetter }: Props) {
+export function Hive(
+  /** The component props. */
+  { center, outer, onLetter }: Props,
+) {
   const cells = [{ letter: center, x: 0, y: 0, isCenter: true }].concat(
     outer.map((letter, i) => {
       const angle = ((-90 + 60 * i) * Math.PI) / 180

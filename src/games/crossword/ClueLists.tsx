@@ -4,7 +4,10 @@ import type { CrosswordClue, CrosswordPuzzle, Direction } from "@/types"
 import { ClueText } from "./ClueText"
 
 /** The across and down clue lists, keeping the current clues in view. */
-export function ClueLists({ puzzle, entries, active, crossing, onClue }: Props) {
+export function ClueLists(
+  /** The component props. */
+  { puzzle, entries, active, crossing, onClue }: Props,
+) {
   return (
     <div className="grid min-h-0 gap-4 lg:grid-cols-2">
       {(["across", "down"] as Direction[]).map(direction => (

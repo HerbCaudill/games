@@ -1,9 +1,15 @@
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
 import { PipDots } from "./PipDots"
-import { boardCells, cellKey, regionStatus, type Placements } from "./pipsRules"
+import { boardCells } from "./logic/boardCells"
+import { cellKey } from "./logic/cellKey"
+import { regionStatus } from "./logic/regionStatus"
+import { type Placements } from "./logic/types"
 
 /** The board: colored regions with their rules, and the dominoes placed so far. */
-export function PipsGrid({ board, placements, cursor, onCell }: Props) {
+export function PipsGrid(
+  /** The component props. */
+  { board, placements, cursor, onCell }: Props,
+) {
   const cells = boardCells(board)
   const rows = Math.max(...cells.map(([r]) => r)) + 1
   const cols = Math.max(...cells.map(([, c]) => c)) + 1

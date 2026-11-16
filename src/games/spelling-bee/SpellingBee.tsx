@@ -10,10 +10,15 @@ import { useToast } from "@/lib/useToast"
 import type { SpellingBeePuzzle } from "@/types"
 import { Hive } from "./Hive"
 import { RankMeter } from "./RankMeter"
-import { checkGuess, rankFor, totalScore } from "./spellingBeeRules"
+import { checkGuess } from "./logic/checkGuess"
+import { rankFor } from "./logic/rankFor"
+import { totalScore } from "./logic/totalScore"
 
 /** Spelling Bee: make words from seven letters, always using the center one. */
-export function SpellingBee({ puzzle }: Props) {
+export function SpellingBee(
+  /** The component props. */
+  { puzzle }: Props,
+) {
   const [found, setFound] = usePersistentState<string[]>(
     `progress:spelling-bee:${puzzle.date}`,
     () => [],

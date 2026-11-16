@@ -5,7 +5,10 @@ import { useKeydown } from "@/lib/useKeydown"
 import { Button } from "./ui/button"
 
 /** A desktop-only button, also opened with `?`, that lists the keyboard shortcuts for the current screen. */
-export function ShortcutsButton({ context }: Props) {
+export function ShortcutsButton(
+  /** The component props. */
+  { context }: Props,
+) {
   const dialog = useRef<HTMLDialogElement>(null)
   const open = () => dialog.current?.showModal()
   useKeydown(event => {
