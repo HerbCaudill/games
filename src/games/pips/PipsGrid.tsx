@@ -69,7 +69,7 @@ export function PipsGrid(
             <RegionBadge
               key={i}
               region={region}
-              color={regionFill(i)}
+              color={regionStroke(i)}
               broken={regionStatus(region, placements, board) === "broken"}
             />
           ))}
@@ -190,15 +190,13 @@ function RegionBadge({
         rx="1"
         transform={`rotate(45 ${x} ${y})`}
         style={{ fill: broken ? "var(--destructive)" : color }}
-        className="stroke-foreground"
-        strokeWidth="0.45"
       />
       <text
         x={x}
         y={y}
         dy="1.15"
         textAnchor="middle"
-        className={broken ? "fill-white" : "fill-foreground"}
+        className="fill-white"
         style={{ font: `700 ${label.length > 2 ? 2.6 : 3.3}px var(--font-sans)` }}
       >
         {label}
