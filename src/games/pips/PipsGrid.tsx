@@ -2,8 +2,9 @@ import type { Cell, PipsBoard, PipsRegion } from "@/types"
 import { PipDots } from "./PipDots"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
+import { outline } from "./logic/outline"
 import { regionStatus } from "./logic/regionStatus"
-import { type Placements } from "./logic/types"
+import { type Placements, type Point } from "./logic/types"
 
 /** The board: colored regions with their rules, and the dominoes placed so far. */
 export function PipsGrid(
@@ -13,10 +14,6 @@ export function PipsGrid(
   const cells = boardCells(board)
   const rows = Math.max(...cells.map(([r]) => r)) + 1
   const cols = Math.max(...cells.map(([, c]) => c)) + 1
-  const regionOf = new Map<string, number>()
-  board.regions.forEach((region, i) => region.cells.forEach(cell => regionOf.set(cellKey(cell), i)))
-  const fill = (i: number) =>
-    board.regions[i].type === "empty" ? "var(--muted)" : REGION_COLORS[i % REGION_COLORS.length]
 
   return (
     <svg
@@ -26,43 +23,41 @@ export function PipsGrid(
       role="grid"
       aria-label="Board"
     >
-      {/* Region tiles, with bridges between neighbors so each region reads as one shape. */}
-      {cells.map(cell => {
-        const [r, c] = cell
-        const region = regionOf.get(cellKey(cell))!
-        const right = regionOf.get(cellKey([r, c + 1])) === region
-        const below = regionOf.get(cellKey([r + 1, c])) === region
-        return (
-          <g key={cellKey(cell)} style={{ fill: fill(region) }}>
-            <rect
-              x={c * U + GAP}
-              y={r * U + GAP}
-              width={U - 2 * GAP}
-              height={U - 2 * GAP}
-              rx="1.4"
-            />
-            {right && (
-              <rect
-                x={c * U + U - GAP - 1}
-                y={r * U + GAP}
-                width={2 * GAP + 2}
-                height={U - 2 * GAP}
-              />
-            )}
-            {below && (
-              <rect
-                x={c * U + GAP}
-                y={r * U + U - GAP - 1}
-                width={U - 2 * GAP}
-                height={2 * GAP + 2}
-              />
-            )}
-          </g>
-        )
-      })}
+      {/* Every board cell shares one shade, so the open spots read as one shape. */}
+      <path
+        d={roundedPath(outline(cells, 0), 1.6)}
+        className="fill-muted stroke-muted"
+        strokeWidth="0.8"
+      />
 
+      {board.regions.map(
+        (region, i) =>
+          region.type !== "empty" && (
+            <path
+              key={i}
+              d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
+              style={{ fill: regionFill(i) }}
+            />
+          ),
+      )}
       {placements.map(
         (pair, i) => pair && <PlacedDomino key={i} pair={pair} values={board.dominoes[i]} />,
+      )}
+
+      {/* Outlines sit above the dominoes so a covered region keeps its shape. */}
+      {board.regions.map(
+        (region, i) =>
+          region.type !== "empty" && (
+            <path
+              key={i}
+              d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
+              className="fill-none"
+              style={{ stroke: regionStroke(i) }}
+              strokeWidth="0.45"
+              strokeDasharray="1.4 1"
+              strokeLinecap="round"
+            />
+          ),
       )}
 
       {board.regions.map(
@@ -71,7 +66,7 @@ export function PipsGrid(
             <RegionBadge
               key={i}
               region={region}
-              color={fill(i)}
+              color={regionFill(i)}
               broken={regionStatus(region, placements, board) === "broken"}
             />
           ),
@@ -84,8 +79,7 @@ export function PipsGrid(
         height={U - 1}
         rx="1.6"
         className="fill-none stroke-(--game-pips) pointer-coarse:hidden"
-        strokeWidth="0.7"
-        strokeDasharray="2 1.2"
+        strokeWidth="0.8"
       />
 
       {/* Hit areas on top, so taps land on the cell whether or not a domino covers it. */}
@@ -105,6 +99,61 @@ export function PipsGrid(
       ))}
     </svg>
   )
+}
+
+/** An SVG path through outline loops given in cell units, with rounded corners. */
+function roundedPath(
+  /** The loops. */
+  loops: Point[][],
+  /** Corner radius. */
+  radius: number,
+) {
+  return loops
+    .map(
+      loop =>
+        loop
+          .map((p, i) => {
+            const prev = loop[(i + loop.length - 1) % loop.length]
+            const next = loop[(i + 1) % loop.length]
+            const [x, y] = [p[0] * U, p[1] * U]
+            const into = toward(p, prev, radius)
+            const out = toward(p, next, radius)
+            return `${i ? "L" : "M"}${x + into[0]},${y + into[1]}Q${x},${y} ${x + out[0]},${y + out[1]}`
+          })
+          .join("") + "Z",
+    )
+    .join("")
+}
+
+/** A step from one corner toward another, no longer than `radius` or half the way there. */
+function toward(
+  /** Start corner, in cell units. */
+  from: Point,
+  /** End corner, in cell units. */
+  to: Point,
+  /** Longest step. */
+  radius: number,
+): Point {
+  const [dx, dy] = [(to[0] - from[0]) * U, (to[1] - from[1]) * U]
+  const length = Math.hypot(dx, dy)
+  const step = Math.min(radius, length / 2) / length
+  return [dx * step, dy * step]
+}
+
+/** A region's fill. */
+function regionFill(
+  /** Region index. */
+  i: number,
+) {
+  return `color-mix(in oklch, ${REGION_COLORS[i % REGION_COLORS.length]} 45%, var(--card))`
+}
+
+/** A region's outline color. */
+function regionStroke(
+  /** Region index. */
+  i: number,
+) {
+  return `oklch(from ${REGION_COLORS[i % REGION_COLORS.length]} calc(l - 0.16) calc(c + 0.04) h)`
 }
 
 /** A domino lying on two cells. */
@@ -203,22 +252,22 @@ function RegionBadge({
 /** Cell size. */
 const U = 10
 
-/** Gap between region tiles. */
-const GAP = 0.35
+/** How far region shapes sit inside their cells' edges, in cells. */
+const REGION_INSET = 0.07
 
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
-/** Region tints, cycled by region. */
+/** Region hues, cycled by region. */
 const REGION_COLORS = [
-  "color-mix(in oklch, #e8956b 55%, var(--card))",
-  "color-mix(in oklch, #6fb59a 55%, var(--card))",
-  "color-mix(in oklch, #8ea5dc 55%, var(--card))",
-  "color-mix(in oklch, #d58fc0 55%, var(--card))",
-  "color-mix(in oklch, #e2c25c 55%, var(--card))",
-  "color-mix(in oklch, #7fc3d6 55%, var(--card))",
-  "color-mix(in oklch, #b39ae0 55%, var(--card))",
-  "color-mix(in oklch, #a9c46a 55%, var(--card))",
+  "#e8956b",
+  "#6fb59a",
+  "#8ea5dc",
+  "#d58fc0",
+  "#e2c25c",
+  "#7fc3d6",
+  "#b39ae0",
+  "#a9c46a",
 ]
 
 // TYPES
