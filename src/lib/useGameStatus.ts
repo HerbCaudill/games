@@ -1,9 +1,9 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import type { GameId } from "@/types"
 import { statusKey } from "./statusKey"
 import { writeStored } from "./writeStored"
 
-/** Record whether a puzzle is started or finished, for the menu to show. */
+/** Save menu progress and announce completions reached during this visit. */
 export function useGameStatus(
   /** The game. */
   game: GameId,
@@ -12,8 +12,18 @@ export function useGameStatus(
   /** The puzzle's current status. */
   status: GameStatus,
 ) {
+  const previous = useRef({ game, date, status })
   useEffect(() => {
-    if (status !== "new") writeStored(statusKey(game, date), status)
+    const before = previous.current
+    previous.current = { game, date, status }
+    writeStored(statusKey(game, date), status)
+    if (
+      before.game === game &&
+      before.date === date &&
+      before.status !== "solved" &&
+      status === "solved"
+    )
+      window.dispatchEvent(new Event("game-completed"))
   }, [game, date, status])
 }
 

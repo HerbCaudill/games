@@ -58,10 +58,10 @@ export function Home(
                     </span>
                   </span>
                   {status === "solved" && (
-                    <IconCheck
-                      className="text-muted-foreground size-5 shrink-0"
-                      aria-label="Solved"
-                    />
+                    <span className="flex shrink-0 items-center gap-1 text-xs">
+                      <IconCheck className="size-4" aria-hidden="true" />
+                      Complete
+                    </span>
                   )}
                   {status === "started" && (
                     <span className="text-muted-foreground shrink-0 text-xs">In progress</span>
