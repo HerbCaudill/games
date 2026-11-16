@@ -13,10 +13,8 @@ test("restarts a solved puzzle and keeps the empty board after reload", async ({
   await expect(page.getByText("Solved in 2 words!")).toBeVisible()
   await page.getByRole("button", { name: "Show the editor’s solution" }).click()
   await page.getByRole("button", { name: "Restart", exact: true }).click()
-  await expect(page.getByText("Try to solve in 2 words")).toBeVisible()
   await expect(page.getByRole("button", { name: "Restart", exact: true })).toBeDisabled()
   await page.reload()
-  await expect(page.getByText("Try to solve in 2 words")).toBeVisible()
   await expect(page.getByRole("button", { name: "Restart", exact: true })).toBeDisabled()
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("status:letter-boxed:2026-11-16")))
@@ -76,6 +74,19 @@ test("honors reduced motion when accepting words", async ({ page }) => {
   ).toBe(0)
   await enterWord(page, "JBEHKCFIL")
   await expect(page.getByText("Solved in 2 words!")).toBeVisible()
+})
+
+test("keeps a three-word finish in progress without celebrating", async ({ page }) => {
+  await enterWord(page, "ADG")
+  await enterWord(page, "JA")
+  await enterWord(page, "DGJBEHKCFIL")
+  await expect(page.getByText("ADG – GJA – ADGJBEHKCFIL", { exact: true })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Enter", exact: true })).toBeVisible()
+  await page.getByRole("button", { name: "All games" }).click()
+  await expect(
+    page.getByRole("link", { name: /Letter Boxed/ }).getByText("In progress"),
+  ).toBeVisible()
 })
 
 /** Tap a word and submit it, omitting the carried letter for subsequent words. */

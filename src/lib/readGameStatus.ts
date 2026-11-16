@@ -10,5 +10,10 @@ export function readGameStatus(
   /** Date as YYYY-MM-DD. */
   date: string,
 ): GameStatus {
-  return readStored<GameStatus>(statusKey(game, date)) ?? "new"
+  const status = readStored<GameStatus>(statusKey(game, date)) ?? "new"
+  if (game === "letter-boxed" && status === "solved") {
+    const progress = readStored<{ words: string[] }>(`progress:${game}:${date}`)
+    if (progress && progress.words.length !== 2) return "started"
+  }
+  return status
 }

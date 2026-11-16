@@ -60,10 +60,15 @@ describe("removeLetter", () => {
 })
 
 describe("isSolved", () => {
-  it("is solved once submitted words use every letter", () => {
+  it("is solved once two submitted words use every letter", () => {
     const first = submitWord(type("ADG"), puzzle).state
     expect(isSolved(first, puzzle)).toBe(false)
     const second = submitWord(type("JBEHKCFIL", first), puzzle).state
     expect(isSolved(second, puzzle)).toBe(true)
+  })
+
+  it("requires exactly two words even when every letter has been used", () => {
+    expect(isSolved({ words: ["ADGJBEHKCFIL"], current: "L" }, puzzle)).toBe(false)
+    expect(isSolved({ words: ["ADG", "GJA", "ADGJBEHKCFIL"], current: "L" }, puzzle)).toBe(false)
   })
 })

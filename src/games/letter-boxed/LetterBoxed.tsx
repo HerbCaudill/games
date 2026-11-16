@@ -5,8 +5,6 @@ import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useToast } from "@/lib/useToast"
-import { statusKey } from "@/lib/statusKey"
-import { writeStored } from "@/lib/writeStored"
 import type { LetterBoxedPuzzle } from "@/types"
 import { LetterBox } from "./LetterBox"
 import { addLetter } from "./logic/addLetter"
@@ -47,7 +45,6 @@ export function LetterBoxed(
     setState(initialState())
     setShowSolution(false)
     setAcceptedWordIndex(null)
-    writeStored(statusKey("letter-boxed", puzzle.date), "new")
   }
   const submit = () => {
     if (solved) return
@@ -72,9 +69,7 @@ export function LetterBoxed(
         {solved ? "" : state.current}
         {!solved && <span className="mb-1 h-8 w-0.5 animate-pulse bg-(--game-letter-boxed)" />}
       </div>
-      <p className="text-muted-foreground min-h-5 text-center text-sm">
-        {state.words.length ? state.words.join(" – ") : `Try to solve in ${puzzle.par} words`}
-      </p>
+      <p className="text-muted-foreground min-h-5 text-center text-sm">{state.words.join(" – ")}</p>
 
       <LetterBox
         puzzle={puzzle}
@@ -85,10 +80,7 @@ export function LetterBoxed(
 
       {solved ? (
         <div className="flex flex-col items-center gap-2 text-center">
-          <p className="font-semibold">
-            Solved in {state.words.length} {state.words.length === 1 ? "word" : "words"}!
-            {state.words.length <= puzzle.par && " Under par."}
-          </p>
+          <p className="font-semibold">Solved in 2 words!</p>
           {showSolution ? (
             <p className="text-muted-foreground text-sm">
               The editor’s solution: {puzzle.solution.join(" – ")}

@@ -109,6 +109,6 @@ const PUZZLES: { [G in GameId]: Omit<PuzzleFor[G], "date"> } = {
     sides: ["ABC", "DEF", "GHI", "JKL"],
     par: 2,
     solution: ["ADG", "GJBEHKCFIL"],
-    dictionary: ["ADG", "GJBEHKCFIL"],
+    dictionary: ["ADG", "GJBEHKCFIL", "GJA", "ADGJBEHKCFIL"],
   },
 }
