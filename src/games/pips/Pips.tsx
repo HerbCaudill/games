@@ -1,6 +1,5 @@
-import { IconCheck, IconRotateClockwise } from "@tabler/icons-react"
+import { IconCheck } from "@tabler/icons-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/lib/formatDuration"
 import { readStored } from "@/lib/readStored"
 import { useGameStatus } from "@/lib/useGameStatus"
@@ -9,15 +8,16 @@ import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
 import { cn } from "@/lib/utils"
 import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
-import { DominoTile } from "./DominoTile"
-import { PipsGrid } from "./PipsGrid"
+import { PipsTable } from "./PipsTable"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
-import { DIRECTIONS } from "./logic/constants"
+import { directionOf } from "./logic/directionOf"
+import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
 import { placeAt } from "./logic/placeAt"
 import { removeDomino } from "./logic/removeDomino"
-import { type Placements } from "./logic/types"
+import { turnTo } from "./logic/turnTo"
+import { type Placements, type Point } from "./logic/types"
 
 /** Pips: place every domino so each region's rule holds. */
 export function Pips(
@@ -31,12 +31,14 @@ export function Pips(
   const board = puzzle.boards[difficulty]
   const [progress, setProgress] = usePersistentState<PipsProgress>(
     progressKey(puzzle.date, difficulty),
-    () => ({ placements: board.dominoes.map(() => null), elapsed: 0 }),
+    () => ({ placements: board.dominoes.map(() => null), turns: [], elapsed: 0 }),
   )
   const { placements } = progress
+  const turns = progress.turns ?? []
   const [chosen, setSelected] = useState<number>()
-  const [direction, setDirection] = useState(0)
   const [cursor, setCursor] = useState<Cell>(() => boardCells(board)[0])
+  // The cursor and the picked domino only matter, and only show, while playing by keyboard.
+  const [usingKeyboard, setUsingKeyboard] = useState(false)
   const solved = isSolved(placements, board)
   const allSolved = DIFFICULTIES.every(d => (d === difficulty ? solved : isStoredSolved(puzzle, d)))
   const anyStarted =
@@ -44,18 +46,53 @@ export function Pips(
   useGameStatus("pips", puzzle.date, allSolved ? "solved" : anyStarted ? "started" : "new")
   useTimer(!solved, () => setProgress(p => ({ ...p, elapsed: p.elapsed + 1 })))
 
-  const setPlacements = (next: Placements) => setProgress(p => ({ ...p, placements: next }))
   const unplaced = board.dominoes.map((_, i) => i).filter(i => !placements[i])
   // Fall back to the first domino in the tray when nothing in it is chosen.
   const selected = chosen !== undefined && !placements[chosen] ? chosen : unplaced[0]
   const dominoAt = (cell: Cell) =>
     placements.findIndex(cells => cells?.some(c => cellKey(c) === cellKey(cell)))
+  const facing = (i: number) => {
+    const pair = placements[i]
+    return pair ? directionOf(pair) : mod4(turns[i] ?? 0)
+  }
+
+  /** Save new placements, turning each moved domino to match how it now lies. */
+  const update = (next: Placements) =>
+    setProgress(p => ({
+      ...p,
+      placements: next,
+      turns: next.map((pair, i) => {
+        const turn = p.turns?.[i] ?? 0
+        return pair ? turnTo(turn, directionOf(pair)) : turn
+      }),
+    }))
+
+  const turn = (i: number) =>
+    setProgress(p => ({
+      ...p,
+      turns: board.dominoes.map((_, j) => (p.turns?.[j] ?? 0) + (i === j ? 1 : 0)),
+    }))
 
   const switchDifficulty = (d: PipsDifficulty) => {
     setDifficulty(d)
     setSelected(undefined)
-    setDirection(0)
     setCursor(boardCells(puzzle.boards[d])[0])
+  }
+
+  /** Turn a domino a quarter clockwise; on the board, it pivots on its first half to the next spot that fits. */
+  const rotate = (i: number) => {
+    if (solved) return
+    const pair = placements[i]
+    if (!pair) return turn(i)
+    const result = placeAt(placements, i, pair[0], (directionOf(pair) + 1) % 4, board)
+    if (result) update(result.placements)
+  }
+
+  /** Put a dragged domino down: on the board where it fits, otherwise back in the tray. */
+  const drop = (i: number, center: Point) => {
+    const result = dropDomino(placements, i, center, facing(i), board)
+    if (result) update(result)
+    else if (placements[i]) update(removeDomino(placements, i))
   }
 
   /** Put the selected domino down at a cell, or pick up the domino already there. */
@@ -64,19 +101,14 @@ export function Pips(
     setCursor(cell)
     const here = dominoAt(cell)
     if (here >= 0) {
-      setPlacements(removeDomino(placements, here))
+      update(removeDomino(placements, here))
       setSelected(here)
-      // Keep the domino's orientation relative to the half that was tapped.
-      const [a, b] = placements[here]!
-      const offset: Cell = [b[0] - a[0], b[1] - a[1]]
-      setDirection(DIRECTIONS.findIndex(([r, c]) => r === offset[0] && c === offset[1]))
       return
     }
     if (selected === undefined) return
-    const result = placeAt(placements, selected, cell, direction, board)
+    const result = placeAt(placements, selected, cell, facing(selected), board)
     if (!result) return
-    setPlacements(result.placements)
-    setDirection(result.direction)
+    update(result.placements)
     const rest = unplaced.filter(i => i !== selected)
     setSelected(rest.find(i => i > selected) ?? rest[0])
   }
@@ -110,16 +142,18 @@ export function Pips(
     else if (key === "Backspace") {
       const here = dominoAt(cursor)
       if (here < 0 || solved) return
-      setPlacements(removeDomino(placements, here))
+      update(removeDomino(placements, here))
       setSelected(here)
     } else if (key === "[") cycle(-1)
     else if (key === "]") cycle(1)
-    else if (key.toLowerCase() === "r") setDirection(d => (d + 1) % 4)
-    else if (key.toLowerCase() === "e") switchDifficulty("easy")
+    else if (key.toLowerCase() === "r") {
+      if (selected !== undefined && !solved) turn(selected)
+    } else if (key.toLowerCase() === "e") switchDifficulty("easy")
     else if (key.toLowerCase() === "m") switchDifficulty("medium")
     else if (key.toLowerCase() === "h") switchDifficulty("hard")
     else return
     event.preventDefault()
+    setUsingKeyboard(true)
   })
 
   return (
@@ -150,48 +184,20 @@ export function Pips(
         </span>
       </div>
 
-      <PipsGrid
-        board={board}
-        placements={placements}
-        cursor={cursor}
-        selected={selected}
-        direction={direction}
-        onCell={activate}
-      />
+      <div className="w-full" onPointerDown={() => setUsingKeyboard(false)}>
+        <PipsTable
+          board={board}
+          placements={placements}
+          turns={turns}
+          solved={solved}
+          cursor={usingKeyboard && !solved ? cursor : undefined}
+          selected={usingKeyboard && !solved ? selected : undefined}
+          onTap={rotate}
+          onDrop={drop}
+        />
+      </div>
 
-      {solved ? (
-        <p className="font-semibold">Solved in {formatDuration(progress.elapsed)}!</p>
-      ) : (
-        <div className="flex w-full flex-col items-center gap-3">
-          <div className="flex flex-wrap justify-center gap-2" role="listbox" aria-label="Dominoes">
-            {unplaced.map(i => (
-              <button
-                key={i}
-                type="button"
-                role="option"
-                aria-selected={i === selected}
-                aria-label={`Domino ${board.dominoes[i].join("–")}`}
-                onClick={() => (i === selected ? setDirection(d => (d + 1) % 4) : setSelected(i))}
-                className={cn(
-                  "rounded-lg p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  i === selected && "bg-(--game-pips)/20 ring-2 ring-(--game-pips)",
-                )}
-              >
-                <DominoTile domino={board.dominoes[i]} direction={i === selected ? direction : 0} />
-              </button>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => setDirection(d => (d + 1) % 4)}
-            disabled={selected === undefined}
-            title="Rotate (R)"
-          >
-            <IconRotateClockwise /> Rotate
-          </Button>
-        </div>
-      )}
+      {solved && <p className="font-semibold">Solved in {formatDuration(progress.elapsed)}!</p>}
     </div>
   )
 }
@@ -217,6 +223,14 @@ function isStoredSolved(
   return Boolean(saved && isSolved(saved.placements, puzzle.boards[difficulty]))
 }
 
+/** A turn count as a direction, 0 to 3. */
+function mod4(
+  /** Quarter turns. */
+  n: number,
+) {
+  return ((n % 4) + 4) % 4
+}
+
 // CONSTANTS
 
 /** Difficulty levels in display order. */
@@ -228,6 +242,8 @@ const DIFFICULTIES: PipsDifficulty[] = ["easy", "medium", "hard"]
 type PipsProgress = {
   /** Where each domino sits. */
   placements: Placements
+  /** Quarter turns clockwise for each domino; missing in progress saved before dominoes could turn. */
+  turns?: number[]
   /** Seconds spent. */
   elapsed: number
 }

@@ -1,53 +1,60 @@
+import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
-import { PipDots } from "./PipDots"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
 import { regionStatus } from "./logic/regionStatus"
 import { type Placements, type Point } from "./logic/types"
 
-/** The board: colored regions with their rules, and the dominoes placed so far. */
+/**
+ * One layer of the board, drawn to scale over the board's cells. The base layer has the shaded
+ * cells and region fills; the overlay, which sits above the dominoes, has the region outlines,
+ * rule badges and keyboard cursor.
+ */
 export function PipsGrid(
   /** The component props. */
-  { board, placements, cursor, onCell }: Props,
+  { board, placements, layer, size, origin, cursor }: Props,
 ) {
   const cells = boardCells(board)
   const rows = Math.max(...cells.map(([r]) => r)) + 1
   const cols = Math.max(...cells.map(([, c]) => c)) + 1
+  const scale = size / U
+  const regions = board.regions.flatMap((region, i) =>
+    region.type === "empty" ? [] : [{ region, i }],
+  )
 
   return (
     <svg
       viewBox={`${-PAD} ${-PAD} ${cols * U + 2 * PAD} ${rows * U + 2 * PAD}`}
-      className="w-full select-none"
-      style={{ maxWidth: `${cols * 5.5}rem`, maxHeight: "58vh" }}
-      role="grid"
-      aria-label="Board"
+      className={cn("pointer-events-none absolute select-none", layer === "overlay" && "z-20")}
+      style={{
+        left: origin[0] - PAD * scale,
+        top: origin[1] - PAD * scale,
+        width: (cols * U + 2 * PAD) * scale,
+        height: (rows * U + 2 * PAD) * scale,
+      }}
+      {...(layer === "base" ? { "aria-hidden": true } : { role: "grid", "aria-label": "Board" })}
     >
-      {/* Every board cell shares one shade, so the open spots read as one shape. */}
-      <path
-        d={roundedPath(outline(cells, 0), 1.6)}
-        className="fill-muted stroke-muted"
-        strokeWidth="0.8"
-      />
-
-      {board.regions.map(
-        (region, i) =>
-          region.type !== "empty" && (
+      {layer === "base" ? (
+        <>
+          {/* Every board cell shares one shade, so the open spots read as one shape. */}
+          <path
+            d={roundedPath(outline(cells, 0), 1.6)}
+            className="fill-muted stroke-muted"
+            strokeWidth="0.8"
+          />
+          {regions.map(({ region, i }) => (
             <path
               key={i}
               d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
               style={{ fill: regionFill(i) }}
             />
-          ),
-      )}
-      {placements.map(
-        (pair, i) => pair && <PlacedDomino key={i} pair={pair} values={board.dominoes[i]} />,
-      )}
-
-      {/* Outlines sit above the dominoes so a covered region keeps its shape. */}
-      {board.regions.map(
-        (region, i) =>
-          region.type !== "empty" && (
+          ))}
+        </>
+      ) : (
+        <>
+          {/* Outlines sit above the dominoes so a covered region keeps its shape. */}
+          {regions.map(({ region, i }) => (
             <path
               key={i}
               d={roundedPath(outline(region.cells, REGION_INSET), 1.4)}
@@ -57,46 +64,40 @@ export function PipsGrid(
               strokeDasharray="1.4 1"
               strokeLinecap="round"
             />
-          ),
-      )}
-
-      {board.regions.map(
-        (region, i) =>
-          region.type !== "empty" && (
+          ))}
+          {regions.map(({ region, i }) => (
             <RegionBadge
               key={i}
               region={region}
               color={regionFill(i)}
               broken={regionStatus(region, placements, board) === "broken"}
             />
-          ),
+          ))}
+          {cursor && (
+            <rect
+              x={cursor[1] * U + 0.5}
+              y={cursor[0] * U + 0.5}
+              width={U - 1}
+              height={U - 1}
+              rx="1.6"
+              className="fill-none stroke-(--game-pips)"
+              strokeWidth="0.8"
+            />
+          )}
+          {cells.map(cell => (
+            <rect
+              key={cellKey(cell)}
+              x={cell[1] * U}
+              y={cell[0] * U}
+              width={U}
+              height={U}
+              fill="none"
+              role="gridcell"
+              aria-label={`Row ${cell[0] + 1}, column ${cell[1] + 1}`}
+            />
+          ))}
+        </>
       )}
-
-      <rect
-        x={cursor[1] * U + 0.5}
-        y={cursor[0] * U + 0.5}
-        width={U - 1}
-        height={U - 1}
-        rx="1.6"
-        className="fill-none stroke-(--game-pips) pointer-coarse:hidden"
-        strokeWidth="0.8"
-      />
-
-      {/* Hit areas on top, so taps land on the cell whether or not a domino covers it. */}
-      {cells.map(cell => (
-        <rect
-          key={cellKey(cell)}
-          x={cell[1] * U}
-          y={cell[0] * U}
-          width={U}
-          height={U}
-          fill="transparent"
-          className="cursor-pointer"
-          role="gridcell"
-          aria-label={`Row ${cell[0] + 1}, column ${cell[1] + 1}`}
-          onClick={() => onCell(cell)}
-        />
-      ))}
     </svg>
   )
 }
@@ -156,47 +157,6 @@ function regionStroke(
   return `oklch(from ${REGION_COLORS[i % REGION_COLORS.length]} calc(l - 0.16) calc(c + 0.04) h)`
 }
 
-/** A domino lying on two cells. */
-function PlacedDomino({ pair: [a, b], values }: { pair: [Cell, Cell]; values: [number, number] }) {
-  const top = Math.min(a[0], b[0])
-  const left = Math.min(a[1], b[1])
-  const vertical = a[1] === b[1]
-  return (
-    <g className="pointer-events-none">
-      <rect
-        x={left * U + 0.9}
-        y={top * U + 0.9}
-        width={(vertical ? U : 2 * U) - 1.8}
-        height={(vertical ? 2 * U : U) - 1.8}
-        rx="1.8"
-        className="fill-card stroke-foreground"
-        strokeWidth="0.5"
-      />
-      {vertical ? (
-        <line
-          x1={left * U + 2.5}
-          x2={left * U + U - 2.5}
-          y1={(top + 1) * U}
-          y2={(top + 1) * U}
-          className="stroke-foreground/40"
-          strokeWidth="0.4"
-        />
-      ) : (
-        <line
-          y1={top * U + 2.5}
-          y2={top * U + U - 2.5}
-          x1={(left + 1) * U}
-          x2={(left + 1) * U}
-          className="stroke-foreground/40"
-          strokeWidth="0.4"
-        />
-      )}
-      <PipDots value={values[0]} x={a[1] * U} y={a[0] * U} size={U} />
-      <PipDots value={values[1]} x={b[1] * U} y={b[0] * U} size={U} />
-    </g>
-  )
-}
-
 /** The rule label at a region's last cell. */
 function RegionBadge({
   region,
@@ -221,7 +181,7 @@ function RegionBadge({
   const x = c * U + U - 1.2
   const y = r * U + U - 1.2
   return (
-    <g className="pointer-events-none">
+    <g>
       <rect
         x={x - 3.2}
         y={y - 3.2}
@@ -277,12 +237,12 @@ type Props = {
   board: PipsBoard
   /** Where each domino sits. */
   placements: Placements
-  /** The keyboard cursor. */
-  cursor: Cell
-  /** The domino in hand, if any. */
-  selected?: number
-  /** Its direction. */
-  direction: number
-  /** Called when a cell is tapped. */
-  onCell: (cell: Cell) => void
+  /** Which layer to draw. */
+  layer: "base" | "overlay"
+  /** Cell size in pixels. */
+  size: number
+  /** Top-left corner of the board's first cell, in pixels. */
+  origin: Point
+  /** The keyboard cursor, when the keyboard is in use. */
+  cursor?: Cell
 }

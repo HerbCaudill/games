@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Locator, type Page } from "@playwright/test"
 import { mockApi } from "./mockApi"
 
 test.beforeEach(async ({ page }) => {
@@ -88,13 +88,13 @@ test("solves Letter Boxed", async ({ page }) => {
   await expect(page.getByText("Solved in 2 words!")).toBeVisible()
 })
 
-test("solves a Pips board by placing dominoes", async ({ page }) => {
+test("solves a Pips board by turning and dragging dominoes", async ({ page }) => {
   await page.goto("/pips")
-  // The first domino (2|1) is in hand; turn it to point down and drop it on the top-left cell.
-  await page.getByRole("button", { name: "Rotate" }).click()
-  await page.getByRole("gridcell", { name: "Row 1, column 1" }).click()
-  // The 3|1 domino is now in hand, still pointing down.
-  await page.getByRole("gridcell", { name: "Row 1, column 2" }).click()
+  const cell = (row: number, col: number) =>
+    page.getByRole("gridcell", { name: `Row ${row}, column ${col}` })
+  // Each domino lies flat; one tap turns it so its first half is on top.
+  await placeDomino(page, "Domino 2–1", cell(1, 1), cell(2, 1))
+  await placeDomino(page, "Domino 3–1", cell(1, 2), cell(2, 2))
   await expect(page.getByText(/Solved in/)).toBeVisible()
 })
 
@@ -109,3 +109,32 @@ test("keeps progress after a reload", async ({ page }) => {
   await page.reload()
   await expect(page.getByText("You have found 1 word")).toBeVisible()
 })
+
+/** Tap a Pips domino to turn it upright, then drag it onto two cells. */
+async function placeDomino(
+  /** The page. */
+  page: Page,
+  /** The domino's label. */
+  name: string,
+  /** Cell for its top half. */
+  top: Locator,
+  /** Cell for its bottom half. */
+  bottom: Locator,
+) {
+  const domino = page.getByRole("button", { name })
+  await domino.click()
+  const from = center((await domino.boundingBox())!)
+  const [a, b] = [center((await top.boundingBox())!), center((await bottom.boundingBox())!)]
+  await page.mouse.move(...from)
+  await page.mouse.down()
+  await page.mouse.move((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, { steps: 8 })
+  await page.mouse.up()
+}
+
+/** The center of a box. */
+function center(
+  /** The box. */
+  box: { x: number; y: number; width: number; height: number },
+): [number, number] {
+  return [box.x + box.width / 2, box.y + box.height / 2]
+}
