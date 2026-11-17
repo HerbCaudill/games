@@ -1,6 +1,14 @@
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconDots } from "@tabler/icons-react"
 import { useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { formatDuration } from "@/lib/formatDuration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -26,7 +34,7 @@ import { OnScreenKeyboard } from "./OnScreenKeyboard"
 /** The daily crossword. */
 export function Crossword(
   /** The component props. */
-  { puzzle }: Props,
+  { puzzle, toolbar }: Props,
 ) {
   const [progress, setProgress] = usePersistentState<CrosswordProgress>(
     `progress:crossword:${puzzle.date}`,
@@ -68,6 +76,15 @@ export function Crossword(
     setRebus(progress.entries[cell])
   }
 
+  /** Turn autocheck on or off, saving any rebus in progress first. */
+  const changeAutocheck = (on: boolean) => {
+    commitRebus()
+    update(s => setAutocheck(s, puzzle, on))
+  }
+
+  const locked =
+    progress.marks[progress.cursor] === "correct" || progress.marks[progress.cursor] === "revealed"
+
   /** Handle a key from the physical or on-screen keyboard; returns whether it was used. */
   const handleKey = (key: string, shift = false) => {
     if (rebus !== undefined) {
@@ -103,7 +120,19 @@ export function Crossword(
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5">
+      {toolbar &&
+        createPortal(
+          <TouchToolbar
+            elapsed={progress.elapsed}
+            autocheck={progress.autocheck ?? false}
+            rebus={rebus !== undefined}
+            rebusDisabled={locked}
+            onAutocheck={changeAutocheck}
+            onRebus={() => (rebus === undefined ? startRebus() : commitRebus())}
+          />,
+          toolbar,
+        )}
+      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5 pointer-coarse:hidden">
         <span className="text-muted-foreground mr-auto font-mono text-sm tabular-nums">
           {formatDuration(progress.elapsed)}
         </span>
@@ -112,10 +141,7 @@ export function Crossword(
             type="checkbox"
             role="switch"
             checked={progress.autocheck ?? false}
-            onChange={event => {
-              commitRebus()
-              update(s => setAutocheck(s, puzzle, event.target.checked))
-            }}
+            onChange={event => changeAutocheck(event.target.checked)}
             className="accent-primary size-4"
           />
           Autocheck
@@ -127,10 +153,7 @@ export function Crossword(
           variant={rebus === undefined ? "ghost" : "default"}
           aria-label={rebus === undefined ? "Enter rebus" : "Save rebus"}
           aria-pressed={rebus !== undefined}
-          disabled={
-            progress.marks[progress.cursor] === "correct" ||
-            progress.marks[progress.cursor] === "revealed"
-          }
+          disabled={locked}
           title={rebus === undefined ? "Rebus (Esc)" : "Save rebus (Enter); cancel (Esc)"}
           className="min-h-10"
           onClick={event => {
@@ -237,6 +260,45 @@ function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
   )
 }
 
+/** The touch-screen header controls: the timer, and a menu with autocheck and rebus. */
+function TouchToolbar({
+  elapsed,
+  autocheck,
+  rebus,
+  rebusDisabled,
+  onAutocheck,
+  onRebus,
+}: TouchToolbarProps) {
+  return (
+    <div className="hidden min-w-0 flex-1 items-center pointer-coarse:flex">
+      <span className="mr-auto font-mono tabular-nums">{formatDuration(elapsed)}</span>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon" aria-label="Puzzle options" />}
+        >
+          <IconDots className="size-5" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuCheckboxItem
+            checked={autocheck}
+            onCheckedChange={onAutocheck}
+            className="min-h-11 text-base"
+          >
+            Autocheck
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuItem
+            disabled={rebusDisabled}
+            onClick={onRebus}
+            className="min-h-11 text-base"
+          >
+            {rebus ? "Save rebus" : "Rebus"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 // TYPES
 
 /** Saved crossword progress. */
@@ -258,7 +320,24 @@ type ClueBarProps = {
   onToggle: () => void
 }
 
+type TouchToolbarProps = {
+  /** Seconds spent. */
+  elapsed: number
+  /** Whether autocheck is on. */
+  autocheck: boolean
+  /** Whether a rebus is being entered. */
+  rebus: boolean
+  /** Whether the current square is locked against a rebus. */
+  rebusDisabled: boolean
+  /** Turn autocheck on or off. */
+  onAutocheck: (on: boolean) => void
+  /** Start or save a rebus. */
+  onRebus: () => void
+}
+
 type Props = {
   /** The puzzle. */
   puzzle: CrosswordPuzzle
+  /** Header element to render the touch-screen controls into, when there is a header. */
+  toolbar?: HTMLElement | null
 }

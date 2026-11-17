@@ -94,6 +94,8 @@
   --xw-word: #a7d8ff;
   --xw-highlight-foreground: #1d2433;
   --xw-shade: #dcdcdc;
+  --xw-block: #000000;
+  --xw-line: #787886;
   --xw-wrong: #c0392b;
   --xw-correct: #1865b5;
   --xw-correct-highlight: #1865b5;

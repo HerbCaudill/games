@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { CrosswordPuzzle } from "@/types"
 import { Crossword } from "../Crossword"
@@ -53,6 +53,18 @@ describe("crossword entry controls", () => {
     view.unmount()
     render(<Crossword puzzle={puzzle} />)
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
+  })
+
+  it("turns on autocheck and starts a rebus from the header menu", async () => {
+    const toolbar = document.body.appendChild(document.createElement("div"))
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    fireEvent.keyDown(document.body, { key: "X" })
+    fireEvent.click(within(toolbar).getByRole("button", { name: "Puzzle options" }))
+    fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Autocheck" }))
+    expect(screen.getByRole("gridcell", { name: /X, wrong/ })).toBeVisible()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Rebus" }))
+    expect(screen.getAllByRole("button", { name: "Save rebus" })[0]).toBeVisible()
+    toolbar.remove()
   })
 
   it("returns keyboard entry to the grid after using the autocheck switch", () => {

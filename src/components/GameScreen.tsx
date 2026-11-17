@@ -1,4 +1,5 @@
 import { IconChevronLeft } from "@tabler/icons-react"
+import { useState } from "react"
 import type { GameInfo } from "@/constants"
 import { Connections } from "@/games/connections/Connections"
 import { Crossword } from "@/games/crossword/Crossword"
@@ -22,6 +23,7 @@ export function GameScreen(
 ) {
   const [token, setToken] = usePersistentState("nyt-token", () => "")
   const load = usePuzzle(game.id, date, token)
+  const [toolbar, setToolbar] = useState<HTMLElement | null>(null)
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -34,17 +36,18 @@ export function GameScreen(
         >
           <IconChevronLeft />
         </Button>
-        <GameGlyph game={game.id} className="size-6 shrink-0" />
+        <GameGlyph game={game.id} className="game-title size-6 shrink-0" />
         <h1
-          className="min-w-0 truncate font-semibold"
+          className="game-title min-w-0 truncate font-semibold"
           style={{ color: `color-mix(in srgb, ${game.color}, var(--foreground) 55%)` }}
         >
           {game.name}
         </h1>
-        <span className="text-muted-foreground ml-auto truncate text-sm">
+        <span className="game-title text-muted-foreground ml-auto truncate text-sm">
           {formatDate(date, "short")}
         </span>
         <ShortcutsButton context={game.id} />
+        <div ref={setToolbar} className="game-toolbar contents" />
       </header>
       <main className="app-content">
         {load.status === "loading" && (
@@ -56,25 +59,19 @@ export function GameScreen(
           </p>
         )}
         {load.status === "needs-token" && <TokenForm message={load.message} onSave={setToken} />}
-        {load.status === "ready" && <GameBody game={game.id} puzzle={load.puzzle} date={date} />}
+        {load.status === "ready" && (
+          <GameBody game={game.id} puzzle={load.puzzle} date={date} toolbar={toolbar} />
+        )}
       </main>
     </div>
   )
 }
 
 /** The game itself; keyed by date so each puzzle starts with fresh component state. */
-function GameBody({
-  game,
-  puzzle,
-  date,
-}: {
-  game: GameId
-  puzzle: PuzzleFor[GameId]
-  date: string
-}) {
+function GameBody({ game, puzzle, date, toolbar }: GameBodyProps) {
   switch (game) {
     case "crossword":
-      return <Crossword key={date} puzzle={puzzle as PuzzleFor["crossword"]} />
+      return <Crossword key={date} puzzle={puzzle as PuzzleFor["crossword"]} toolbar={toolbar} />
     case "pips":
       return <Pips key={date} puzzle={puzzle as PuzzleFor["pips"]} />
     case "spelling-bee":
@@ -84,6 +81,17 @@ function GameBody({
     case "letter-boxed":
       return <LetterBoxed key={date} puzzle={puzzle as PuzzleFor["letter-boxed"]} />
   }
+}
+
+type GameBodyProps = {
+  /** The game. */
+  game: GameId
+  /** Its puzzle. */
+  puzzle: PuzzleFor[GameId]
+  /** Puzzle date as YYYY-MM-DD. */
+  date: string
+  /** Header element a game can render touch controls into. */
+  toolbar: HTMLElement | null
 }
 
 type Props = {

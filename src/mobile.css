@@ -45,6 +45,13 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* On touch screens a game's own header controls take the place of its title and date. */
+@media (pointer: coarse) {
+  .app-header:has(.game-toolbar > *) .game-title {
+    display: none;
+  }
+}
+
 /* A computed font size below 16px triggers iPhone zoom on focus. */
 @media (max-width: 767px), (pointer: coarse) {
   input,

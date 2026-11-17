@@ -105,6 +105,17 @@ describe("backspace", () => {
     expect(state.cursor).toBe(1)
     expect(state.entries.slice(0, 3)).toEqual(["C", "", ""])
   })
+
+  it("moves back into the previous answer from the empty first square of an answer", () => {
+    const state = backspace(type("CAT"), puzzle)
+    expect(state).toMatchObject({ cursor: 2, direction: "across" })
+    expect(state.entries.slice(0, 3)).toEqual(["C", "A", ""])
+  })
+
+  it("crosses from the first down answer back to the last across answer", () => {
+    const state = backspace({ ...initialState(puzzle), direction: "down" }, puzzle)
+    expect(state).toMatchObject({ cursor: 8, direction: "across" })
+  })
 })
 
 describe("arrow", () => {

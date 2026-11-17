@@ -9,6 +9,7 @@ export function CrosswordGrid(
   { puzzle, state, rebus, onCell, onRebus }: Props,
 ) {
   const { width, height } = puzzle
+  const [w, h] = [width * U, height * U]
   const word = new Set(clueAt(puzzle, state.cursor, state.direction)?.cells ?? [])
   const hold = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const origin = useRef({ x: 0, y: 0 })
@@ -19,9 +20,9 @@ export function CrosswordGrid(
 
   return (
     <svg
-      viewBox={`-0.5 -0.5 ${width * U + 1} ${height * U + 1}`}
+      viewBox={`${-BORDER} ${-BORDER} ${w + 2 * BORDER} ${h + 2 * BORDER}`}
       className="block touch-manipulation select-none"
-      style={{ width: `min(100cqw, calc(100cqh * ${width / height}))` }}
+      style={{ width: `min(100cqw, calc(100cqh * ${(w + 2 * BORDER) / (h + 2 * BORDER)}))` }}
       role="grid"
       tabIndex={0}
       aria-label="Crossword grid"
@@ -34,7 +35,7 @@ export function CrosswordGrid(
       }}
       onContextMenu={event => event.preventDefault()}
     >
-      <rect width={width * U} height={height * U} className="fill-foreground" />
+      <rect width={w} height={h} style={{ fill: "var(--xw-block)" }} />
       {puzzle.cells.map((cell, i) => {
         if (!cell) return null
         const x = (i % width) * U
@@ -76,8 +77,6 @@ export function CrosswordGrid(
                       ? "var(--xw-shade)"
                       : "var(--card)",
               }}
-              className="stroke-foreground/70"
-              strokeWidth="0.6"
             />
             {cell.circled && (
               <circle
@@ -137,6 +136,26 @@ export function CrosswordGrid(
           </g>
         )
       })}
+      <rect
+        x={-BORDER / 2}
+        y={-BORDER / 2}
+        width={w + BORDER}
+        height={h + BORDER}
+        style={{ stroke: "var(--xw-block)" }}
+        strokeWidth={BORDER}
+        fill="none"
+        pointerEvents="none"
+      />
+      {/* Lines run between black squares too, as in the printed grid. */}
+      <path
+        d={[
+          ...Array.from({ length: height + 1 }, (_, r) => `M0 ${r * U}H${w}`),
+          ...Array.from({ length: width + 1 }, (_, c) => `M${c * U} 0V${h}`),
+        ].join("")}
+        style={{ stroke: "var(--xw-line)" }}
+        strokeWidth={LINE}
+        pointerEvents="none"
+      />
     </svg>
   )
 }
@@ -145,6 +164,12 @@ export function CrosswordGrid(
 
 /** Square size in SVG units. */
 const U = 10
+
+/** Width of the lines between squares. */
+const LINE = 0.5
+
+/** Width of the thick border around the grid; the edge lines sit on its inner side. */
+const BORDER = 1.2
 
 // TYPES
 
