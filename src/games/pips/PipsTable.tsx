@@ -19,7 +19,16 @@ export function PipsTable(
   const space = useRef<HTMLDivElement>(null)
   const [room, setRoom] = useState({ width: 0, height: 0, left: 0, top: 0, contentTop: 0 })
   const [drag, setDrag] = useState<{ index: number; offset: Point }>()
+  // A just-dropped domino, held where it was let go for one frame so only its transform animates to where it lands.
+  const [landing, setLanding] = useState<{ index: number; from: Point }>()
   const pointer = useRef<{ index: number; id: number; start: Point; moved: boolean }>(undefined)
+
+  useLayoutEffect(() => {
+    if (!landing) return
+    // Flush the held position as the transition's starting point before letting go of it.
+    space.current!.getBoundingClientRect()
+    setLanding(undefined)
+  }, [landing])
 
   useLayoutEffect(() => {
     const el = space.current!
@@ -110,8 +119,10 @@ export function PipsTable(
     if (!p.moved) return onTap(p.index)
     const [x, y] = centerOf(p.index)
     const offset = [event.clientX - p.start[0], event.clientY - p.start[1]]
+    const from: Point = [x + offset[0] / size, y + offset[1] / size]
     const turn = placements[p.index] ? directionOf(placements[p.index]!) : (turns[p.index] ?? 0)
-    onDrop(p.index, inBounds([x + offset[0] / size, y + offset[1] / size], turn))
+    setLanding({ index: p.index, from })
+    onDrop(p.index, inBounds(from, turn))
   }
 
   const cancel = () => {
@@ -151,7 +162,12 @@ export function PipsTable(
             const pair = placements[i]
             const turn = pair ? turnTo(turns[i] ?? 0, directionOf(pair)) : (turns[i] ?? 0)
             const dragging = drag?.index === i
-            const [dx, dy] = dragging ? drag.offset : [0, 0]
+            const held = landing?.index === i
+            const [dx, dy] = dragging
+              ? drag.offset
+              : held
+                ? [(landing.from[0] - x) * size, (landing.from[1] - y) * size]
+                : [0, 0]
             return (
               <button
                 key={i}
@@ -166,7 +182,7 @@ export function PipsTable(
                     : dragging
                       ? "z-30 cursor-grabbing drop-shadow-lg"
                       : "z-10 cursor-grab",
-                  !dragging && "transition-[left,top,transform] duration-150 ease-out",
+                  !dragging && !held && "transition-[left,top,transform] duration-150 ease-out",
                   i === selected && "ring-3 ring-(--game-pips)",
                 )}
                 style={{

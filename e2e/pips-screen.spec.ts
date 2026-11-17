@@ -30,6 +30,30 @@ test("keeps a loose domino beyond the game container and lets it return to the b
   await expect(page.getByRole("img", { name: "Broken constraint: 5" })).toBeVisible()
 })
 
+test("leaves a dropped domino where it was let go instead of replaying the drag", async ({
+  page,
+}) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const viewport = page.viewportSize()!
+  const drop: [number, number] = [viewport.width / 2, viewport.height - 40]
+  await dragTo(page, domino, drop)
+  const path = await domino.evaluate(
+    el =>
+      new Promise<[number, number][]>(resolve => {
+        const points: [number, number][] = []
+        const start = performance.now()
+        const sample = () => {
+          const box = el.getBoundingClientRect()
+          points.push([box.x + box.width / 2, box.y + box.height / 2])
+          if (performance.now() - start < 250) requestAnimationFrame(sample)
+          else resolve(points)
+        }
+        sample()
+      }),
+  )
+  expect(Math.max(...path.map(point => distance(point, drop)))).toBeLessThan(2)
+})
+
 test("keeps loose dominoes reachable at screen edges, after turning and after resizing", async ({
   page,
 }) => {
