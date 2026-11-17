@@ -4,16 +4,16 @@ A personal client for five NYT daily games, in this order: Crossword, Pips, Spel
 
 ## Running it
 
-`pnpm dev` starts everything. The puzzle API is a Vite plugin (`server/nytApiPlugin.ts`), so there is no separate server process.
+`pnpm dev` starts everything. In development the puzzle API is a Vite plugin (`server/nytApiPlugin.ts`), so there is no separate server process. In production it is a Vercel function (`api/[game]/[date].ts`); `vercel.json` sends every other path to the app.
 
-The API needs `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). It is the value of the `NYT-S` cookie from a signed-in nytimes.com session. Spelling Bee Buddy (`../spelling-bee-buddy/.env`, `VITE_NYT_TOKEN`) uses the same token.
+The API needs an NYT token: the value of the `NYT-S` cookie from a signed-in nytimes.com session. The server never stores it. The app saves it in localStorage on each device, asks for it when the API answers 401, and sends it in the `X-NYT-Token` header. In development the plugin falls back to `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). Spelling Bee Buddy (`../spelling-bee-buddy/.env`, `VITE_NYT_TOKEN`) uses the same token.
 
 ## Architecture
 
-- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed.
+- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. It caches NYT responses per token, because the token is the API's only access control.
 - `src/games/<game>/` holds each game. `logic/` has the pure game rules, one function per file, tested in `logic/tests/`. The `.tsx` files are the UI.
 - `src/lib/` holds shared hooks: puzzle loading (`usePuzzle`, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
-- Progress lives in localStorage under `progress:<game>:<date>`, and menu status under `status:<game>:<date>`.
+- Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, and the NYT token under `nyt-token`.
 
 ## NYT feeds
 

@@ -17,11 +17,13 @@ export async function handleApiRequest(
   const [, game, date] = match
   const load = loaders[game as GameId]
   if (!load) return error(404, `Unknown game: ${game}`)
+  if (!token) return error(401, "An NYT token is required.")
   try {
     const puzzle = await load(date, (url, as) => fetchNyt(url, as, token))
     if (!puzzle) return error(404, `No ${game} puzzle for ${date}`)
     return { status: 200, body: puzzle }
   } catch (e) {
+    if (e instanceof TokenRejected) return error(401, "NYT rejected the token.")
     return error(502, e instanceof Error ? e.message : String(e))
   }
 }
@@ -33,20 +35,20 @@ async function fetchNyt(
   /** How to read the body. */
   as: "json" | "text",
   /** The NYT-S cookie value. */
-  token: string | undefined,
+  token: string,
 ): Promise<unknown> {
-  const cached = cache.get(url)
+  // The token is the only access control, so a response is reused only for the same token.
+  const key = `${token} ${url}`
+  const cached = cache.get(key)
   if (cached && cached.expires > Date.now()) return cached.value
   const response = await fetch(url, {
-    headers: {
-      "User-Agent": USER_AGENT,
-      ...(token ? { "nyt-s": token, Cookie: `NYT-S=${token}` } : {}),
-    },
+    headers: { "User-Agent": USER_AGENT, "nyt-s": token, Cookie: `NYT-S=${token}` },
   })
+  if (response.status === 401 || response.status === 403) throw new TokenRejected()
   if (response.status === 404) return undefined
   if (!response.ok) throw new Error(`NYT returned ${response.status} for ${url}`)
   const value = as === "json" ? await response.json() : await response.text()
-  cache.set(url, { value, expires: Date.now() + CACHE_MS })
+  cache.set(key, { value, expires: Date.now() + CACHE_MS })
   return value
 }
 
@@ -59,6 +61,9 @@ function error(
 ): ApiResponse {
   return { status, body: { error: message } }
 }
+
+/** NYT refused the subscriber token. */
+class TokenRejected extends Error {}
 
 // CONSTANTS
 
@@ -99,7 +104,7 @@ const USER_AGENT =
 /** How long to reuse an NYT response. */
 const CACHE_MS = 10 * 60 * 1000
 
-/** Recent NYT responses by URL. */
+/** Recent NYT responses by token and URL. */
 const cache = new Map<string, { value: unknown; expires: number }>()
 
 // TYPES

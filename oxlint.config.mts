@@ -9,7 +9,8 @@ export default defineConfig({
         generatedFilePatterns: ["src/components/ui/**"],
       },
       exportFileExceptions: {
-        frameworkFilePatterns: ["playwright*.config.ts"],
+        // Vercel routes by file name, such as `api/[game]/[date].ts`.
+        frameworkFilePatterns: ["playwright*.config.ts", "api/**"],
       },
       testStoryFileExceptions: {
         frameworkFilePatterns: ["e2e/**"],

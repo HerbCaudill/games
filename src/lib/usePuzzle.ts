@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { GameId, PuzzleFor } from "@/types"
+import { NYT_TOKEN_HEADER } from "../../server/constants.ts"
 import { readStored } from "./readStored"
 import { writeStored } from "./writeStored"
 
@@ -9,33 +10,40 @@ export function usePuzzle<G extends GameId>(
   game: G,
   /** Date as YYYY-MM-DD. */
   date: string,
+  /** The NYT-S cookie value saved on this device, if any. */
+  token: string,
 ): PuzzleLoad<PuzzleFor[G]> {
   const key = `puzzle:${game}:${date}`
-  const [load, setLoad] = useState<PuzzleLoad<PuzzleFor[G]> & { key: string }>(() =>
-    initialLoad(key),
+  // A new token retries a request that failed for want of one.
+  const request = `${key} ${token}`
+  const [load, setLoad] = useState<PuzzleLoad<PuzzleFor[G]> & { request: string }>(() =>
+    initialLoad(key, request),
   )
-  if (load.key !== key) setLoad(initialLoad(key))
+  if (load.request !== request) setLoad(initialLoad(key, request))
 
   useEffect(() => {
     if (readStored(key)) return
     let cancelled = false
-    fetch(`/api/${game}/${date}`)
+    fetch(`/api/${game}/${date}`, { headers: token ? { [NYT_TOKEN_HEADER]: token } : {} })
       .then(async response => {
         const body = await response.json()
+        if (response.status === 401) throw new NeedsToken(body.error)
         if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`)
         return body as PuzzleFor[G]
       })
       .then(puzzle => {
         writeStored(key, puzzle)
-        if (!cancelled) setLoad({ key, status: "ready", puzzle })
+        if (!cancelled) setLoad({ request, status: "ready", puzzle })
       })
       .catch((error: Error) => {
-        if (!cancelled) setLoad({ key, status: "error", message: error.message })
+        if (cancelled) return
+        const status = error instanceof NeedsToken ? "needs-token" : "error"
+        setLoad({ request, status, message: error.message })
       })
     return () => {
       cancelled = true
     }
-  }, [game, date, key])
+  }, [game, date, key, token, request])
 
   return load
 }
@@ -44,10 +52,15 @@ export function usePuzzle<G extends GameId>(
 function initialLoad<P>(
   /** Storage key for the puzzle. */
   key: string,
-): PuzzleLoad<P> & { key: string } {
+  /** Identifies the request this state belongs to. */
+  request: string,
+): PuzzleLoad<P> & { request: string } {
   const puzzle = readStored<P>(key)
-  return puzzle ? { key, status: "ready", puzzle } : { key, status: "loading" }
+  return puzzle ? { request, status: "ready", puzzle } : { request, status: "loading" }
 }
+
+/** The API needs a valid NYT token. */
+class NeedsToken extends Error {}
 
 // TYPES
 
@@ -55,4 +68,4 @@ function initialLoad<P>(
 export type PuzzleLoad<P> =
   | { status: "loading" }
   | { status: "ready"; puzzle: P }
-  | { status: "error"; message: string }
+  | { status: "error" | "needs-token"; message: string }

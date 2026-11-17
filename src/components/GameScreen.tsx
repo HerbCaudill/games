@@ -6,11 +6,13 @@ import { LetterBoxed } from "@/games/letter-boxed/LetterBoxed"
 import { Pips } from "@/games/pips/Pips"
 import { SpellingBee } from "@/games/spelling-bee/SpellingBee"
 import { formatDate } from "@/lib/formatDate"
+import { usePersistentState } from "@/lib/usePersistentState"
 import { usePuzzle } from "@/lib/usePuzzle"
 import { navigate } from "@/lib/navigate"
 import type { GameId, PuzzleFor } from "@/types"
 import { GameGlyph } from "./GameGlyph"
 import { ShortcutsButton } from "./ShortcutsButton"
+import { TokenForm } from "./TokenForm"
 import { Button } from "./ui/button"
 
 /** A game with its header, loading and error states. */
@@ -18,7 +20,8 @@ export function GameScreen(
   /** The component props. */
   { game, date, isToday }: Props,
 ) {
-  const load = usePuzzle(game.id, date)
+  const [token, setToken] = usePersistentState("nyt-token", () => "")
+  const load = usePuzzle(game.id, date, token)
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -52,6 +55,7 @@ export function GameScreen(
             Couldn’t load the puzzle: {load.message}
           </p>
         )}
+        {load.status === "needs-token" && <TokenForm message={load.message} onSave={setToken} />}
         {load.status === "ready" && <GameBody game={game.id} puzzle={load.puzzle} date={date} />}
       </main>
     </div>
