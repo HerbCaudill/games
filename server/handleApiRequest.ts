@@ -19,6 +19,7 @@ export async function handleApiRequest(
   if (!load) return error(404, `Unknown game: ${game}`)
   if (!token) return error(401, "An NYT token is required.")
   try {
+    await checkToken(token)
     const puzzle = await load(date, (url, as) => fetchNyt(url, as, token))
     if (!puzzle) return error(404, `No ${game} puzzle for ${date}`)
     return { status: 200, body: puzzle }
@@ -26,6 +27,18 @@ export async function handleApiRequest(
     if (e instanceof TokenRejected) return error(401, "NYT rejected the token.")
     return error(502, e instanceof Error ? e.message : String(e))
   }
+}
+
+/** Confirm the token belongs to a signed-in NYT account, since the puzzle feeds don't check. */
+async function checkToken(
+  /** The NYT-S cookie value. */
+  token: string,
+) {
+  if ((verifiedTokens.get(token) ?? 0) > Date.now()) return
+  const response = await fetch(ACCOUNT_CHECK_URL, { headers: nytHeaders(token) })
+  if (response.status === 401 || response.status === 403) throw new TokenRejected()
+  if (response.status >= 500) throw new Error(`NYT returned ${response.status} checking the token`)
+  verifiedTokens.set(token, Date.now() + TOKEN_CHECK_MS)
 }
 
 /** Fetch an NYT URL as the subscriber, reusing recent responses. */
@@ -37,19 +50,23 @@ async function fetchNyt(
   /** The NYT-S cookie value. */
   token: string,
 ): Promise<unknown> {
-  // The token is the only access control, so a response is reused only for the same token.
-  const key = `${token} ${url}`
-  const cached = cache.get(key)
+  const cached = cache.get(url)
   if (cached && cached.expires > Date.now()) return cached.value
-  const response = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, "nyt-s": token, Cookie: `NYT-S=${token}` },
-  })
+  const response = await fetch(url, { headers: nytHeaders(token) })
   if (response.status === 401 || response.status === 403) throw new TokenRejected()
   if (response.status === 404) return undefined
   if (!response.ok) throw new Error(`NYT returned ${response.status} for ${url}`)
   const value = as === "json" ? await response.json() : await response.text()
-  cache.set(key, { value, expires: Date.now() + CACHE_MS })
+  cache.set(url, { value, expires: Date.now() + CACHE_MS })
   return value
+}
+
+/** Headers that make a request as the signed-in NYT account. */
+function nytHeaders(
+  /** The NYT-S cookie value. */
+  token: string,
+) {
+  return { "User-Agent": USER_AGENT, "nyt-s": token, Cookie: `NYT-S=${token}` }
 }
 
 /** Build an error response. */
@@ -101,10 +118,19 @@ const NYT = "https://www.nytimes.com"
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
+/** An account endpoint: without a puzzle ID it answers 400 for a signed-in token and 403 otherwise. */
+const ACCOUNT_CHECK_URL = `${NYT}/svc/games/state/spelling_bee/latest`
+
+/** How long to trust a token NYT accepted. */
+const TOKEN_CHECK_MS = 60 * 60 * 1000
+
+/** When each accepted token next needs checking. */
+const verifiedTokens = new Map<string, number>()
+
 /** How long to reuse an NYT response. */
 const CACHE_MS = 10 * 60 * 1000
 
-/** Recent NYT responses by token and URL. */
+/** Recent NYT responses by URL. */
 const cache = new Map<string, { value: unknown; expires: number }>()
 
 // TYPES

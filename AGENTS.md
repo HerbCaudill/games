@@ -10,7 +10,7 @@ The API needs an NYT token: the value of the `NYT-S` cookie from a signed-in nyt
 
 ## Architecture
 
-- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. It caches NYT responses per token, because the token is the API's only access control.
+- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. NYT's puzzle feeds answer without any token, so before serving a puzzle it checks the token against an NYT account endpoint and trusts an accepted token for an hour. The token is the API's only access control.
 - `src/games/<game>/` holds each game. `logic/` has the pure game rules, one function per file, tested in `logic/tests/`. The `.tsx` files are the UI.
 - `src/lib/` holds shared hooks: puzzle loading (`usePuzzle`, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
 - Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, and the NYT token under `nyt-token`.
