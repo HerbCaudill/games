@@ -1,17 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#1f2a44"/>
-  <g transform="translate(256 256)">
-    <rect x="-140" y="-140" width="134" height="134" rx="18" fill="#f4f1ea"/>
-    <rect x="6" y="-140" width="134" height="134" rx="18" fill="#f2c94c"/>
-    <rect x="-140" y="6" width="134" height="134" rx="18" fill="#7fb7a4"/>
-    <rect x="6" y="6" width="134" height="134" rx="18" fill="#f4f1ea"/>
-    <rect x="-118" y="-118" width="40" height="40" fill="#1f2a44"/>
-    <circle cx="73" cy="-73" r="14" fill="#1f2a44"/>
-    <circle cx="40" cy="-40" r="14" fill="#1f2a44"/>
-    <circle cx="106" cy="-106" r="14" fill="#1f2a44"/>
-    <path d="M-73 34 L-45 50 L-45 90 L-73 106 L-101 90 L-101 50 Z" fill="#1f2a44"/>
-    <circle cx="40" cy="40" r="10" fill="#1f2a44"/>
-    <circle cx="106" cy="106" r="10" fill="#1f2a44"/>
-    <path d="M40 40 L106 106" stroke="#1f2a44" stroke-width="10"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .st0 {
+        fill: #23201d;
+      }
+
+      .st1 {
+        fill: #f4f1ea;
+      }
+
+      .st2 {
+        fill: #f2c94c;
+      }
+
+      .st3 {
+        fill: #f5786d;
+      }
+
+      .st4 {
+        fill: #f7f2ee;
+        stroke: #23201d;
+        stroke-miterlimit: 10;
+        stroke-width: 14px;
+      }
+
+      .st5 {
+        fill: #f7f2ee;
+      }
+    </style>
+  </defs>
+  <rect class="st0" y="0" width="512" height="512"/>
+  <g>
+    <rect class="st2" x="22.1" y="266" width="223.9" height="223.9" rx="18" ry="18"/>
+    <rect class="st3" x="266" y="22.1" width="223.9" height="223.9" rx="18" ry="18"/>
+    <g>
+      <path class="st1" d="M134,134H22.1v94c0,9.9,8.1,18,18,18h93.9V134Z"/>
+      <path class="st1" d="M246,40.1c0-9.9-8.1-18-18-18h-94v111.9h112V40.1Z"/>
+    </g>
+    <polygon id="Hexagon" class="st4" points="183.5 344.4 183.5 401.5 134 430 84.6 401.5 84.6 344.4 134 315.9 183.5 344.4"/>
+    <g>
+      <rect class="st5" x="266" y="266" width="223.9" height="223.9" rx="18" ry="18"/>
+      <g>
+        <circle class="st0" cx="378" cy="378" r="23.4"/>
+        <circle class="st0" cx="322.8" cy="433.1" r="23.4"/>
+        <circle class="st0" cx="433.1" cy="322.8" r="23.4"/>
+      </g>
+    </g>
+    <rect class="st4" x="326" y="82.1" width="103.8" height="103.8"/>
   </g>
 </svg>
