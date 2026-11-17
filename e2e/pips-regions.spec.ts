@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { mockApi } from "./mockApi"
 
-test("region outlines keep a one-pixel gap around a domino, including its corners", async ({
-  page,
-}) => {
+test("region outlines lie on a placed domino's border, including its corners", async ({ page }) => {
   await mockApi(page)
   await page.goto("/pips?date=2026-11-16")
   const domino = page.getByRole("button", { name: "Domino 2–1", exact: true })
@@ -20,16 +18,16 @@ test("region outlines keep a one-pixel gap around a domino, including its corner
   await expect.poll(async () => (await domino.boundingBox())!.x).toBeCloseTo(cell.x)
   expect(await paths.first().getAttribute("d")).toBe(emptyPath)
 
-  const gaps = await paths.evaluateAll((elements, cellSize) => {
-    const tile = document.querySelector<SVGRectElement>('button[aria-label="Domino 2–1"] rect')!
+  const offsets = await paths.evaluateAll((elements, cellSize) => {
+    const tile = document.querySelector<SVGRectElement>(
+      'button[aria-label="Domino 2–1"] svg > rect:last-of-type',
+    )!
     const box = tile.getBoundingClientRect()
     const tileScale = tile.getScreenCTM()!.a
     const radius = tile.rx.baseVal.value * tileScale
-    const tileStroke = parseFloat(getComputedStyle(tile).strokeWidth) * tileScale
     return elements.map((element, row) => {
       const path = element as SVGPathElement
       const matrix = path.getScreenCTM()!
-      const outlineStroke = parseFloat(getComputedStyle(path).strokeWidth) * matrix.a
       const length = path.getTotalLength()
       return Array.from({ length: 160 }, (_, i) => {
         const point = path.getPointAtLength((i / 160) * length).matrixTransform(matrix)
@@ -39,13 +37,13 @@ test("region outlines keep a one-pixel gap around a domino, including its corner
           Math.abs(point.y - box.y - row * cellSize - box.height / 2) - (box.height / 2 - radius)
         const distance =
           Math.hypot(Math.max(x, 0), Math.max(y, 0)) + Math.min(Math.max(x, y), 0) - radius
-        return distance - tileStroke / 2 - outlineStroke / 2
+        return distance
       })
     })
   }, cell.height)
-  for (const region of gaps) {
+  for (const region of offsets) {
     // CSS layout rounds fractional tile positions; allow less than 0.05 CSS pixels of error.
-    expect(Math.min(...region)).toBeCloseTo(1, 1)
-    expect(Math.max(...region)).toBeCloseTo(1, 1)
+    expect(Math.min(...region)).toBeCloseTo(0, 1)
+    expect(Math.max(...region)).toBeCloseTo(0, 1)
   }
 })

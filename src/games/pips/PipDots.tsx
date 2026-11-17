@@ -1,7 +1,7 @@
 /** The pips for one domino half, drawn in a square at (x, y). */
 export function PipDots(
   /** The component props. */
-  { value, x, y, size }: Props,
+  { value, x, y, size, color }: Props,
 ) {
   return (
     <>
@@ -11,7 +11,8 @@ export function PipDots(
           cx={x + dx * size}
           cy={y + dy * size}
           r={size * 0.085}
-          className="fill-foreground"
+          className={color ? undefined : "fill-foreground"}
+          style={color ? { fill: color } : undefined}
         />
       ))}
     </>
@@ -70,4 +71,6 @@ type Props = {
   y: number
   /** Side length of the half. */
   size: number
+  /** Pip color, when not the default ink. */
+  color?: string
 }

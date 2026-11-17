@@ -1,23 +1,44 @@
+import { useId } from "react"
 import type { Domino } from "@/types"
 import { dominoGeometry } from "./dominoGeometry"
 import { PipDots } from "./PipDots"
+import { regionColors } from "./regionColors"
 
-/** A domino lying flat, first half on the left, filling its box. Its parent turns it. */
+/**
+ * A domino lying flat, first half on the left, filling its box. Its parent turns it. On the board,
+ * each half takes the color of the region under it.
+ */
 export function DominoTile(
   /** The component props. */
-  { domino }: Props,
+  { domino, regions = [undefined, undefined] }: Props,
 ) {
+  const clip = `domino-${useId().replace(/[^\w-]/g, "")}`
+  const body = {
+    x: INSET,
+    y: INSET,
+    width: 2 * U - 2 * INSET,
+    height: U - 2 * INSET,
+    rx: dominoGeometry.radius,
+  }
   return (
     <svg viewBox={`0 0 ${2 * U} ${U}`} className="block size-full" aria-hidden="true">
-      <rect
-        x={INSET}
-        y={INSET}
-        width={2 * U - 2 * INSET}
-        height={U - 2 * INSET}
-        rx={dominoGeometry.radius}
-        className="fill-card stroke-foreground"
-        strokeWidth={dominoGeometry.strokeWidth}
-      />
+      <clipPath id={clip}>
+        <rect {...body} />
+      </clipPath>
+      <rect {...body} className="fill-card" />
+      {regions.map(
+        (region, half) =>
+          region !== undefined && (
+            <rect
+              key={half}
+              x={half * U}
+              width={U}
+              height={U}
+              clipPath={`url(#${clip})`}
+              style={{ fill: regionColors.fill(region) }}
+            />
+          ),
+      )}
       <line
         x1={U}
         x2={U}
@@ -26,8 +47,21 @@ export function DominoTile(
         className="stroke-foreground/40"
         strokeWidth="0.4"
       />
-      <PipDots value={domino[0]} x={0} y={0} size={U} />
-      <PipDots value={domino[1]} x={U} y={0} size={U} />
+      {domino.map((value, half) => (
+        <PipDots
+          key={half}
+          value={value}
+          x={half * U}
+          y={0}
+          size={U}
+          color={regions[half] === undefined ? undefined : regionColors.ink(regions[half])}
+        />
+      ))}
+      <rect
+        {...body}
+        className="stroke-foreground fill-none"
+        strokeWidth={dominoGeometry.strokeWidth}
+      />
     </svg>
   )
 }
@@ -45,4 +79,6 @@ const INSET = dominoGeometry.inset
 type Props = {
   /** Pip counts. */
   domino: Domino
+  /** The region index under each half, when the domino is on the board. */
+  regions?: [number | undefined, number | undefined]
 }

@@ -5,6 +5,7 @@ import { DominoTile } from "./DominoTile"
 import { PipsGrid } from "./PipsGrid"
 import { boardCells } from "./logic/boardCells"
 import { directionOf } from "./logic/directionOf"
+import { halfRegions } from "./logic/halfRegions"
 import { tableLayout } from "./logic/tableLayout"
 import { turnTo } from "./logic/turnTo"
 import type { Placements, Point } from "./logic/types"
@@ -197,7 +198,10 @@ export function PipsTable(
                 onPointerUp={up}
                 onPointerCancel={cancel}
               >
-                <DominoTile domino={domino} />
+                <DominoTile
+                  domino={domino}
+                  regions={pair && !dragging ? halfRegions(board, pair) : undefined}
+                />
               </button>
             )
           })}

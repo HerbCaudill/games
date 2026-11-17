@@ -6,6 +6,7 @@ import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
 import { regionStatus } from "./logic/regionStatus"
+import { regionColors } from "./regionColors"
 import { type Placements, type Point } from "./logic/types"
 import "./pips.css"
 
@@ -21,14 +22,20 @@ export function PipsGrid(
   const rows = Math.max(...cells.map(([r]) => r)) + 1
   const cols = Math.max(...cells.map(([, c]) => c)) + 1
   const scale = size / U
-  // Separate the visible stroke edges by one CSS pixel, keeping their corner centers aligned.
-  const offset = (dominoGeometry.strokeWidth + REGION_STROKE_WIDTH) / 2 + 1 / scale
-  const regionInset = (dominoGeometry.inset - offset) / U
-  const regionRadius = dominoGeometry.radius + offset
+  // Outlines trace the domino borders exactly, so on a covered region the dashes lie on the border.
   const regions = board.regions.flatMap((region, i) =>
     region.type === "empty"
       ? []
-      : [{ region, i, shape: roundedPath(outline(region.cells, regionInset), regionRadius) }],
+      : [
+          {
+            region,
+            i,
+            shape: roundedPath(
+              outline(region.cells, dominoGeometry.inset / U),
+              dominoGeometry.radius,
+            ),
+          },
+        ],
   )
 
   return (
@@ -56,7 +63,7 @@ export function PipsGrid(
             strokeWidth="0.8"
           />
           {regions.map(({ i, shape }) => (
-            <path key={i} d={shape} style={{ fill: regionFill(i) }} />
+            <path key={i} d={shape} style={{ fill: regionColors.fill(i) }} />
           ))}
         </>
       ) : layer === "overlay" ? (
@@ -67,7 +74,7 @@ export function PipsGrid(
               key={i}
               d={shape}
               className="fill-none"
-              style={{ stroke: regionStroke(i) }}
+              style={{ stroke: regionColors.stroke(i) }}
               strokeWidth={REGION_STROKE_WIDTH}
               strokeDasharray="1.4 1"
               strokeLinecap="round"
@@ -103,7 +110,7 @@ export function PipsGrid(
             key={i}
             region={region}
             shape={shape}
-            color={regionStroke(i)}
+            color={regionColors.stroke(i)}
             broken={regionStatus(region, placements, board) === "broken"}
           />
         ))
@@ -150,22 +157,6 @@ function toward(
   const length = Math.hypot(dx, dy)
   const step = Math.min(radius, length / 2) / length
   return [dx * step, dy * step]
-}
-
-/** A region's fill. */
-function regionFill(
-  /** Region index. */
-  i: number,
-) {
-  return `color-mix(in oklch, ${REGION_COLORS[i % REGION_COLORS.length]} 45%, var(--card))`
-}
-
-/** A region's outline color. */
-function regionStroke(
-  /** Region index. */
-  i: number,
-) {
-  return `oklch(from ${REGION_COLORS[i % REGION_COLORS.length]} calc(l - 0.16) calc(c + 0.04) h)`
 }
 
 /** The rule label at a region's last cell. */
@@ -239,18 +230,6 @@ const BADGE_PATH =
   "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +
   "L0.389,2.581 A0.55,0.55 0 0 1 -0.389,2.581 " +
   "L-2.581,0.389 A0.55,0.55 0 0 1 -2.581,-0.389 Z"
-
-/** Region hues, cycled by region. */
-const REGION_COLORS = [
-  "#e8956b",
-  "#6fb59a",
-  "#8ea5dc",
-  "#d58fc0",
-  "#e2c25c",
-  "#7fc3d6",
-  "#b39ae0",
-  "#a9c46a",
-]
 
 // TYPES
 
