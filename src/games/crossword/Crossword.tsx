@@ -12,6 +12,7 @@ import {
 import { formatDuration } from "@/lib/formatDuration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
+import { useMediaQuery } from "@/lib/useMediaQuery"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
 import type { CrosswordPuzzle } from "@/types"
@@ -41,6 +42,7 @@ export function Crossword(
     () => ({ ...initialState(puzzle), elapsed: 0 }),
   )
   const [rebus, setRebus] = useState<string>()
+  const touch = useMediaQuery("(pointer: coarse)")
   const solved = isSolved(progress, puzzle)
   const full = progress.entries.every((entry, i) => !puzzle.cells[i] || entry)
   useGameStatus(
@@ -118,6 +120,16 @@ export function Crossword(
     if (handleKey(event.key, event.shiftKey)) event.preventDefault()
   })
 
+  const clueBar = (
+    <ClueBar
+      text={clue && <ClueText clue={clue} />}
+      label={clue && `${clue.label}${clue.direction === "across" ? "A" : "D"}`}
+      onPrevious={() => update(s => nextClue(s, puzzle, -1))}
+      onNext={() => update(s => nextClue(s, puzzle, 1))}
+      onToggle={() => update(s => toggleDirection(s, puzzle))}
+    />
+  )
+
   return (
     <div className="flex h-full flex-col">
       {toolbar &&
@@ -180,13 +192,7 @@ export function Crossword(
       <div className="flex min-h-0 flex-1 flex-col pointer-coarse:landscape:flex-row">
         <div className="mx-auto flex min-h-0 w-full max-w-7xl min-w-0 flex-1 flex-col gap-4 md:pointer-fine:flex-row md:pointer-fine:p-4">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col md:pointer-fine:gap-3">
-            <ClueBar
-              text={clue && <ClueText clue={clue} />}
-              label={clue && `${clue.label}${clue.direction === "across" ? "A" : "D"}`}
-              onPrevious={() => update(s => nextClue(s, puzzle, -1))}
-              onNext={() => update(s => nextClue(s, puzzle, 1))}
-              onToggle={() => update(s => toggleDirection(s, puzzle))}
-            />
+            {!touch && clueBar}
             <div
               className="grid min-h-0 flex-1 content-start justify-items-center p-2 md:p-0"
               style={{ containerType: "size" }}
@@ -225,7 +231,11 @@ export function Crossword(
           </aside>
         </div>
 
-        <OnScreenKeyboard rebus={rebus !== undefined} onKey={key => handleKey(key)} />
+        {/* On touch screens the clue sits right above the keyboard, as in the NYT app. */}
+        <div className="flex flex-col pointer-coarse:landscape:w-[45%] pointer-coarse:landscape:shrink-0 pointer-coarse:landscape:self-end pointer-fine:hidden">
+          {touch && clueBar}
+          <OnScreenKeyboard rebus={rebus !== undefined} onKey={key => handleKey(key)} />
+        </div>
       </div>
     </div>
   )
@@ -234,7 +244,7 @@ export function Crossword(
 /** The current clue, with buttons to move between clues; tapping it switches direction. */
 function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
   return (
-    <div className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:rounded-lg">
+    <div className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:pointer-fine:rounded-lg">
       <button
         type="button"
         tabIndex={-1}

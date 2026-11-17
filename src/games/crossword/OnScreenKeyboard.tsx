@@ -7,7 +7,7 @@ export function OnScreenKeyboard(
   { onKey, rebus }: Props,
 ) {
   return (
-    <div className="bg-muted grid gap-2 p-1.5 pb-[max(2rem,env(safe-area-inset-bottom))] pointer-coarse:landscape:w-[45%] pointer-coarse:landscape:shrink-0 pointer-coarse:landscape:self-end pointer-fine:hidden">
+    <div className="bg-muted grid gap-2 p-1.5 pb-[max(3rem,env(safe-area-inset-bottom))]">
       {ROWS.map((row, r) => (
         <div key={r} className="flex justify-center gap-1">
           {row.map(key => (
