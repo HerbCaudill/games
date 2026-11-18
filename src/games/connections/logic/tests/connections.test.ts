@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { swapIntoTopRow } from "../swapIntoTopRow"
 import type { ConnectionsPuzzle } from "@/types"
 import { initialState } from "../initialState"
 import { submitGuess } from "../submitGuess"
@@ -72,5 +73,14 @@ describe("submitGuess", () => {
       initialState(puzzle),
     )
     expect(isOver(state, puzzle)).toBe(true)
+  })
+})
+
+describe("swapIntoTopRow", () => {
+  it("swaps the selected words with the top row's others, leaving every other word in place", () => {
+    const words = "a b c d e f g h i j k l".split(" ")
+    expect(swapIntoTopRow(words, ["b", "e", "h", "k"])).toEqual(
+      "b e h k a f g c i j d l".split(" "),
+    )
   })
 })

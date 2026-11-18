@@ -14,6 +14,7 @@ import { isOver } from "./logic/isOver"
 import { MAX_MISTAKES } from "./logic/constants"
 import { remainingWords } from "./logic/remainingWords"
 import { submitGuess } from "./logic/submitGuess"
+import { swapIntoTopRow } from "./logic/swapIntoTopRow"
 import { type ConnectionsState } from "./logic/types"
 import { useConnectionsAnimation } from "./useConnectionsAnimation"
 import "./connections.css"
@@ -34,7 +35,7 @@ export function Connections(
   const mergingBand = useRef<HTMLDivElement>(null)
   const submitting = useRef(false)
   const [busy, setBusy] = useState(false)
-  const animate = useConnectionsAnimation()
+  const { animate, release } = useConnectionsAnimation()
   const toast = useToast()
   const over = isOver(state, puzzle)
   const won = state.solved.length === puzzle.groups.length
@@ -62,84 +63,62 @@ export function Connections(
     const tiles = [
       ...(grid.current?.querySelectorAll<HTMLButtonElement>("button[aria-pressed=true]") ?? []),
     ]
+    // Each selected tile hops in turn.
     if (
       !(await animate(
         tiles.map((element, index) => ({
           element,
           keyframes: [0, -10, 0].map(y => ({ transform: `translateY(${y}px)` })),
-          options: { duration: 200, delay: index * 55, easing: "ease-in-out", fill: "both" },
+          options: { duration: 180, delay: index * 60, easing: "ease-in-out", fill: "both" },
         })),
       ))
     )
       return
-    const { state: next, result } = submitGuess(state, selected, puzzle)
-    if (
-      result === "correct" &&
-      grid.current &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      const allTiles = [...grid.current.querySelectorAll<HTMLButtonElement>("button")]
-      const starts = allTiles.map(element => ({ element, from: element.getBoundingClientRect() }))
-      // Reorder first, then animate from each tile's old position into its new slot.
-      flushSync(() =>
-        setDisplayOrder([
-          ...words.filter(word => selected.includes(word)),
-          ...words.filter(word => !selected.includes(word)),
-        ]),
-      )
-      if (
-        !(await animate(
-          starts.map(({ element, from }) => {
-            const to = element.getBoundingClientRect()
-            return {
-              element,
+    let { state: next, result } = submitGuess(state, selected, puzzle)
+    if (result === "correct") {
+      // The group takes the top row, swapping places with the words there; the rest stay put.
+      const order = swapIntoTopRow(words, selected)
+      next = { ...next, order: [...order, ...next.order.filter(word => !order.includes(word))] }
+      if (grid.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const starts = [...grid.current.querySelectorAll<HTMLButtonElement>("button")].map(
+          element => ({ element, from: element.getBoundingClientRect() }),
+        )
+        flushSync(() => setDisplayOrder(order))
+        const moves = starts
+          .map(({ element, from }) => ({ element, from, to: element.getBoundingClientRect() }))
+          .filter(({ from, to }) => from.x !== to.x || from.y !== to.y)
+        if (
+          !(await animate(
+            moves.map(({ element, from, to }) => {
+              const zIndex = selected.includes(element.textContent!) ? 1 : 0
+              return {
+                element,
+                keyframes: [
+                  { transform: `translate(${from.x - to.x}px, ${from.y - to.y}px)`, zIndex },
+                  { transform: "translate(0px, 0px)", zIndex },
+                ],
+                options: { duration: 280, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+              }
+            }),
+          ))
+        )
+          return
+        // The group's band settles in over the top row.
+        flushSync(() => setMerging(puzzle.groups[next.solved.at(-1)!]))
+        if (
+          !(await animate([
+            {
+              element: mergingBand.current!,
               keyframes: [
-                {
-                  transform: `translate(${from.x - to.x}px, ${from.y - to.y}px)`,
-                  zIndex: selected.includes(element.textContent!) ? 1 : 0,
-                },
-                {
-                  transform: "translate(0px, 0px)",
-                  zIndex: selected.includes(element.textContent!) ? 1 : 0,
-                },
+                { opacity: 0, transform: "scale(0.96)" },
+                { opacity: 1, transform: "scale(1)" },
               ],
-              options: { duration: 240, easing: "ease-in-out" },
-            }
-          }),
-        ))
-      )
-        return
-      const group = puzzle.groups[next.solved.at(-1)!]
-      flushSync(() => setMerging(group))
-      const bounds = grid.current.getBoundingClientRect()
-      if (
-        !(await animate([
-          ...tiles.map((element, index) => {
-            const box = element.getBoundingClientRect()
-            const width = bounds.width / 4
-            return {
-              element,
-              keyframes: [
-                { transform: "translateX(0px) scaleX(1)", transformOrigin: "left center" },
-                {
-                  transform: `translateX(${bounds.x + index * width - box.x}px) scaleX(${width / box.width})`,
-                  transformOrigin: "left center",
-                  backgroundColor: `var(--group-${group.level})`,
-                  color: "transparent",
-                  borderRadius: "0px",
-                },
-              ],
-              options: { duration: 200, easing: "ease-in-out", fill: "forwards" as const },
-            }
-          }),
-          {
-            element: mergingBand.current!,
-            keyframes: [{ opacity: 0 }, { opacity: 0, offset: 0.4 }, { opacity: 1 }],
-            options: { duration: 200, fill: "forwards" },
-          },
-        ]))
-      )
-        return
+              options: { duration: 180, easing: "ease-out", fill: "forwards" },
+            },
+          ]))
+        )
+          return
+      }
     }
     if (result === "one-away") toast.show("One away…")
     if (result === "already-guessed") toast.show("Already guessed!")
@@ -156,10 +135,14 @@ export function Connections(
       )
         return
     }
-    setState(next)
-    if (result === "correct") setSelected([])
-    setDisplayOrder(undefined)
-    setMerging(undefined)
+    // Commit the new board before letting go of the animations' end states, so nothing flickers.
+    flushSync(() => {
+      setState(next)
+      if (result === "correct") setSelected([])
+      setDisplayOrder(undefined)
+      setMerging(undefined)
+    })
+    release()
     submitting.current = false
     setBusy(false)
   }

@@ -1,18 +1,26 @@
 import { useEffect, useRef } from "react"
 
-/** Play a short board animation, skipping motion when requested and cleaning up on exit. */
+/**
+ * Play short board animations, skipping motion when requested. Finished animations hold their end
+ * state until `release`, so the caller can commit the matching React state first without a flicker.
+ */
 export function useConnectionsAnimation() {
   const active = useRef<Animation[]>([])
   const mounted = useRef(true)
+  const release = () => {
+    active.current.forEach(animation => animation.cancel())
+    active.current = []
+  }
   useEffect(() => {
     mounted.current = true
     return () => {
       mounted.current = false
-      active.current.forEach(animation => animation.cancel())
+      release()
     }
   }, [])
 
-  return async (steps: AnimationStep[]) => {
+  /** Run the steps together; resolves false if the board went away meanwhile. */
+  const animate = async (steps: AnimationStep[]) => {
     if (!mounted.current) return false
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true
     const animations = steps.map(({ element, keyframes, options }) =>
@@ -20,10 +28,9 @@ export function useConnectionsAnimation() {
     )
     active.current.push(...animations)
     await Promise.all(animations.map(animation => animation.finished.catch(() => undefined)))
-    animations.forEach(animation => animation.cancel())
-    active.current = active.current.filter(animation => !animations.includes(animation))
     return mounted.current
   }
+  return { animate, release }
 }
 
 /** One element's part of a board animation. */

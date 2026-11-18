@@ -69,7 +69,7 @@ test("submission bounces in sequence before moving the words into a solved band"
         ),
       { intervals: [25] },
     )
-    .toEqual([0, 55, 110, 165])
+    .toEqual([0, 60, 120, 180])
   await expect(page.getByText("FRUIT", { exact: true })).toHaveCount(0)
   await expect(grid).toHaveAttribute("aria-busy", "true")
   await page.keyboard.press("Enter")
@@ -93,26 +93,24 @@ test("submission bounces in sequence before moving the words into a solved band"
       { intervals: [25] },
     )
     .toBe(true)
+  // The group's band fades in over the top row.
   await expect
     .poll(
       () =>
-        grid.evaluate(
-          element =>
-            [...element.querySelectorAll("button[aria-pressed=true]")].filter(tile =>
-              tile
-                .getAnimations()
-                .some(animation =>
-                  (animation.effect as KeyframeEffect)
-                    .getKeyframes()
-                    .some(
-                      frame => String(frame.transform).includes("scaleX(") && frame.backgroundColor,
-                    ),
-                ),
-            ).length,
+        grid.evaluate(element =>
+          [...element.querySelectorAll("[aria-hidden=true]")].some(band =>
+            band
+              .getAnimations()
+              .some(animation =>
+                (animation.effect as KeyframeEffect)
+                  .getKeyframes()
+                  .some(frame => frame.opacity === "0"),
+              ),
+          ),
         ),
       { intervals: [25] },
     )
-    .toBe(4)
+    .toBe(true)
   await expect(page.getByText("FRUIT", { exact: true })).toBeVisible()
   await expect(grid).toHaveAttribute("aria-busy", "false")
   await expect(page.getByRole("button", { name: "APPLE", exact: true })).toHaveCount(0)
