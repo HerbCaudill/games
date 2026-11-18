@@ -87,8 +87,11 @@ export function SpellingBee(
         </details>
       </section>
 
-      <section className="relative flex flex-1 flex-col items-center gap-5">
-        <Toast message={toast.message} />
+      <section className="flex flex-1 flex-col items-center">
+        {/* Messages get their own place above the word, so they never cover it. */}
+        <div className="relative h-9 w-full">
+          <Toast message={toast.message} />
+        </div>
         <div
           className="flex h-12 items-center text-3xl font-semibold tracking-wide uppercase"
           aria-live="polite"
@@ -108,10 +111,12 @@ export function SpellingBee(
               {letter}
             </span>
           ))}
-          <span className="ml-0.5 h-9 w-0.5 animate-pulse bg-(--game-spelling-bee)" />
+          <span className="animate-blink ml-0.5 h-9 w-0.5 bg-(--game-spelling-bee)" />
         </div>
-        <Hive center={puzzle.center} outer={outer} onLetter={add} />
-        <div className="flex gap-3">
+        <div className="mt-6">
+          <Hive center={puzzle.center} outer={outer} onLetter={add} />
+        </div>
+        <div className="mt-5 flex gap-3">
           <Button variant="outline" className="h-12 rounded-full px-6 text-base" onClick={remove}>
             <IconBackspace /> Delete
           </Button>

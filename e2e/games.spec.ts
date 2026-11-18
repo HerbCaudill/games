@@ -56,6 +56,10 @@ test("rejects a Spelling Bee word without the center letter", async ({ page }) =
       .dispatchEvent("pointerdown")
   await page.getByRole("button", { name: "Enter" }).click()
   await expect(page.getByRole("status")).toHaveText("Missing center letter")
+  // The message has its own place above the word, clear of the cursor.
+  const message = (await page.getByRole("status").boundingBox())!
+  const word = (await page.getByLabel("Current word").boundingBox())!
+  expect(message.y + message.height).toBeLessThanOrEqual(word.y)
 })
 
 test("solves a Connections group and loses after four mistakes", async ({ page }) => {

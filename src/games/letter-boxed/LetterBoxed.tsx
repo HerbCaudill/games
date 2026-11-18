@@ -67,7 +67,7 @@ export function LetterBoxed(
       <Toast message={toast.message} />
       <div className="border-foreground/70 flex h-12 items-end gap-0.5 border-b-2 px-2 text-3xl font-semibold tracking-wide">
         {solved ? "" : state.current}
-        {!solved && <span className="mb-1 h-8 w-0.5 animate-pulse bg-(--game-letter-boxed)" />}
+        {!solved && <span className="animate-blink mb-1 h-8 w-0.5 bg-(--game-letter-boxed)" />}
       </div>
       <p className="text-muted-foreground min-h-5 text-center text-sm">{state.words.join(" – ")}</p>
 

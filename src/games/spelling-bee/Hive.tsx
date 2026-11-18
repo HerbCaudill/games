@@ -12,7 +12,7 @@ export function Hive(
   return (
     <svg
       viewBox="-3 -3.05 6 6.1"
-      className="w-[min(18rem,80vw)] select-none"
+      className="w-[min(18rem,80vw,36svh)] select-none"
       role="group"
       aria-label="Letters"
     >
