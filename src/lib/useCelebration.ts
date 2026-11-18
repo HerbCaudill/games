@@ -9,14 +9,12 @@ export function useCelebration(
   key: string,
   /** Whether it is done. */
   done: boolean,
-  /** Whether the celebration shows its own message; false for a game that says it itself. */
-  message = true,
 ) {
   const previous = useRef({ key, done })
   useEffect(() => {
     const before = previous.current
     previous.current = { key, done }
     if (before.key === key && !before.done && done)
-      window.dispatchEvent(new CustomEvent("game-completed", { detail: { message } }))
-  }, [key, done, message])
+      window.dispatchEvent(new Event("game-completed"))
+  }, [key, done])
 }

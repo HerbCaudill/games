@@ -15,7 +15,7 @@ Spelling Bee hints are written by Claude with the server's `ANTHROPIC_API_KEY`: 
 - `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<resource>/<YYYY-MM-DD>`, where a resource is a game, `spelling-bee-hints` (Claude's clues, written once per puzzle per server instance; the prompt came from Spelling Bee Buddy) or `spelling-bee-stats` (the share of NYT players who found each word). Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. NYT's puzzle feeds answer without any token, so before serving a puzzle it checks the token against an NYT account endpoint and trusts an accepted token for an hour. The token is the API's only access control.
 - `src/games/<game>/` holds each game. `logic/` has the pure game rules, one function per file, tested in `logic/tests/`. The `.tsx` files are the UI.
 - `src/lib/` holds shared hooks: API requests (`useApi`, and `usePuzzle` on top of it, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
-- Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, Spelling Bee hints under `hints:spelling-bee:<date>`, and the NYT token under `nyt-token`.
+- Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, time spent under `time:<game>:<date>` (Crossword and Pips keep it in their progress instead), Spelling Bee hints under `hints:spelling-bee:<date>`, and the NYT token under `nyt-token`.
 
 ## NYT feeds
 

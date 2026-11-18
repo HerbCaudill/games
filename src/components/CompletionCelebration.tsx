@@ -1,19 +1,14 @@
-import { IconCheck } from "@tabler/icons-react"
 import { useEffect, useState, type CSSProperties } from "react"
 import "./completion-celebration.css"
 
-/** Shared, nonblocking celebration for every game's completion. */
+/** Shared, nonblocking confetti for every game's completion; each game shows its own solved message. */
 export function CompletionCelebration(
   /** No external configuration. */
   _props: Props,
 ) {
   const [celebration, setCelebration] = useState(0)
-  const [message, setMessage] = useState(true)
   useEffect(() => {
-    const celebrate = (event: Event) => {
-      setMessage((event as CustomEvent<{ message?: boolean }>).detail?.message ?? true)
-      setCelebration(count => count + 1)
-    }
+    const celebrate = () => setCelebration(count => count + 1)
     window.addEventListener("game-completed", celebrate)
     return () => window.removeEventListener("game-completed", celebrate)
   }, [])
@@ -26,12 +21,6 @@ export function CompletionCelebration(
   if (!celebration) return null
   return (
     <div key={celebration} className="completion-celebration">
-      {message && (
-        <div role="status" className="completion-celebration-message">
-          <IconCheck className="size-5" aria-hidden="true" />
-          Puzzle complete!
-        </div>
-      )}
       <div aria-hidden="true" className="completion-confetti">
         {Array.from({ length: 36 }, (_, i) => (
           <span

@@ -2,8 +2,10 @@ import { IconArrowsShuffle, IconBackspace, IconBulb, IconLayoutGrid } from "@tab
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Panel } from "@/components/Panel"
+import { SolvedMessage } from "@/components/SolvedMessage"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
+import { useElapsed } from "@/lib/useElapsed"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
@@ -34,11 +36,9 @@ export function SpellingBee(
   const toast = useToast()
   const score = totalScore(found, puzzle)
   const rank = rankFor(score, puzzle)
-  useGameStatus(
-    "spelling-bee",
-    puzzle.date,
-    score === rank.max ? "solved" : found.length ? "started" : "new",
-  )
+  const solved = score === rank.max
+  const elapsed = useElapsed(`time:spelling-bee:${puzzle.date}`, !solved)
+  useGameStatus("spelling-bee", puzzle.date, solved ? "solved" : found.length ? "started" : "new")
 
   const letters = new Set([puzzle.center, ...puzzle.outer])
   const add = (letter: string) => setGuess(g => (g.length < 19 ? g + letter.toLowerCase() : g))
@@ -117,6 +117,11 @@ export function SpellingBee(
             total: puzzle.pangrams.length,
           }}
         />
+        {solved && (
+          <div className="mt-4 flex justify-center">
+            <SolvedMessage seconds={elapsed} />
+          </div>
+        )}
         <div className="mt-4">
           <FoundWords found={found} pangrams={puzzle.pangrams} />
         </div>

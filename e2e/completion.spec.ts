@@ -7,25 +7,18 @@ test.beforeEach(async ({ page }) => {
 })
 
 for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-boxed"] as const) {
-  test(`${game} celebrates once and shows complete on the home page`, async ({
+  test(`${game} says how long it took, celebrates once and shows complete on the home page`, async ({
     page,
     isMobile,
   }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" })
     await page.goto(`/${game}?date=2026-11-16`)
     await finish(page, game, isMobile)
-    // Letter Boxed says it with its own solution message, so the shared one stays quiet.
-    const celebration = page
-      .getByRole("status")
-      .filter({ hasText: game === "letter-boxed" ? "solution in 2 words" : "Puzzle complete!" })
-    await expect(celebration).toBeVisible()
-    await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(
-      game === "letter-boxed" ? 0 : 1,
-    )
-    expect(await celebration.evaluate(element => element.getAnimations().length)).toBeGreaterThan(0)
+    await expect(page.getByRole("status").filter({ hasText: /^Solved in \d+:\d\d/ })).toBeVisible()
+    await expect(confetti(page)).toHaveCount(1)
     await page.reload()
-    await expect(page.getByRole("button", { name: "All games" })).toBeVisible()
-    await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(0)
+    await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
+    await expect(confetti(page)).toHaveCount(0)
     await page.getByRole("button", { name: "All games" }).click()
     await expect(
       page.locator(`a[href^="/${game}"]`).getByText("Complete", { exact: true }),
@@ -37,22 +30,28 @@ test("celebrates without motion when reduced motion is requested", async ({ page
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/spelling-bee?date=2026-11-16")
   await finish(page, "spelling-bee", isMobile)
-  const celebration = page.getByRole("status").filter({ hasText: "Puzzle complete!" })
-  await expect(celebration).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
+  await expect(confetti(page)).toHaveCount(1)
   expect(
-    await celebration.evaluate(
-      element => element.parentElement!.getAnimations({ subtree: true }).length,
-    ),
+    await confetti(page).evaluate(element => element.getAnimations({ subtree: true }).length),
   ).toBe(0)
-  await expect(celebration).toHaveCount(0)
+  await expect(confetti(page)).toHaveCount(0)
 })
 
 test("celebrates each Pips board as it is solved", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" })
   await page.goto("/pips?date=2026-11-16")
   await solvePipsBoard(page, "medium")
-  await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toBeVisible()
+  await expect(confetti(page)).toHaveCount(1)
 })
+
+/** The shared completion confetti, present only while it plays. */
+function confetti(
+  /** Browser page. */
+  page: Page,
+) {
+  return page.locator(".completion-celebration")
+}
 
 /** Complete a synthetic puzzle through its public controls. */
 async function finish(

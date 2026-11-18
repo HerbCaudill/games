@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 test("restarts the board but keeps the history and the solved status", async ({ page }) => {
   await enterWord(page, "ADG")
   await enterWord(page, "JBEHKCFIL")
-  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
   await page.getByRole("button", { name: "Restart", exact: true }).click()
   await expect(page.getByRole("button", { name: "Restart", exact: true })).toBeDisabled()
   await page.reload()
@@ -24,7 +24,7 @@ test("restarts the board but keeps the history and the solved status", async ({ 
   await expect(history.getByLabel("Solved in 2 words")).toBeVisible()
   await history.getByRole("button", { name: /ADG.*GJBEHKCFIL/ }).click()
   await expect(history).toBeHidden()
-  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
 })
 
 test("starts a new chain with the next letter after a solution", async ({ page }) => {
@@ -69,7 +69,7 @@ test("animates accepted paths quickly while keeping word entry usable", async ({
     await page.keyboard.type("JBEHKCFIL")
     await page.keyboard.press("Enter")
   }
-  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
   await page.getByRole("group", { name: "Letters" }).evaluate(element => {
     element.getAnimations({ subtree: true }).forEach(animation => animation.play())
   })
@@ -81,7 +81,7 @@ test("animates accepted paths quickly while keeping word entry usable", async ({
     )
     .toBe(0)
   await page.reload()
-  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
   expect(
     await page
       .getByRole("group", { name: "Letters" })
@@ -99,7 +99,7 @@ test("honors reduced motion when accepting words", async ({ page }) => {
       .evaluate(element => element.getAnimations({ subtree: true }).length),
   ).toBe(0)
   await enterWord(page, "JBEHKCFIL")
-  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
 })
 
 test("keeps a three-word finish in progress without celebrating", async ({ page }) => {
@@ -107,7 +107,7 @@ test("keeps a three-word finish in progress without celebrating", async ({ page 
   await enterWord(page, "JA")
   await enterWord(page, "DGJBEHKCFIL")
   await expect(page.getByRole("status").filter({ hasText: "solution in 3 words" })).toBeVisible()
-  await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(0)
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Enter", exact: true })).toBeVisible()
   await page.getByRole("button", { name: "All games" }).click()
   await expect(

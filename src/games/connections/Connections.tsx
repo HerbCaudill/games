@@ -1,8 +1,10 @@
 import { useRef, useState } from "react"
 import { flushSync } from "react-dom"
+import { SolvedMessage } from "@/components/SolvedMessage"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
 import { shuffle } from "@/lib/shuffle"
+import { useElapsed } from "@/lib/useElapsed"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
@@ -39,6 +41,7 @@ export function Connections(
   const toast = useToast()
   const over = isOver(state, puzzle)
   const won = state.solved.length === puzzle.groups.length
+  const elapsed = useElapsed(`time:connections:${puzzle.date}`, !over)
   useGameStatus(
     "connections",
     puzzle.date,
@@ -159,7 +162,10 @@ export function Connections(
 
   return (
     <div className="connections-feedback relative mx-auto flex max-w-md flex-col gap-4 p-4 sm:pt-8">
-      <Toast message={toast.message} />
+      {/* Takes no space, so the toast still places itself against the game. */}
+      <div className="connections-toast contents">
+        <Toast message={toast.message} />
+      </div>
       <p className="text-muted-foreground text-center text-sm">Create four groups of four!</p>
 
       {/* A container, so a solved group's band can be exactly one square tile tall. */}
@@ -251,10 +257,19 @@ export function Connections(
         </>
       )}
 
-      {over && (
-        <p className="text-center font-semibold">
-          {won ? (state.mistakes === 0 ? "Perfect!" : "Solved!") : "Better luck next time"}
-        </p>
+      {won ? (
+        <div className="flex justify-center">
+          <SolvedMessage
+            seconds={elapsed}
+            detail={
+              state.mistakes === 0
+                ? "Perfect"
+                : `${state.mistakes} ${state.mistakes === 1 ? "mistake" : "mistakes"}`
+            }
+          />
+        </div>
+      ) : (
+        over && <p className="text-center font-semibold">Better luck next time</p>
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Panel } from "@/components/Panel"
 import { Button } from "@/components/ui/button"
+import { useElapsed } from "@/lib/useElapsed"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
@@ -40,12 +41,12 @@ export function LetterBoxed(
   const [acceptedWordIndex, setAcceptedWordIndex] = useState<number | null>(null)
   const [feedback, setFeedback] = useState<LetterBoxedMessage>()
   const finished = isSolution(state.words, puzzle)
+  const solved = isSolved(state, puzzle)
+  const elapsed = useElapsed(`time:letter-boxed:${puzzle.date}`, !solved)
   useGameStatus(
     "letter-boxed",
     puzzle.date,
-    isSolved(state, puzzle) ? "solved" : state.history.length || state.current ? "started" : "new",
-    // The solution message below the word already says it.
-    { message: false },
+    solved ? "solved" : state.history.length || state.current ? "started" : "new",
   )
 
   // A finished chain keeps its message until a new chain starts.
@@ -156,7 +157,7 @@ export function LetterBoxed(
           {!finished && <span className="animate-blink ml-1 h-8 w-[3px] bg-black" />}
         </div>
       </div>
-      <Message message={message} />
+      <Message message={message} seconds={elapsed} />
       <div className="p-4 sm:p-12">
         <LetterBox
           puzzle={puzzle}

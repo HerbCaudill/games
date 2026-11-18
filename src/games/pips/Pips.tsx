@@ -14,7 +14,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { formatDuration } from "@/lib/formatDuration"
+import { SolvedMessage } from "@/components/SolvedMessage"
 import { readStored } from "@/lib/readStored"
 import { useCelebration } from "@/lib/useCelebration"
 import { useGameStatus } from "@/lib/useGameStatus"
@@ -281,7 +281,7 @@ export function Pips(
         />
       </div>
 
-      {solved && <p className="font-semibold">Solved in {formatDuration(progress.elapsed)}!</p>}
+      {solved && <SolvedMessage seconds={progress.elapsed} />}
     </div>
   )
 }

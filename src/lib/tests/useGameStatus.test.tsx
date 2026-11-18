@@ -54,19 +54,3 @@ it("clears a stale completion when the puzzle is restarted", () => {
   rerender({ status: "new" })
   expect(readGameStatus("letter-boxed", "2026-11-16")).toBe("new")
 })
-
-it("can celebrate without the shared message", () => {
-  const celebrate = vi.fn()
-  window.addEventListener("game-completed", celebrate)
-  try {
-    const { rerender } = renderHook(
-      ({ status }: { status: GameStatus }) =>
-        useGameStatus("letter-boxed", "2026-11-16", status, { message: false }),
-      { initialProps: { status: "started" as GameStatus } },
-    )
-    rerender({ status: "solved" })
-    expect(celebrate.mock.calls[0][0].detail).toEqual({ message: false })
-  } finally {
-    window.removeEventListener("game-completed", celebrate)
-  }
-})

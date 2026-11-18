@@ -2,7 +2,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { formatDuration } from "@/lib/formatDuration"
+import { SolvedMessage } from "@/components/SolvedMessage"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { useMediaQuery } from "@/lib/useMediaQuery"
@@ -161,9 +161,9 @@ export function Crossword(
         )}
 
       {solved && (
-        <p className="bg-(--game-crossword) px-4 py-2 text-center text-sm font-medium text-(--game-crossword-foreground)">
-          Solved in {formatDuration(progress.elapsed)}!
-        </p>
+        <div className="flex justify-center px-4 py-2">
+          <SolvedMessage seconds={progress.elapsed} />
+        </div>
       )}
       {full && !solved && (
         <p className="bg-muted px-4 py-2 text-center text-sm">

@@ -32,6 +32,6 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expect(band).toHaveCSS("background-color", color)
       await expect(band).toHaveCSS("color", "rgb(29, 36, 51)")
     }
-    await expect(page.getByText("Perfect!", { exact: true })).toBeVisible()
+    await expect(page.getByRole("status").filter({ hasText: "Perfect" })).toBeVisible()
   })
 }

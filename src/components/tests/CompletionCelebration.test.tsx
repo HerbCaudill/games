@@ -1,22 +1,14 @@
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, render } from "@testing-library/react"
 import { afterEach, expect, it } from "vitest"
 import { CompletionCelebration } from "../CompletionCelebration"
 
 afterEach(cleanup)
 
-it("announces a completion", () => {
-  render(<CompletionCelebration />)
-  act(() => {
-    window.dispatchEvent(new CustomEvent("game-completed"))
-  })
-  expect(screen.getByRole("status")).toHaveTextContent("Puzzle complete!")
-})
-
-it("leaves the words to a game that says them itself", () => {
+it("throws confetti when a game is completed, leaving the words to the game", () => {
   const { container } = render(<CompletionCelebration />)
+  expect(container).toBeEmptyDOMElement()
   act(() => {
-    window.dispatchEvent(new CustomEvent("game-completed", { detail: { message: false } }))
+    window.dispatchEvent(new Event("game-completed"))
   })
-  expect(screen.queryByRole("status")).toBeNull()
   expect(container).not.toBeEmptyDOMElement()
 })

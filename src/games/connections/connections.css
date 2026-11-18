@@ -1,4 +1,4 @@
-.connections-feedback [role="status"] {
+.connections-toast [role="status"] {
   animation: connections-toast 1600ms ease both;
 }
 
@@ -18,7 +18,7 @@
     transition: none;
   }
 
-  .connections-feedback [role="status"] {
+  .connections-toast [role="status"] {
     animation: none;
   }
 }

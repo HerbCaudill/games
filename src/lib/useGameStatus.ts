@@ -12,18 +12,11 @@ export function useGameStatus(
   date: string,
   /** The puzzle's current status. */
   status: GameStatus,
-  /** Celebration options. */
-  {
-    message = true,
-  }: {
-    /** Whether the shared celebration shows its message; false for a game that says it itself. */
-    message?: boolean
-  } = {},
 ) {
   useEffect(() => {
     writeStored(statusKey(game, date), status)
   }, [game, date, status])
-  useCelebration(`${game}:${date}`, status === "solved", message)
+  useCelebration(`${game}:${date}`, status === "solved")
 }
 
 // TYPES
