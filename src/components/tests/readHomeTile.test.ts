@@ -26,7 +26,7 @@ it("shows how much of the crossword is filled", () => {
   expect(readHomeTile("crossword", DATE)).toEqual({
     status: "started",
     elapsed: 75,
-    progress: { game: "crossword", width: 2, height: 2, filled: 1 / 3 },
+    progress: { game: "crossword", filled: 1 / 3 },
   })
 })
 

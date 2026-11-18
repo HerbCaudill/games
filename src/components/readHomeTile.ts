@@ -60,7 +60,7 @@ function readProgress(
       const { entries } = progress as CrosswordProgress
       const open = puzzle.cells.filter(Boolean).length
       const filled = puzzle.cells.filter((cell, i) => cell && entries[i]).length
-      return { game, width: puzzle.width, height: puzzle.height, filled: open ? filled / open : 0 }
+      return { game, filled: open ? filled / open : 0 }
     }
     case "spelling-bee": {
       const puzzle = readPuzzle("spelling-bee", date)
@@ -106,10 +106,6 @@ export type HomeProgress =
   | {
       /** The game. */
       game: "crossword"
-      /** Squares across. */
-      width: number
-      /** Squares down. */
-      height: number
       /** The share of open squares filled, from 0 to 1. */
       filled: number
     }

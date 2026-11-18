@@ -82,7 +82,7 @@ function ProgressPicture(
   const className = "size-22"
   switch (progress.game) {
     case "crossword":
-      return <GridProgress {...progress} className={className} />
+      return <GridProgress filled={progress.filled} className={className} />
     case "spelling-bee":
       return <HiveProgress rank={progress.rank} className={className} />
     case "connections":
