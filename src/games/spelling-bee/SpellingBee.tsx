@@ -110,7 +110,14 @@ export function SpellingBee(
         <GridPanel puzzle={puzzle} token={token} found={found} />
       </Panel>
       <section className="flex-1 md:max-w-sm">
-        <RankMeter score={score} rank={rank} />
+        <RankMeter
+          score={score}
+          rank={rank}
+          pangrams={{
+            found: puzzle.pangrams.filter(word => found.includes(word)).length,
+            total: puzzle.pangrams.length,
+          }}
+        />
         <details className="bg-card mt-4 rounded-lg border">
           <summary className="cursor-pointer px-3 py-2 text-sm">
             You have found {found.length} {found.length === 1 ? "word" : "words"}

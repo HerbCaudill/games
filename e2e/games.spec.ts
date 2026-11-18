@@ -44,7 +44,9 @@ test("scores a Spelling Bee word and shows the rank", async ({ page }) => {
       .getByRole("button", { name: letter.toUpperCase(), exact: true })
       .dispatchEvent("pointerdown")
   await page.getByRole("button", { name: "Enter" }).click()
-  await expect(page.getByText("5 points")).toBeVisible()
+  await expect(page.getByText("5 / 21 points")).toBeVisible()
+  await expect(page.getByText("3 points to Great")).toBeVisible()
+  await expect(page.getByLabel("0 of 1 pangram found")).toBeVisible()
   await expect(page.getByText("You have found 1 word")).toBeVisible()
 })
 
@@ -72,7 +74,6 @@ test("shows Spelling Bee hints, the word grid and player stats from the header",
   await page.getByRole("button", { name: "Word grid and stats" }).click()
   const grid = page.getByRole("dialog", { name: "Word grid and stats" })
   await expect(grid.getByLabel("M, 4 letters: 1 of 1 found")).toBeVisible()
-  await expect(grid.getByLabel("Pangrams: 0 of 1 found")).toBeVisible()
   await expect(grid.getByText("1,234 players")).toBeVisible()
 })
 

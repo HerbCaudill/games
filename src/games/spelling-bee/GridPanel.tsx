@@ -11,22 +11,9 @@ export function GridPanel(
   { puzzle, token, found }: Props,
 ) {
   const grid = wordGrid(puzzle.answers, found)
-  const pangrams = {
-    found: puzzle.pangrams.filter(word => found.includes(word)).length,
-    total: puzzle.pangrams.length,
-  }
   return (
     <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-3">
-        <p
-          className="flex items-center gap-2 text-sm"
-          aria-label={`Pangrams: ${pangrams.found} of ${pangrams.total} found`}
-        >
-          <span className="font-semibold">
-            {pangrams.total} {pangrams.total === 1 ? "pangram" : "pangrams"}
-          </span>
-          <WordDots count={pangrams} />
-        </p>
+      <section>
         <table className="w-full border-collapse text-sm" aria-label="Word grid">
           <thead>
             <tr>
