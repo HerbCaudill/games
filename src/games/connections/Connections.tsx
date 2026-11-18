@@ -175,11 +175,12 @@ export function Connections(
   })
 
   return (
-    <div className="connections-feedback relative mx-auto flex max-w-xl flex-col gap-4 p-4 sm:pt-8">
+    <div className="connections-feedback relative mx-auto flex max-w-md flex-col gap-4 p-4 sm:pt-8">
       <Toast message={toast.message} />
       <p className="text-muted-foreground text-center text-sm">Create four groups of four!</p>
 
-      <div className="grid gap-2">
+      {/* A container, so a solved group's band can be exactly one square tile tall. */}
+      <div className="@container grid gap-2">
         {shownGroups.map(i => (
           <SolvedGroup key={i} group={puzzle.groups[i]} missed={!state.solved.includes(i)} />
         ))}
@@ -199,7 +200,7 @@ export function Connections(
                 disabled={busy}
                 onClick={() => toggle(word)}
                 className={cn(
-                  "flex h-16 items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/60 sm:h-20",
+                  "flex aspect-square items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/60",
                   word.length > 9
                     ? "text-[0.65rem] sm:text-xs"
                     : word.length > 6
@@ -239,7 +240,7 @@ export function Connections(
           <div className="flex justify-center gap-2">
             <Button
               variant="outline"
-              className="rounded-full px-4"
+              className="h-12 rounded-full px-6 text-base"
               onClick={mix}
               disabled={busy}
               title="Shuffle (S)"
@@ -248,7 +249,7 @@ export function Connections(
             </Button>
             <Button
               variant="outline"
-              className="rounded-full px-4"
+              className="h-12 rounded-full px-6 text-base"
               onClick={() => setSelected([])}
               disabled={busy || !selected.length}
               title="Deselect all (D)"
@@ -256,7 +257,7 @@ export function Connections(
               Deselect all
             </Button>
             <Button
-              className="rounded-full px-4"
+              className="h-12 rounded-full px-6 text-base"
               onClick={submit}
               disabled={busy || selected.length !== 4}
               title="Submit (Enter)"
@@ -281,7 +282,7 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
   return (
     <div
       className={cn(
-        "text-(--group-foreground) flex h-16 flex-col items-center justify-center rounded-lg px-2 text-center sm:h-20",
+        "text-(--group-foreground) flex h-[calc((100cqw-1.5rem)/4)] flex-col items-center justify-center rounded-lg px-2 text-center",
         missed && "opacity-75",
       )}
       style={{ background: `var(--group-${group.level})` }}

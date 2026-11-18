@@ -28,11 +28,12 @@ export function GameScreen(
         <Button
           variant="ghost"
           size="icon"
+          className="size-10"
           aria-label="All games"
           title="All games"
           onClick={() => navigate(isToday ? "/" : `/?date=${date}`)}
         >
-          <IconChevronLeft />
+          <IconChevronLeft className="size-7" stroke={2.5} />
         </Button>
         <h1 className="sr-only">{game.name}</h1>
         {/* Each game puts its own controls here. */}
