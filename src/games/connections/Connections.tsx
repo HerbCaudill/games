@@ -194,7 +194,7 @@ export function Connections(
                 disabled={busy}
                 onClick={() => toggle(word)}
                 className={cn(
-                  "flex aspect-square items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/60",
+                  "flex aspect-square items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none",
                   word.length > 9
                     ? "text-[0.65rem] sm:text-xs"
                     : word.length > 6

@@ -22,7 +22,7 @@ export function HomeTile(
         event.preventDefault()
         navigate(href)
       }}
-      className="text-foreground focus-visible:ring-ring/50 grid min-h-38 grid-cols-[1fr_auto] gap-4 rounded-[20px] py-5 pr-5 pl-[22px] transition-[filter] outline-none hover:brightness-95 focus-visible:ring-3"
+      className="text-foreground grid min-h-38 grid-cols-[1fr_auto] gap-4 rounded-[20px] py-5 pr-5 pl-[22px] transition-[filter] outline-none hover:brightness-95"
       style={{ background: game.color }}
     >
       <span className="flex min-w-0 flex-col justify-between">
