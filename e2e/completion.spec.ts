@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-boxed"] as const) {
-  test(`${game} says how long it took, celebrates once and shows complete on the home page`, async ({
+  test(`${game} says how long it took, celebrates once and shows it solved on the home page`, async ({
     page,
     isMobile,
   }) => {
@@ -20,9 +20,7 @@ for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-
     await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
     await expect(confetti(page)).toHaveCount(0)
     await page.getByRole("button", { name: "All games" }).click()
-    await expect(
-      page.locator(`a[href^="/${game}"]`).getByText("Complete", { exact: true }),
-    ).toBeVisible()
+    await expect(page.locator(`a[href^="/${game}"]`).getByText(/^Solved in \d+:\d\d/)).toBeVisible()
   })
 }
 

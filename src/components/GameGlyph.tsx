@@ -1,5 +1,4 @@
 import type { GameId } from "@/types"
-import { GAME_GLYPH_STROKE_WIDTH } from "@/constants"
 
 /** A small drawing that stands for a game. */
 export function GameGlyph(
@@ -14,7 +13,7 @@ export function GameGlyph(
       color="#000"
       fill="currentColor"
       stroke="currentColor"
-      strokeWidth={GAME_GLYPH_STROKE_WIDTH}
+      strokeWidth={STROKE_WIDTH}
     >
       {GLYPHS[game]}
     </svg>
@@ -22,6 +21,9 @@ export function GameGlyph(
 }
 
 // CONSTANTS
+
+/** Stroke width, in the glyphs' 32-unit drawing. */
+const STROKE_WIDTH = 2
 
 /** Glyph shapes by game. */
 const GLYPHS: Record<GameId, React.ReactNode> = {

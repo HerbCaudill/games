@@ -110,9 +110,7 @@ test("keeps a three-word finish in progress without celebrating", async ({ page 
   await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Enter", exact: true })).toBeVisible()
   await page.getByRole("button", { name: "All games" }).click()
-  await expect(
-    page.getByRole("link", { name: /Letter Boxed/ }).getByText("In progress"),
-  ).toBeVisible()
+  await expect(page.getByRole("link", { name: /Letter Boxed.*In progress/ })).toBeVisible()
 })
 
 /** Tap a word and submit it, omitting the carried letter for subsequent words. */

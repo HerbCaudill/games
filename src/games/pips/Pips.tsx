@@ -25,11 +25,13 @@ import { useUndo } from "@/lib/useUndo"
 import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
 import { PipsTable } from "./PipsTable"
 import { boardCells } from "./logic/boardCells"
+import { DIFFICULTIES } from "./logic/constants"
 import { cellKey } from "./logic/cellKey"
 import { directionOf } from "./logic/directionOf"
 import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
 import { placeAt } from "./logic/placeAt"
+import { progressKey } from "./logic/progressKey"
 import { removeDomino } from "./logic/removeDomino"
 import { turnTo } from "./logic/turnTo"
 import { type Placements, type Point } from "./logic/types"
@@ -286,16 +288,6 @@ export function Pips(
   )
 }
 
-/** Storage key for one board's progress. */
-function progressKey(
-  /** Puzzle date. */
-  date: string,
-  /** Difficulty. */
-  difficulty: PipsDifficulty,
-) {
-  return `progress:pips:${date}:${difficulty}`
-}
-
 /** Whether a board not currently shown has been solved, from its saved progress. */
 function isStoredSolved(
   /** The puzzle. */
@@ -327,11 +319,6 @@ function mod4(
 ) {
   return ((n % 4) + 4) % 4
 }
-
-// CONSTANTS
-
-/** Difficulty levels in display order. */
-const DIFFICULTIES: PipsDifficulty[] = ["easy", "medium", "hard"]
 
 // TYPES
 

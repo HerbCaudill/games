@@ -7,13 +7,12 @@ test.beforeEach(async ({ page }) => {
 
 test("lists the games in order and opens one", async ({ page }) => {
   await page.goto("/")
-  const names = page.getByRole("listitem").locator("span.font-semibold")
-  await expect(names).toHaveText([
-    "Crossword",
-    "Pips",
-    "Spelling Bee",
-    "Connections",
-    "Letter Boxed",
+  await expect(page.getByRole("main").getByRole("link")).toHaveText([
+    /^Crossword/,
+    /^Pips/,
+    /^Spelling Bee/,
+    /^Connections/,
+    /^Letter Boxed/,
   ])
   await page.getByRole("link", { name: /Connections/ }).click()
   await expect(page).toHaveURL(/\/connections$/)

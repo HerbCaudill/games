@@ -1,10 +1,9 @@
-import { IconCheck } from "@tabler/icons-react"
-import { GAME_GLYPH_STROKE_WIDTH, GAMES } from "@/constants"
+import { GAMES } from "@/constants"
 import { formatDate } from "@/lib/formatDate"
-import { readGameStatus } from "@/lib/readGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { navigate } from "@/lib/navigate"
-import { GameGlyph } from "./GameGlyph"
+import { HomeTile } from "./HomeTile"
+import { readHomeTile } from "./readHomeTile"
 import { ShortcutsButton } from "./ShortcutsButton"
 
 /** The menu of today's games. */
@@ -30,52 +29,16 @@ export function Home(
       </header>
       <main className="app-content">
         <ul className="mx-auto grid max-w-xl gap-3 p-4 sm:pt-8">
-          {GAMES.map((game, i) => {
-            const status = readGameStatus(game.id, date)
-            return (
-              <li key={game.id}>
-                <a
-                  href={`/${game.id}${query}`}
-                  onClick={event => {
-                    event.preventDefault()
-                    navigate(`/${game.id}${query}`)
-                  }}
-                  className="bg-card hover:bg-muted focus-visible:ring-ring/50 flex items-center gap-4 rounded-xl border p-4 transition-colors outline-none focus-visible:ring-3"
-                >
-                  <span
-                    className="grid size-12 shrink-0 place-items-center rounded-lg"
-                    style={{
-                      background: game.id === "crossword" ? "#fff" : game.color,
-                      border:
-                        game.id === "crossword"
-                          ? `${GAME_GLYPH_STROKE_WIDTH}px solid #000`
-                          : undefined,
-                    }}
-                  >
-                    <GameGlyph game={game.id} className="size-8" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-semibold">{game.name}</span>
-                    <span className="text-muted-foreground block truncate text-sm">
-                      {game.blurb}
-                    </span>
-                  </span>
-                  {status === "solved" && (
-                    <span className="flex shrink-0 items-center gap-1 text-xs">
-                      <IconCheck className="size-4" aria-hidden="true" />
-                      Complete
-                    </span>
-                  )}
-                  {status === "started" && (
-                    <span className="text-muted-foreground shrink-0 text-xs">In progress</span>
-                  )}
-                  <kbd className="text-muted-foreground hidden shrink-0 rounded border px-1.5 font-mono text-xs pointer-fine:inline">
-                    {i + 1}
-                  </kbd>
-                </a>
-              </li>
-            )
-          })}
+          {GAMES.map((game, i) => (
+            <li key={game.id}>
+              <HomeTile
+                game={game}
+                href={`/${game.id}${query}`}
+                shortcut={i + 1}
+                tile={readHomeTile(game.id, date)}
+              />
+            </li>
+          ))}
         </ul>
       </main>
     </div>

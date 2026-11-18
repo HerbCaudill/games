@@ -84,9 +84,14 @@
   /* Original game identity colors; text uses a darker tint where needed. */
   --game-crossword: #000000;
   --game-crossword-foreground: #ffffff;
+  /* NYT's crossword blue, behind the crossword's home tile, and the light blue that fills its picture. */
+  --crossword-tile: #6492e5;
+  --crossword-tile-fill: #a9c4f4;
   --game-pips: #d3a6ce;
   /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
   --game-spelling-bee: oklch(0.87 0.17 90);
+  /* The lit cells of the home menu's Spelling Bee hive. */
+  --spelling-bee-hive: oklch(0.7 0.16 70);
   --game-connections: #b4a0ff;
   --game-letter-boxed: #f5786d;
   /* The old Letterboxd clone's pink, behind the whole game. */
