@@ -72,6 +72,7 @@ test("shows Spelling Bee hints, the word grid and player stats from the header",
   await page.getByRole("button", { name: "Word grid and stats" }).click()
   const grid = page.getByRole("dialog", { name: "Word grid and stats" })
   await expect(grid.getByLabel("M, 4 letters: 1 of 1 found")).toBeVisible()
+  await expect(grid.getByLabel("Pangrams: 0 of 1 found")).toBeVisible()
   await expect(grid.getByText("1,234 players")).toBeVisible()
 })
 
