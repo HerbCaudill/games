@@ -14,12 +14,18 @@ for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-
     await page.emulateMedia({ reducedMotion: "no-preference" })
     await page.goto(`/${game}?date=2026-11-16`)
     await finish(page, game, isMobile)
-    const celebration = page.getByRole("status").filter({ hasText: "Puzzle complete!" })
+    // Letter Boxed says it with its own solution message, so the shared one stays quiet.
+    const celebration = page
+      .getByRole("status")
+      .filter({ hasText: game === "letter-boxed" ? "solution in 2 words" : "Puzzle complete!" })
     await expect(celebration).toBeVisible()
+    await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(
+      game === "letter-boxed" ? 0 : 1,
+    )
     expect(await celebration.evaluate(element => element.getAnimations().length)).toBeGreaterThan(0)
     await page.reload()
     await expect(page.getByRole("button", { name: "All games" })).toBeVisible()
-    await expect(celebration).toHaveCount(0)
+    await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toHaveCount(0)
     await page.getByRole("button", { name: "All games" }).click()
     await expect(
       page.locator(`a[href^="/${game}"]`).getByText("Complete", { exact: true }),
@@ -29,8 +35,8 @@ for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-
 
 test("celebrates without motion when reduced motion is requested", async ({ page, isMobile }) => {
   await page.emulateMedia({ reducedMotion: "reduce" })
-  await page.goto("/letter-boxed?date=2026-11-16")
-  await finish(page, "letter-boxed", isMobile)
+  await page.goto("/spelling-bee?date=2026-11-16")
+  await finish(page, "spelling-bee", isMobile)
   const celebration = page.getByRole("status").filter({ hasText: "Puzzle complete!" })
   await expect(celebration).toBeVisible()
   expect(

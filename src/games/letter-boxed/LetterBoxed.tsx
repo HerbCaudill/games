@@ -44,6 +44,8 @@ export function LetterBoxed(
     "letter-boxed",
     puzzle.date,
     isSolved(state, puzzle) ? "solved" : state.history.length || state.current ? "started" : "new",
+    // The solution message below the word already says it.
+    { message: false },
   )
 
   // A finished chain keeps its message until a new chain starts.

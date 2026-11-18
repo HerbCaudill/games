@@ -8,8 +8,12 @@ export function CompletionCelebration(
   _props: Props,
 ) {
   const [celebration, setCelebration] = useState(0)
+  const [message, setMessage] = useState(true)
   useEffect(() => {
-    const celebrate = () => setCelebration(count => count + 1)
+    const celebrate = (event: Event) => {
+      setMessage((event as CustomEvent<{ message?: boolean }>).detail?.message ?? true)
+      setCelebration(count => count + 1)
+    }
     window.addEventListener("game-completed", celebrate)
     return () => window.removeEventListener("game-completed", celebrate)
   }, [])
@@ -22,10 +26,12 @@ export function CompletionCelebration(
   if (!celebration) return null
   return (
     <div key={celebration} className="completion-celebration">
-      <div role="status" className="completion-celebration-message">
-        <IconCheck className="size-5" aria-hidden="true" />
-        Puzzle complete!
-      </div>
+      {message && (
+        <div role="status" className="completion-celebration-message">
+          <IconCheck className="size-5" aria-hidden="true" />
+          Puzzle complete!
+        </div>
+      )}
       <div aria-hidden="true" className="completion-confetti">
         {Array.from({ length: 36 }, (_, i) => (
           <span
