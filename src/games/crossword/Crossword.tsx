@@ -123,7 +123,6 @@ export function Crossword(
   const clueBar = (
     <ClueBar
       text={clue && <ClueText clue={clue} />}
-      label={clue && `${clue.label}${clue.direction === "across" ? "A" : "D"}`}
       onPrevious={() => update(s => nextClue(s, puzzle, -1))}
       onNext={() => update(s => nextClue(s, puzzle, 1))}
       onToggle={() => update(s => toggleDirection(s, puzzle))}
@@ -242,7 +241,7 @@ export function Crossword(
 }
 
 /** The current clue, with buttons to move between clues; tapping it switches direction. */
-function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
+function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
   return (
     <div className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:pointer-fine:rounded-lg">
       <button
@@ -258,9 +257,8 @@ function ClueBar({ label, text, onPrevious, onNext, onToggle }: ClueBarProps) {
         type="button"
         tabIndex={-1}
         onClick={onToggle}
-        className="flex flex-1 items-center gap-2 py-2 text-left text-sm leading-snug md:text-base"
+        className="flex flex-1 items-center py-2 text-left text-sm leading-snug md:text-base"
       >
-        <span className="shrink-0 font-semibold">{label}</span>
         <span className="line-clamp-3">{text}</span>
       </button>
       <button type="button" tabIndex={-1} aria-label="Next clue" className="px-2" onClick={onNext}>
@@ -318,8 +316,6 @@ type CrosswordProgress = CrosswordState & {
 }
 
 type ClueBarProps = {
-  /** Clue number and direction, like 12A. */
-  label?: string
   /** Clue text. */
   text?: React.ReactNode
   /** Go to the previous clue. */
