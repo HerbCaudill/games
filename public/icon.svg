@@ -1,52 +1,27 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 512">
-  <defs>
-    <style>
-      .st0 {
-        fill: #23201d;
-      }
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Four square tiles that run to the edges; the dark background shows only in the gaps. -->
+  <rect width="512" height="512" fill="#23201d" />
 
-      .st1 {
-        fill: #f4f1ea;
-      }
+  <!-- Crossword: a checkerboard -->
+  <rect x="125" y="0" width="125" height="125" fill="#f4f1ea" />
+  <rect x="0" y="125" width="125" height="125" fill="#f4f1ea" />
 
-      .st2 {
-        fill: #f2c94c;
-      }
+  <!-- Letter Boxed: a square on coral -->
+  <rect x="262" y="0" width="250" height="250" fill="#f5786d" />
+  <rect x="329" y="67" width="116" height="116" fill="#f7f2ee" stroke="#23201d" stroke-width="16" />
 
-      .st3 {
-        fill: #f5786d;
-      }
+  <!-- Spelling Bee: a hexagon on yellow -->
+  <rect x="0" y="262" width="250" height="250" fill="#f2c94c" />
+  <polygon
+    points="125 323 180.4 355 180.4 419 125 451 69.6 419 69.6 355"
+    fill="#f7f2ee"
+    stroke="#23201d"
+    stroke-width="16"
+  />
 
-      .st4 {
-        fill: #f7f2ee;
-        stroke: #23201d;
-        stroke-miterlimit: 10;
-        stroke-width: 14px;
-      }
-
-      .st5 {
-        fill: #f7f2ee;
-      }
-    </style>
-  </defs>
-  <rect class="st0" y="0" width="512" height="512"/>
-  <g>
-    <rect class="st2" x="22.1" y="266" width="223.9" height="223.9" rx="18" ry="18"/>
-    <rect class="st3" x="266" y="22.1" width="223.9" height="223.9" rx="18" ry="18"/>
-    <g>
-      <path class="st1" d="M134,134H22.1v94c0,9.9,8.1,18,18,18h93.9V134Z"/>
-      <path class="st1" d="M246,40.1c0-9.9-8.1-18-18-18h-94v111.9h112V40.1Z"/>
-    </g>
-    <polygon id="Hexagon" class="st4" points="183.5 344.4 183.5 401.5 134 430 84.6 401.5 84.6 344.4 134 315.9 183.5 344.4"/>
-    <g>
-      <rect class="st5" x="266" y="266" width="223.9" height="223.9" rx="18" ry="18"/>
-      <g>
-        <circle class="st0" cx="378" cy="378" r="23.4"/>
-        <circle class="st0" cx="322.8" cy="433.1" r="23.4"/>
-        <circle class="st0" cx="433.1" cy="322.8" r="23.4"/>
-      </g>
-    </g>
-    <rect class="st4" x="326" y="82.1" width="103.8" height="103.8"/>
-  </g>
+  <!-- Pips: a die -->
+  <rect x="262" y="262" width="250" height="250" fill="#f7f2ee" />
+  <circle cx="387" cy="387" r="26" fill="#23201d" />
+  <circle cx="325.4" cy="448.6" r="26" fill="#23201d" />
+  <circle cx="448.6" cy="325.4" r="26" fill="#23201d" />
 </svg>
