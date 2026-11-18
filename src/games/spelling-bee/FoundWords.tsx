@@ -15,7 +15,7 @@ export function FoundWords(
   // Fill the first column before starting the second, like the NYT list.
   const rows = Math.max(MIN_ROWS, Math.ceil(sorted.length / 2))
   return (
-    <div className="relative h-14 md:h-auto">
+    <div className="relative h-10 md:h-auto">
       <div
         className={cn(
           "bg-card rounded-lg border max-md:absolute max-md:inset-x-0 max-md:top-0 max-md:z-20",
@@ -26,18 +26,18 @@ export function FoundWords(
           type="button"
           aria-expanded={open}
           onClick={() => setOpen(o => !o)}
-          className="flex h-14 w-full items-center justify-between px-5 text-left"
+          className="flex h-10 w-full items-center justify-between px-3 text-left text-sm"
         >
           You have found {found.length} {found.length === 1 ? "word" : "words"}
           <IconChevronDown
-            className={cn("size-5 transition-transform", open && "rotate-180")}
+            className={cn("size-4 transition-transform", open && "rotate-180")}
             aria-hidden="true"
           />
         </button>
         {open && (
           <ul
             aria-label="Found words"
-            className="grid grid-flow-col grid-cols-2 content-start gap-x-8 overflow-auto px-5 pb-5 max-md:h-[60svh]"
+            className="grid grid-flow-col grid-cols-2 content-start gap-x-8 overflow-auto px-3 pb-3 max-md:h-[60svh]"
             style={{ gridTemplateRows: `repeat(${rows}, auto)` }}
           >
             {sorted.map(word => (
