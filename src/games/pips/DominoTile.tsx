@@ -6,7 +6,7 @@ import { regionColors } from "./regionColors"
 
 /**
  * A domino lying flat, first half on the left, filling its box. Its parent turns it by `turn`
- * quarter turns. The face sits raised above a dark edge that stays at the bottom of the screen
+ * quarter turns. The face sits raised above a gray edge that stays at the bottom of the screen
  * however the domino is turned. On the board, each half takes the color of the region under it.
  */
 export function DominoTile(
@@ -35,7 +35,7 @@ export function DominoTile(
       <clipPath id={clip}>
         <rect {...face} />
       </clipPath>
-      <rect {...body} className="fill-foreground" />
+      <rect {...body} style={{ fill: EDGE }} />
       <rect {...face} className="fill-card" />
       <g clipPath={`url(#${clip})`}>
         <g transform={`translate(${(-downX * DEPTH) / 2} ${(-downY * DEPTH) / 2})`}>
@@ -89,8 +89,11 @@ const U = dominoGeometry.unit
 /** Gap between the domino's edge and its cells' edges. */
 const INSET = dominoGeometry.inset
 
-/** Thickness of the dark edge under the face. */
+/** Thickness of the edge under the face. */
 const DEPTH = 0.7
+
+/** The edge under the face: an opaque gray between the outline and the face. */
+const EDGE = "color-mix(in oklab, var(--foreground) 40%, var(--card))"
 
 /** For each quarter turn clockwise, the tile's own direction that ends up pointing down the screen. */
 const DOWN: [number, number][] = [

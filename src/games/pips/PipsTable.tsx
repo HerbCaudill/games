@@ -6,12 +6,14 @@ import { PipsGrid } from "./PipsGrid"
 import { boardCells } from "./logic/boardCells"
 import { directionOf } from "./logic/directionOf"
 import { halfRegions } from "./logic/halfRegions"
+import { TRAY_SCALE } from "./logic/constants"
 import { tableLayout } from "./logic/tableLayout"
 import { turnTo } from "./logic/turnTo"
 import type { Placements, Point } from "./logic/types"
 
 /**
- * The board and the tray of dominoes, at one scale. Drag a domino anywhere to move it; tap it to turn it.
+ * The board and the tray of dominoes. Dominoes off the board are drawn smaller and grow to the
+ * board's scale once picked up. Drag a domino anywhere to move it; tap it to turn it.
  */
 export function PipsTable(
   /** The component props. */
@@ -150,10 +152,10 @@ export function PipsTable(
                 hidden={Boolean(placements[i] || spots[i] || drag?.index === i)}
                 className="bg-muted absolute rounded-md"
                 style={{
-                  left: origin[0] + (x - 1) * size + INSET,
-                  top: origin[1] + (y - 0.5) * size + INSET,
-                  width: 2 * size - 2 * INSET,
-                  height: size - 2 * INSET,
+                  left: origin[0] + (x - TRAY_SCALE) * size + INSET,
+                  top: origin[1] + (y - TRAY_SCALE / 2) * size + INSET,
+                  width: 2 * TRAY_SCALE * size - 2 * INSET,
+                  height: TRAY_SCALE * size - 2 * INSET,
                 }}
               />
             ))}
@@ -163,6 +165,7 @@ export function PipsTable(
             const pair = placements[i]
             const turn = pair ? turnTo(turns[i] ?? 0, directionOf(pair)) : (turns[i] ?? 0)
             const dragging = drag?.index === i
+            const scale = pair || dragging ? 1 : TRAY_SCALE
             const held = landing?.index === i
             const [dx, dy] = dragging
               ? drag.offset
@@ -191,7 +194,7 @@ export function PipsTable(
                   top: room.top + origin[1] + (y - 0.5) * size,
                   width: 2 * size,
                   height: size,
-                  transform: `translate(${dx}px, ${dy}px) rotate(${turn * 90}deg)`,
+                  transform: `translate(${dx}px, ${dy}px) rotate(${turn * 90}deg) scale(${scale})`,
                 }}
                 onPointerDown={event => down(event, i)}
                 onPointerMove={move}

@@ -7,3 +7,6 @@ export const DIRECTIONS: Cell[] = [
   [0, -1],
   [-1, 0],
 ]
+
+/** How big dominoes off the board are, relative to the board's cells. */
+export const TRAY_SCALE = 0.75

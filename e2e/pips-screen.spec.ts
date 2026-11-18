@@ -95,8 +95,11 @@ test("keeps a domino dropped at the top reachable below the header", async ({ pa
     .toBeGreaterThanOrEqual(header.y + header.height)
   await domino.click()
   await expect
-    .poll(async () => (await domino.boundingBox())!.height)
-    .toBeGreaterThan((await domino.boundingBox())!.width)
+    .poll(async () => {
+      const box = (await domino.boundingBox())!
+      return box.height > box.width
+    })
+    .toBe(true)
 })
 
 /** Drag a domino by its center to a viewport point. */
@@ -147,4 +150,18 @@ test("clears the board, putting every domino back in the tray", async ({ page })
   await expect(page.getByRole("img", { name: "Broken constraint: 5" })).not.toBeVisible()
   await expect.poll(async () => distance(await centerOf(domino), start)).toBeLessThan(2)
   await expect(clear).toBeDisabled()
+})
+
+test("shows tray dominoes smaller than board cells, growing to full size once picked up", async ({
+  page,
+}) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const cellWidth = (await cell.boundingBox())!.width
+  expect((await domino.boundingBox())!.width).toBeLessThan(1.8 * cellWidth)
+  await page.mouse.move(...(await centerOf(domino)))
+  await page.mouse.down()
+  await page.mouse.move(20, 300, { steps: 8 })
+  await expect.poll(async () => (await domino.boundingBox())!.width).toBeCloseTo(2 * cellWidth, 0)
+  await page.mouse.up()
 })
