@@ -23,8 +23,20 @@ describe("parseCrossword", () => {
           {},
         ],
         clues: [
-          { cells: [0, 1], direction: "Across", label: "1", text: [{ plain: "Feline" }] },
-          { cells: [3, 4], direction: "Across", label: "3", text: [{ plain: "Ox" }] },
+          {
+            cells: [0, 1],
+            direction: "Across",
+            label: "1",
+            text: [{ plain: "With 3-Across, a pair" }],
+            relatives: [1, 1],
+          },
+          {
+            cells: [3, 4],
+            direction: "Across",
+            label: "3",
+            text: [{ plain: "See 1-Across" }],
+            relatives: [0],
+          },
           {
             cells: [0, 3],
             direction: "Down",
@@ -69,6 +81,11 @@ describe("parseCrossword", () => {
     expect(clues.map(c => `${c.label}${c.direction[0]}`)).toEqual(["1a", "3a", "1d", "2d"])
     expect(clues[2]).toMatchObject({ text: "Italic", html: "<i>Italic</i>", cells: [0, 3] })
     expect(clues[0].html).toBeUndefined()
+  })
+
+  it("links clues that refer to each other, once each", () => {
+    const { clues } = parseCrossword(raw)
+    expect(clues.map(c => c.related)).toEqual([[1], [0], [], []])
   })
 })
 

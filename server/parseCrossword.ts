@@ -24,6 +24,7 @@ export function parseCrossword(
         ? clue.text.map(t => (t.formatted ? cleanHtml(t.formatted) : escapeHtml(t.plain))).join(" ")
         : undefined,
       cells: clue.cells,
+      related: [...new Set(clue.relatives ?? [])],
     })),
   }
 }
@@ -89,6 +90,7 @@ export type RawCrossword = {
       direction: string
       label: string
       text: { plain: string; formatted?: string }[]
+      relatives?: number[]
     }[]
   }[]
 }

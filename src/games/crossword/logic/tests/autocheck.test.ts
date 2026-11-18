@@ -51,5 +51,5 @@ const puzzle: CrosswordPuzzle = {
     circled: false,
     shaded: false,
   })),
-  clues: [{ id: 0, direction: "across", label: "1", text: "Test", cells: [0, 1, 2] }],
+  clues: [{ id: 0, direction: "across", label: "1", text: "Test", cells: [0, 1, 2], related: [] }],
 }

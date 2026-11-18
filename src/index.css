@@ -92,6 +92,7 @@
   /* Crossword squares. */
   --xw-cursor: var(--game-spelling-bee);
   --xw-word: #a7d8ff;
+  --xw-related: oklch(0.95 0.08 95);
   --xw-highlight-foreground: #1d2433;
   --xw-shade: #dcdcdc;
   --xw-block: #000000;

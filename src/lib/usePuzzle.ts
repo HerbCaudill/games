@@ -13,7 +13,7 @@ export function usePuzzle<G extends GameId>(
   /** The NYT-S cookie value saved on this device, if any. */
   token: string,
 ): PuzzleLoad<PuzzleFor[G]> {
-  const key = `puzzle:${game}:${date}`
+  const key = `puzzle:${game}:${date}:v${PUZZLE_FORMAT}`
   // A new token retries a request that failed for want of one.
   const request = `${key} ${token}`
   const [load, setLoad] = useState<PuzzleLoad<PuzzleFor[G]> & { request: string }>(() =>
@@ -61,6 +61,11 @@ function initialLoad<P>(
 
 /** The API needs a valid NYT token. */
 class NeedsToken extends Error {}
+
+// CONSTANTS
+
+/** Bump when the API's puzzle shape changes, so devices fetch puzzles again instead of using stale local copies. */
+const PUZZLE_FORMAT = 2
 
 // TYPES
 

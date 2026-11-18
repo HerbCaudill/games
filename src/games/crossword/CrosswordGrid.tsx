@@ -10,7 +10,9 @@ export function CrosswordGrid(
 ) {
   const { width, height } = puzzle
   const [w, h] = [width * U, height * U]
-  const word = new Set(clueAt(puzzle, state.cursor, state.direction)?.cells ?? [])
+  const clue = clueAt(puzzle, state.cursor, state.direction)
+  const word = new Set(clue?.cells ?? [])
+  const related = new Set(clue?.related.flatMap(id => puzzle.clues[id].cells) ?? [])
   const hold = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const origin = useRef({ x: 0, y: 0 })
 
@@ -43,7 +45,7 @@ export function CrosswordGrid(
         const isCursor = i === state.cursor
         const mark = state.marks[i]
         const entry = isCursor && rebus !== undefined ? rebus : state.entries[i]
-        const highlighted = isCursor || word.has(i)
+        const highlighted = isCursor || word.has(i) || related.has(i)
         const ink = highlighted ? "var(--xw-highlight-foreground)" : "var(--foreground)"
         return (
           <g
@@ -73,9 +75,11 @@ export function CrosswordGrid(
                   ? "var(--xw-cursor)"
                   : word.has(i)
                     ? "var(--xw-word)"
-                    : cell.shaded
-                      ? "var(--xw-shade)"
-                      : "var(--card)",
+                    : related.has(i)
+                      ? "var(--xw-related)"
+                      : cell.shaded
+                        ? "var(--xw-shade)"
+                        : "var(--card)",
               }}
             />
             {cell.circled && (

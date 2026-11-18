@@ -43,10 +43,10 @@ const puzzle: CrosswordPuzzle = {
     l === "#" ? null : cell(l, { 0: "1", 2: "2", 6: "4" }[i] as string | undefined),
   ),
   clues: [
-    { id: 0, direction: "across", label: "1", text: "Feline", cells: [0, 1, 2] },
-    { id: 1, direction: "across", label: "4", text: "Damp", cells: [6, 7, 8] },
-    { id: 2, direction: "down", label: "1", text: "Bovine", cells: [0, 3, 6] },
-    { id: 3, direction: "down", label: "2", text: "Toddler", cells: [2, 5, 8] },
+    { id: 0, direction: "across", label: "1", text: "Feline", cells: [0, 1, 2], related: [] },
+    { id: 1, direction: "across", label: "4", text: "Damp", cells: [6, 7, 8], related: [] },
+    { id: 2, direction: "down", label: "1", text: "Bovine", cells: [0, 3, 6], related: [] },
+    { id: 3, direction: "down", label: "2", text: "Toddler", cells: [2, 5, 8], related: [] },
   ],
 }
 

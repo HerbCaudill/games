@@ -53,6 +53,8 @@ export type CrosswordClue = {
   html?: string
   /** Cell indexes covered by the answer, in reading order. */
   cells: number[]
+  /** IDs of clues this one refers to or is referred to by, such as the theme answers a revealer names. */
+  related: number[]
 }
 
 /** A crossword direction. */
