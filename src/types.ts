@@ -190,3 +190,56 @@ export type PuzzleFor = {
   connections: ConnectionsPuzzle
   "letter-boxed": LetterBoxedPuzzle
 }
+
+/** The games whose progress syncs with the NYT account; NYT keeps Pips and Letter Boxed only in the browser. */
+export type SyncedGame = "crossword" | "spelling-bee" | "connections"
+
+/** Progress as the API and the app exchange it, for each synced game. */
+export type SyncedProgressFor = {
+  crossword: CrosswordSync
+  "spelling-bee": SpellingBeeSync
+  connections: ConnectionsSync
+}
+
+/** Crossword progress shared with NYT. */
+export type CrosswordSync = {
+  /** What the solver typed in each square, uppercase; empty for none and for black squares. */
+  entries: string[]
+  /** Check and reveal marks for each square. */
+  marks: (CrosswordMark | null)[]
+  /** Seconds spent. */
+  elapsed: number
+  /** Whether new entries are checked immediately. */
+  autocheck: boolean
+  /** Whether the solver has had any help: autocheck, checking or revealing. */
+  usedAid: boolean
+  /** When the puzzle was first solved, if it has been. */
+  firstSolve?: CrosswordSolve
+  /** When the entries last changed, in Unix seconds. */
+  updated: number
+}
+
+/** A crossword's first solve. */
+export type CrosswordSolve = {
+  /** Seconds on the clock at the solve. */
+  seconds: number
+  /** The moment of the solve, as ISO 8601 with the solver's UTC offset. */
+  date: string
+}
+
+/** A mark left on a crossword square by checking or revealing. */
+export type CrosswordMark = "wrong" | "correct" | "revealed"
+
+/** Spelling Bee progress shared with NYT. */
+export type SpellingBeeSync = {
+  /** Words found, in the order found. */
+  words: string[]
+  /** The rank they reach, such as "Genius". */
+  rank: string
+}
+
+/** Connections progress shared with NYT. */
+export type ConnectionsSync = {
+  /** Every guess, in order, as four words each. */
+  guesses: string[][]
+}

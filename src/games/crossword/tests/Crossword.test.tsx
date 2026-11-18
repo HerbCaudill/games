@@ -20,7 +20,7 @@ afterEach(() => {
 
 describe("crossword entry controls", () => {
   it("opens a rebus from the toolbar, saves all its letters and solves with it", () => {
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     fireEvent.click(screen.getByRole("button", { name: "Enter rebus" }))
     for (const key of "cat") fireEvent.keyDown(document.body, { key })
     fireEvent.keyDown(document.body, { key: "Enter" })
@@ -31,7 +31,7 @@ describe("crossword entry controls", () => {
   })
 
   it("cancels a rebus with Escape without changing the saved entry", () => {
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     fireEvent.click(screen.getByRole("button", { name: "Enter rebus" }))
     fireEvent.keyDown(document.body, { key: "X" })
     fireEvent.keyDown(document.body, { key: "Escape" })
@@ -40,7 +40,7 @@ describe("crossword entry controls", () => {
 
   it("opens rebus entry for a long-pressed touch cell", () => {
     vi.useFakeTimers()
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     const cell = screen.getByRole("grid").querySelector("g")!
     const down = new Event("pointerdown", { bubbles: true, cancelable: true })
     Object.assign(down, { pointerType: "touch", clientX: 20, clientY: 20 })
@@ -50,18 +50,18 @@ describe("crossword entry controls", () => {
   })
 
   it("checks existing entries when toggled on and remembers the setting after reload", () => {
-    const view = render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    const view = render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     fireEvent.keyDown(document.body, { key: "X" })
     fireEvent.click(screen.getByRole("switch", { name: "Autocheck" }))
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
     expect(screen.getByRole("gridcell", { name: /X, wrong/ })).toBeVisible()
     view.unmount()
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
   })
 
   it("returns keyboard entry to the grid after using the autocheck switch", () => {
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
+    render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     const toggle = screen.getByRole("switch", { name: "Autocheck" })
     toggle.focus()
     fireEvent.click(toggle)

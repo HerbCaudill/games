@@ -7,9 +7,32 @@ export async function GET(
   /** The incoming request. */
   request: Request,
 ) {
+  return respond(request)
+}
+
+/** Save progress to `/api/<game>-progress/<YYYY-MM-DD>` in production. */
+export async function PUT(
+  /** The incoming request. */
+  request: Request,
+) {
+  return respond(request, await request.json().catch(() => undefined))
+}
+
+/** Answer a request with the shared API handler. */
+async function respond(
+  /** The incoming request. */
+  request: Request,
+  /** The parsed JSON body, if any. */
+  body?: unknown,
+) {
   const token = request.headers.get(NYT_TOKEN_HEADER) ?? undefined
-  const { status, body } = await handleApiRequest(new URL(request.url).pathname, token, services)
-  return Response.json(body, { status })
+  const { pathname } = new URL(request.url)
+  const { method } = request
+  const { status, body: response } = await handleApiRequest(pathname, token, services, {
+    method,
+    body,
+  })
+  return Response.json(response, { status })
 }
 
 // CONSTANTS

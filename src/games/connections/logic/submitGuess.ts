@@ -1,7 +1,9 @@
+import { remainingWords } from "./remainingWords"
+import { swapIntoTopRow } from "./swapIntoTopRow"
 import type { ConnectionsState, GuessOutcome } from "./types"
 import type { ConnectionsPuzzle } from "@/types"
 
-/** Check four selected words against the groups. */
+/** Check four selected words against the groups, moving a solved group into the top row. */
 export function submitGuess(
   /** Current state. */
   state: ConnectionsState,
@@ -16,8 +18,18 @@ export function submitGuess(
   const guesses = [...state.guesses, selection]
   const overlaps = puzzle.groups.map(group => selection.filter(w => group.words.includes(w)).length)
   const match = overlaps.indexOf(4)
-  if (match >= 0)
-    return { state: { ...state, guesses, solved: [...state.solved, match] }, result: "correct" }
+  if (match >= 0) {
+    const order = swapIntoTopRow(remainingWords(state, puzzle), selection)
+    return {
+      state: {
+        ...state,
+        guesses,
+        solved: [...state.solved, match],
+        order: [...order, ...state.order.filter(word => !order.includes(word))],
+      },
+      result: "correct",
+    }
+  }
   const next = { ...state, guesses, mistakes: state.mistakes + 1 }
   return { state: next, result: overlaps.includes(3) ? "one-away" : "wrong" }
 }

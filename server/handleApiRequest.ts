@@ -1,14 +1,25 @@
-import type { GameId, SpellingBeeHints, SpellingBeePuzzle } from "../src/types.ts"
+import { isDeepStrictEqual } from "node:util"
+import type {
+  GameId,
+  PuzzleFor,
+  SpellingBeeHints,
+  SpellingBeePuzzle,
+  SyncedGame,
+} from "../src/types.ts"
+import { connectionsProgress } from "./connectionsProgress.ts"
+import { crosswordProgress } from "./crosswordProgress.ts"
 import { parseConnections, type RawConnections } from "./parseConnections.ts"
 import { parseCrossword, type RawCrossword } from "./parseCrossword.ts"
 import { parseLetterBoxed } from "./parseLetterBoxed.ts"
 import { parsePips, type RawPips } from "./parsePips.ts"
 import { parseSpellingBee, type RawActiveSpellingBees } from "./parseSpellingBee.ts"
 import { parseSpellingBeeStats, type RawSpellingBeeStats } from "./parseSpellingBeeStats.ts"
+import { spellingBeeProgress } from "./spellingBeeProgress.ts"
+import type { NytGameState, ProgressFormat } from "./types.ts"
 
 /**
- * Serve `/api/<resource>/<YYYY-MM-DD>`: a game's puzzle from NYT, or a Spelling Bee's hints or
- * player stats.
+ * Serve `/api/<resource>/<YYYY-MM-DD>`: a game's puzzle from NYT, a Spelling Bee's hints or player
+ * stats, or the player's progress on a game, which `PUT` saves back to the NYT account.
  */
 export async function handleApiRequest(
   /** Request path, such as `/api/pips/2026-11-16`. */
@@ -17,23 +28,97 @@ export async function handleApiRequest(
   token: string | undefined,
   /** Services the server has set up. */
   services: ApiServices = {},
+  /** The request method and its JSON body. */
+  { method = "GET", body }: ApiRequest = {},
 ): Promise<ApiResponse> {
   const match = path.match(/^\/api\/([a-z-]+)\/(\d{4}-\d{2}-\d{2})$/)
   if (!match) return error(404, "Not found")
   const [, resource, date] = match
+  const game = resource.replace(/-progress$/, "") as SyncedGame
+  const progress = resource.endsWith("-progress") ? progressFormats[game] : undefined
   const load = loaders[resource as Resource]
-  if (!load) return error(404, `Unknown resource: ${resource}`)
+  if (!load && !progress) return error(404, `Unknown resource: ${resource}`)
+  if (method !== "GET" && !(progress && method === "PUT")) return error(405, "Method not allowed")
   if (!token) return error(401, "An NYT token is required.")
   try {
     await checkToken(token)
-    const body = await load(date, (url, as) => fetchNyt(url, as, token), services)
-    if (!body) return error(404, `No ${describe(resource as Resource)} for ${date}`)
-    return { status: 200, body }
+    const get: Fetcher = (url, as) => fetchNyt(url, as, token)
+    if (progress) return await serveProgress(game, date, token, get, method, body)
+    const data = await load(date, get, services)
+    if (!data) return error(404, `No ${describe(resource as Resource)} for ${date}`)
+    return { status: 200, body: data }
   } catch (e) {
     if (e instanceof TokenRejected) return error(401, "NYT rejected the token.")
     if (e instanceof NotSetUp) return error(503, e.message)
     return error(502, e instanceof Error ? e.message : String(e))
   }
+}
+
+/** Read the player's progress on a puzzle from the NYT account, or save it there. */
+async function serveProgress<G extends SyncedGame>(
+  /** The game. */
+  game: G,
+  /** Print date as YYYY-MM-DD. */
+  date: string,
+  /** The NYT-S cookie value. */
+  token: string,
+  /** Fetches NYT URLs. */
+  get: Fetcher,
+  /** `GET` to read, `PUT` to save. */
+  method: string,
+  /** The progress to save. */
+  body: unknown,
+): Promise<ApiResponse> {
+  const format = progressFormats[game] as ProgressFormat<G>
+  const puzzle = (await loaders[game](date, get, {})) as PuzzleFor[G] | undefined
+  if (!puzzle) return error(404, `No ${describe(game)} for ${date}`)
+  const { state, userId } = await loadState(format.nytGame, puzzle.id, token)
+  if (method === "GET")
+    return { status: 200, body: { progress: state ? format.fromNyt(state, puzzle) : null } }
+
+  const parsed = format.schema.safeParse(body)
+  if (!parsed.success) return error(400, `Invalid ${game} progress`)
+  const gameData = format.toNyt(parsed.data, puzzle, state?.game_data)
+  if (state && isDeepStrictEqual(gameData, state.game_data))
+    return { status: 200, body: { saved: false } }
+  const response = await fetch(`${NYT}/svc/games/state`, {
+    method: "POST",
+    headers: {
+      ...nytHeaders(token),
+      "Content-Type": "application/json",
+      "x-games-client-time": new Date().toISOString(),
+      "x-games-user-type": "sub",
+    },
+    body: JSON.stringify({
+      game: format.nytGame,
+      game_data: gameData,
+      puzzle_id: String(puzzle.id),
+      print_date: date,
+      schema_version: NYT_SCHEMA_VERSION,
+      timestamp: format.updated?.(parsed.data) ?? Math.floor(Date.now() / 1000),
+      user_id: userId,
+    }),
+  })
+  if (response.status === 401 || response.status === 403) throw new TokenRejected()
+  if (!response.ok) throw new Error(`NYT returned ${response.status} saving ${game} progress`)
+  return { status: 200, body: { saved: true } }
+}
+
+/** Load the player's saved game for a puzzle, fresh from NYT, with their NYT user ID. */
+async function loadState(
+  /** NYT's name for the game. */
+  nytGame: string,
+  /** NYT puzzle ID. */
+  puzzleId: number,
+  /** The NYT-S cookie value. */
+  token: string,
+) {
+  const url = `${NYT}/svc/games/state/${nytGame}/latests?puzzle_ids=${puzzleId}`
+  const response = await fetch(url, { headers: nytHeaders(token) })
+  if (response.status === 401 || response.status === 403) throw new TokenRejected()
+  if (!response.ok) throw new Error(`NYT returned ${response.status} for ${url}`)
+  const { states, user_id } = (await response.json()) as { states: NytGameState[]; user_id: number }
+  return { state: states[0] as NytGameState | undefined, userId: user_id }
 }
 
 /** Write hints for a Spelling Bee once per puzzle, sharing the work between overlapping requests. */
@@ -165,6 +250,16 @@ const loaders: Record<Resource, Loader> = {
   },
 }
 
+/** How each synced game's progress converts to and from NYT's state API. */
+const progressFormats: { [G in SyncedGame]: ProgressFormat<G> } = {
+  crossword: crosswordProgress,
+  "spelling-bee": spellingBeeProgress,
+  connections: connectionsProgress,
+}
+
+/** The state API schema NYT's own web client sent when this was written. */
+const NYT_SCHEMA_VERSION = "0.52.0"
+
 /** NYT origin. */
 const NYT = "https://www.nytimes.com"
 
@@ -195,6 +290,14 @@ const CACHE_MS = 10 * 60 * 1000
 const cache = new Map<string, { value: unknown; expires: number }>()
 
 // TYPES
+
+/** What a request carries besides its path. */
+export type ApiRequest = {
+  /** HTTP method; `GET` when absent. */
+  method?: string
+  /** The parsed JSON body, for `PUT`. */
+  body?: unknown
+}
 
 /** A JSON response for the API. */
 export type ApiResponse = { status: number; body: unknown }

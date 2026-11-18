@@ -19,7 +19,10 @@ export function nytApiPlugin(
     if (!path?.startsWith("/api/")) return next()
     const header = req.headers[NYT_TOKEN_HEADER]
     const token = (typeof header === "string" ? header : undefined) ?? envToken
-    const { status, body } = await handleApiRequest(path, token, services)
+    const { status, body } = await handleApiRequest(path, token, services, {
+      method: req.method,
+      body: req.method === "PUT" ? await readJson(req) : undefined,
+    })
     res.statusCode = status
     res.setHeader("Content-Type", "application/json")
     res.end(JSON.stringify(body))
@@ -36,5 +39,19 @@ export function nytApiPlugin(
     configurePreviewServer: server => {
       server.middlewares.use(middleware)
     },
+  }
+}
+
+/** Read a request's JSON body, or undefined if it isn't JSON. */
+async function readJson(
+  /** The incoming request. */
+  req: IncomingMessage,
+) {
+  const chunks: Buffer[] = []
+  for await (const chunk of req) chunks.push(chunk as Buffer)
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown
+  } catch {
+    return undefined
   }
 }

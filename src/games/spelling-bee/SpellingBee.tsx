@@ -8,6 +8,7 @@ import { Toast } from "@/components/Toast"
 import { useElapsed } from "@/lib/useElapsed"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
+import { useNytSync } from "@/lib/useNytSync"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { shuffle } from "@/lib/shuffle"
 import { useToast } from "@/lib/useToast"
@@ -18,7 +19,9 @@ import { HintsPanel } from "./HintsPanel"
 import { Hive } from "./Hive"
 import { RankMeter } from "./RankMeter"
 import { checkGuess } from "./logic/checkGuess"
+import { mergeSync } from "./logic/mergeSync"
 import { rankFor } from "./logic/rankFor"
+import { toSync } from "./logic/toSync"
 import { totalScore } from "./logic/totalScore"
 
 /** Spelling Bee: make words from seven letters, always using the center one. */
@@ -31,6 +34,10 @@ export function SpellingBee(
     `progress:spelling-bee:${puzzle.date}`,
     () => [],
   )
+  useNytSync("spelling-bee", puzzle.date, token, found, setFound, {
+    toSync: f => toSync(f, puzzle),
+    merge: (f, remote) => mergeSync(f, remote, puzzle),
+  })
   const [guess, setGuess] = useState("")
   const [outer, setOuter] = useState(puzzle.outer)
   const toast = useToast()

@@ -6,6 +6,7 @@ import { SolvedMessage } from "@/components/SolvedMessage"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { useMediaQuery } from "@/lib/useMediaQuery"
+import { useNytSync } from "@/lib/useNytSync"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
 import type { CrosswordPuzzle } from "@/types"
@@ -17,18 +18,21 @@ import { backspace } from "./logic/backspace"
 import { clueAt } from "./logic/clueAt"
 import { initialState } from "./logic/initialState"
 import { isSolved } from "./logic/isSolved"
+import { mergeSync } from "./logic/mergeSync"
 import { nextClue } from "./logic/nextClue"
+import { recordChange } from "./logic/recordChange"
 import { selectCell } from "./logic/selectCell"
 import { setAutocheck } from "./logic/setAutocheck"
+import { toSync } from "./logic/toSync"
 import { toggleDirection } from "./logic/toggleDirection"
 import { typeEntry } from "./logic/typeEntry"
-import { type CrosswordState } from "./logic/types"
+import type { CrosswordProgress, CrosswordState } from "./logic/types"
 import { OnScreenKeyboard } from "./OnScreenKeyboard"
 
 /** The daily crossword. */
 export function Crossword(
   /** The component props. */
-  { puzzle, toolbar }: Props,
+  { puzzle, token, toolbar }: Props,
 ) {
   const [progress, setProgress] = usePersistentState<CrosswordProgress>(
     `progress:crossword:${puzzle.date}`,
@@ -45,9 +49,16 @@ export function Crossword(
   )
   useTimer(!solved, () => setProgress(p => ({ ...p, elapsed: p.elapsed + 1 })))
 
-  /** Apply a state change, keeping the elapsed time. */
+  useNytSync("crossword", puzzle.date, token, progress, setProgress, {
+    toSync,
+    merge: mergeSync,
+    // The clock alone isn't worth a save; it goes along with the next change to the grid.
+    changeKey: p => JSON.stringify([p.entries, p.marks, p.autocheck ?? false]),
+  })
+
+  /** Apply a state change, keeping the elapsed time and noting when the grid changed or was solved. */
   const update = (change: (state: CrosswordState) => CrosswordState) =>
-    setProgress(p => ({ ...change(p), elapsed: p.elapsed }))
+    setProgress(p => recordChange(p, change(p), puzzle, new Date()))
 
   const clue = clueAt(puzzle, progress.cursor, progress.direction)
   const crossing = clueAt(
@@ -257,12 +268,6 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
 
 // TYPES
 
-/** Saved crossword progress. */
-type CrosswordProgress = CrosswordState & {
-  /** Seconds spent. */
-  elapsed: number
-}
-
 type ClueBarProps = {
   /** Clue text. */
   text?: React.ReactNode
@@ -277,6 +282,8 @@ type ClueBarProps = {
 type Props = {
   /** The puzzle. */
   puzzle: CrosswordPuzzle
+  /** The NYT-S cookie value saved on this device, for syncing progress. */
+  token: string
   /** Header element to render the puzzle controls into. */
   toolbar: HTMLElement | null
 }

@@ -22,5 +22,5 @@ export function setAutocheck(
             : null,
       )
     : state.marks
-  return { ...state, autocheck: enabled, marks }
+  return { ...state, autocheck: enabled, marks, usedAid: state.usedAid || enabled }
 }

@@ -19,5 +19,5 @@ export function reveal(
     entries[cell] = puzzle.cells[cell]!.answer
     marks[cell] = "revealed"
   }
-  return { ...state, entries, marks }
+  return { ...state, entries, marks, usedAid: true }
 }

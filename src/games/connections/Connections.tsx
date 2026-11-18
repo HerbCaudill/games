@@ -7,6 +7,7 @@ import { shuffle } from "@/lib/shuffle"
 import { useElapsed } from "@/lib/useElapsed"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
+import { useNytSync } from "@/lib/useNytSync"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useToast } from "@/lib/useToast"
 import { cn } from "@/lib/utils"
@@ -14,9 +15,10 @@ import type { ConnectionsGroup, ConnectionsPuzzle } from "@/types"
 import { initialState } from "./logic/initialState"
 import { isOver } from "./logic/isOver"
 import { MAX_MISTAKES } from "./logic/constants"
+import { mergeSync } from "./logic/mergeSync"
 import { remainingWords } from "./logic/remainingWords"
 import { submitGuess } from "./logic/submitGuess"
-import { swapIntoTopRow } from "./logic/swapIntoTopRow"
+import { toSync } from "./logic/toSync"
 import { type ConnectionsState } from "./logic/types"
 import { useConnectionsAnimation } from "./useConnectionsAnimation"
 import "./connections.css"
@@ -24,12 +26,16 @@ import "./connections.css"
 /** Connections: sort sixteen words into four groups of four. */
 export function Connections(
   /** The component props. */
-  { puzzle }: Props,
+  { puzzle, token }: Props,
 ) {
   const [state, setState] = usePersistentState<ConnectionsState>(
     `progress:connections:${puzzle.date}`,
     () => initialState(puzzle),
   )
+  useNytSync("connections", puzzle.date, token, state, setState, {
+    toSync,
+    merge: (s, remote) => mergeSync(s, remote, puzzle),
+  })
   const [selected, setSelected] = useState<string[]>([])
   const [displayOrder, setDisplayOrder] = useState<string[]>()
   const [merging, setMerging] = useState<ConnectionsGroup>()
@@ -77,11 +83,10 @@ export function Connections(
       ))
     )
       return
-    let { state: next, result } = submitGuess(state, selected, puzzle)
+    const { state: next, result } = submitGuess(state, selected, puzzle)
     if (result === "correct") {
       // The group takes the top row, swapping places with the words there; the rest stay put.
-      const order = swapIntoTopRow(words, selected)
-      next = { ...next, order: [...order, ...next.order.filter(word => !order.includes(word))] }
+      const order = next.order.slice(0, words.length)
       if (grid.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const starts = [...grid.current.querySelectorAll<HTMLButtonElement>("button")].map(
           element => ({ element, from: element.getBoundingClientRect() }),
@@ -294,4 +299,6 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
 type Props = {
   /** The puzzle. */
   puzzle: ConnectionsPuzzle
+  /** The NYT-S cookie value saved on this device, for syncing progress. */
+  token: string
 }

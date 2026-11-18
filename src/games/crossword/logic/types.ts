@@ -1,4 +1,4 @@
-import type { Direction } from "@/types"
+import type { CrosswordMark, CrosswordSolve, Direction } from "@/types"
 
 /** A crossword in progress. */
 export type CrosswordState = {
@@ -12,10 +12,22 @@ export type CrosswordState = {
   direction: Direction
   /** Whether new entries are checked immediately; absent in older saves. */
   autocheck?: boolean
+  /** Whether the solver has had any help: autocheck, checking or revealing. */
+  usedAid?: boolean
+}
+
+/** Saved crossword progress: the state, plus the clock and what NYT records about the solve. */
+export type CrosswordProgress = CrosswordState & {
+  /** Seconds spent. */
+  elapsed: number
+  /** When the puzzle was first solved; absent until then, and in older saves. */
+  firstSolve?: CrosswordSolve
+  /** When the entries or marks last changed, in Unix seconds; absent in older saves. */
+  updated?: number
 }
 
 /** A mark left by checking or revealing. */
-export type Mark = "wrong" | "correct" | "revealed"
+export type Mark = CrosswordMark
 
 /** How much to check, reveal or clear. */
 export type Scope = "square" | "word" | "puzzle"

@@ -62,7 +62,14 @@ export function GameScreen(
 function GameBody({ game, puzzle, date, token, toolbar }: GameBodyProps) {
   switch (game) {
     case "crossword":
-      return <Crossword key={date} puzzle={puzzle as PuzzleFor["crossword"]} toolbar={toolbar} />
+      return (
+        <Crossword
+          key={date}
+          puzzle={puzzle as PuzzleFor["crossword"]}
+          token={token}
+          toolbar={toolbar}
+        />
+      )
     case "pips":
       return <Pips key={date} puzzle={puzzle as PuzzleFor["pips"]} toolbar={toolbar} />
     case "spelling-bee":
@@ -75,7 +82,7 @@ function GameBody({ game, puzzle, date, token, toolbar }: GameBodyProps) {
         />
       )
     case "connections":
-      return <Connections key={date} puzzle={puzzle as PuzzleFor["connections"]} />
+      return <Connections key={date} puzzle={puzzle as PuzzleFor["connections"]} token={token} />
     case "letter-boxed":
       return (
         <LetterBoxed key={date} puzzle={puzzle as PuzzleFor["letter-boxed"]} toolbar={toolbar} />

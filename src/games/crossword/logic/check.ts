@@ -17,5 +17,5 @@ export function check(
     const entry = state.entries[cell]
     if (entry && !isCorrect(puzzle, cell, entry)) marks[cell] = "wrong"
   }
-  return { ...state, marks }
+  return { ...state, marks, usedAid: true }
 }

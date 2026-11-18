@@ -1,13 +1,18 @@
 import type { Page } from "@playwright/test"
 import type { GameId, PuzzleFor, SpellingBeeHints, SpellingBeeStats } from "../src/types"
 
-/** Serve the test puzzles, and the Spelling Bee's hints and stats, in place of the API. */
+/** Serve the test puzzles, the Spelling Bee's hints and stats, and an empty NYT account, in place of the API. */
 export async function mockApi(
   /** The Playwright page to intercept requests on. */
   page: Page,
 ) {
   await page.route("**/api/**", route => {
     const [, , resource, date] = new URL(route.request().url()).pathname.split("/")
+    // Nothing is saved in the test account, and saves go nowhere.
+    if (resource.endsWith("-progress"))
+      return route.fulfill({
+        json: route.request().method() === "PUT" ? { saved: true } : { progress: null },
+      })
     if (resource === "spelling-bee-hints")
       return route.fulfill({ json: { date, hints: HINTS } satisfies SpellingBeeHints })
     if (resource === "spelling-bee-stats") return route.fulfill({ json: STATS })
