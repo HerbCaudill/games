@@ -39,7 +39,7 @@ export function Hive(
             dy="0.36em"
             textAnchor="middle"
             className={isCenter ? "fill-black" : "fill-foreground"}
-            style={{ font: "600 0.667px var(--font-sans)", textTransform: "uppercase" }}
+            style={{ font: `600 ${FONT_SIZE}px var(--font-sans)`, textTransform: "uppercase" }}
           >
             {letter}
           </text>
@@ -53,6 +53,9 @@ export function Hive(
 
 /** Hexagon radius. */
 const RADIUS = 0.98
+
+/** Letter size: capitals 0.4 of the hexagon's radius tall, as in the NYT hive. */
+const FONT_SIZE = 0.56
 
 /** Distance between neighboring cell centers, leaving a small gap. */
 const SPACING = Math.sqrt(3) * 1.05

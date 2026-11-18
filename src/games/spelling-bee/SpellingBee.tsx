@@ -112,20 +112,20 @@ export function SpellingBee(
         </div>
         <Hive center={puzzle.center} outer={outer} onLetter={add} />
         <div className="flex gap-3">
-          <Button variant="outline" size="lg" className="rounded-full px-5" onClick={remove}>
+          <Button variant="outline" className="h-12 rounded-full px-6 text-base" onClick={remove}>
             <IconBackspace /> Delete
           </Button>
           <Button
             variant="outline"
-            size="icon-lg"
-            className="rounded-full"
+            size="icon"
+            className="size-12 rounded-full [&_svg:not([class*='size-'])]:size-5"
             onClick={mix}
             aria-label="Shuffle"
             title="Shuffle (Space)"
           >
             <IconArrowsShuffle />
           </Button>
-          <Button variant="outline" size="lg" className="rounded-full px-5" onClick={submit}>
+          <Button variant="outline" className="h-12 rounded-full px-6 text-base" onClick={submit}>
             Enter
           </Button>
         </div>
