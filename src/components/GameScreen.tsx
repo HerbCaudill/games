@@ -6,12 +6,10 @@ import { Crossword } from "@/games/crossword/Crossword"
 import { LetterBoxed } from "@/games/letter-boxed/LetterBoxed"
 import { Pips } from "@/games/pips/Pips"
 import { SpellingBee } from "@/games/spelling-bee/SpellingBee"
-import { formatDate } from "@/lib/formatDate"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { usePuzzle } from "@/lib/usePuzzle"
 import { navigate } from "@/lib/navigate"
 import type { GameId, PuzzleFor } from "@/types"
-import { GameGlyph } from "./GameGlyph"
 import { ShortcutsButton } from "./ShortcutsButton"
 import { TokenForm } from "./TokenForm"
 import { Button } from "./ui/button"
@@ -36,18 +34,10 @@ export function GameScreen(
         >
           <IconChevronLeft />
         </Button>
-        <GameGlyph game={game.id} className="game-title size-6 shrink-0" />
-        <h1
-          className="game-title min-w-0 truncate font-semibold"
-          style={{ color: `color-mix(in srgb, ${game.color}, var(--foreground) 55%)` }}
-        >
-          {game.name}
-        </h1>
-        <span className="game-title text-muted-foreground ml-auto truncate text-sm">
-          {formatDate(date, "short")}
-        </span>
+        <h1 className="sr-only">{game.name}</h1>
+        {/* Each game puts its own controls here. */}
+        <div ref={setToolbar} className="flex min-w-0 flex-1 items-center gap-2" />
         <ShortcutsButton context={game.id} />
-        <div ref={setToolbar} className="game-toolbar contents" />
       </header>
       <main className="app-content">
         {load.status === "loading" && (
@@ -73,7 +63,7 @@ function GameBody({ game, puzzle, date, toolbar }: GameBodyProps) {
     case "crossword":
       return <Crossword key={date} puzzle={puzzle as PuzzleFor["crossword"]} toolbar={toolbar} />
     case "pips":
-      return <Pips key={date} puzzle={puzzle as PuzzleFor["pips"]} />
+      return <Pips key={date} puzzle={puzzle as PuzzleFor["pips"]} toolbar={toolbar} />
     case "spelling-bee":
       return <SpellingBee key={date} puzzle={puzzle as PuzzleFor["spelling-bee"]} />
     case "connections":
@@ -90,7 +80,7 @@ type GameBodyProps = {
   puzzle: PuzzleFor[GameId]
   /** Puzzle date as YYYY-MM-DD. */
   date: string
-  /** Header element a game can render touch controls into. */
+  /** Header element a game can render its controls into. */
   toolbar: HTMLElement | null
 }
 

@@ -35,6 +35,8 @@ export const SHORTCUTS: Record<ShortcutContext, ShortcutGroup> = {
       [["Enter"], "Place the domino, or pick up the one here"],
       [["⌫"], "Return the domino here to the tray"],
       [["E", "M", "H"], "Easy, medium or hard board"],
+      [["⌘", "Z"], "Undo"],
+      [["⇧", "⌘", "Z"], "Redo"],
     ],
   },
   "spelling-bee": {

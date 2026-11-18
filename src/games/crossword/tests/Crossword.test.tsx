@@ -1,21 +1,26 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { CrosswordPuzzle } from "@/types"
 import { Crossword } from "../Crossword"
 
+/** Stands in for the app header the puzzle controls go into. */
+let toolbar: HTMLElement
+
 beforeEach(() => {
   localStorage.clear()
   HTMLElement.prototype.scrollIntoView = vi.fn()
+  toolbar = document.body.appendChild(document.createElement("div"))
 })
 
 afterEach(() => {
   cleanup()
+  toolbar.remove()
   vi.useRealTimers()
 })
 
 describe("crossword entry controls", () => {
   it("opens a rebus from the toolbar, saves all its letters and solves with it", () => {
-    render(<Crossword puzzle={puzzle} />)
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     fireEvent.click(screen.getByRole("button", { name: "Enter rebus" }))
     for (const key of "cat") fireEvent.keyDown(document.body, { key })
     fireEvent.keyDown(document.body, { key: "Enter" })
@@ -26,7 +31,7 @@ describe("crossword entry controls", () => {
   })
 
   it("cancels a rebus with Escape without changing the saved entry", () => {
-    render(<Crossword puzzle={puzzle} />)
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     fireEvent.click(screen.getByRole("button", { name: "Enter rebus" }))
     fireEvent.keyDown(document.body, { key: "X" })
     fireEvent.keyDown(document.body, { key: "Escape" })
@@ -35,7 +40,7 @@ describe("crossword entry controls", () => {
 
   it("opens rebus entry for a long-pressed touch cell", () => {
     vi.useFakeTimers()
-    render(<Crossword puzzle={puzzle} />)
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     const cell = screen.getByRole("grid").querySelector("g")!
     const down = new Event("pointerdown", { bubbles: true, cancelable: true })
     Object.assign(down, { pointerType: "touch", clientX: 20, clientY: 20 })
@@ -45,30 +50,18 @@ describe("crossword entry controls", () => {
   })
 
   it("checks existing entries when toggled on and remembers the setting after reload", () => {
-    const view = render(<Crossword puzzle={puzzle} />)
+    const view = render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     fireEvent.keyDown(document.body, { key: "X" })
     fireEvent.click(screen.getByRole("switch", { name: "Autocheck" }))
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
     expect(screen.getByRole("gridcell", { name: /X, wrong/ })).toBeVisible()
     view.unmount()
-    render(<Crossword puzzle={puzzle} />)
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
   })
 
-  it("turns on autocheck and starts a rebus from the header menu", async () => {
-    const toolbar = document.body.appendChild(document.createElement("div"))
-    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
-    fireEvent.keyDown(document.body, { key: "X" })
-    fireEvent.click(within(toolbar).getByRole("button", { name: "Puzzle options" }))
-    fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Autocheck" }))
-    expect(screen.getByRole("gridcell", { name: /X, wrong/ })).toBeVisible()
-    fireEvent.click(screen.getByRole("menuitem", { name: "Rebus" }))
-    expect(screen.getAllByRole("button", { name: "Save rebus" })[0]).toBeVisible()
-    toolbar.remove()
-  })
-
   it("returns keyboard entry to the grid after using the autocheck switch", () => {
-    render(<Crossword puzzle={puzzle} />)
+    render(<Crossword puzzle={puzzle} toolbar={toolbar} />)
     const toggle = screen.getByRole("switch", { name: "Autocheck" })
     toggle.focus()
     fireEvent.click(toggle)

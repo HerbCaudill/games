@@ -1,14 +1,7 @@
-import { IconChevronLeft, IconChevronRight, IconDots } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { formatDuration } from "@/lib/formatDuration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -133,49 +126,39 @@ export function Crossword(
     <div className="flex h-full flex-col">
       {toolbar &&
         createPortal(
-          <TouchToolbar
-            elapsed={progress.elapsed}
-            autocheck={progress.autocheck ?? false}
-            rebus={rebus !== undefined}
-            rebusDisabled={locked}
-            onAutocheck={changeAutocheck}
-            onRebus={() => (rebus === undefined ? startRebus() : commitRebus())}
-          />,
+          <div className="ml-auto flex items-center gap-2">
+            <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={progress.autocheck ?? false}
+                onChange={event => changeAutocheck(event.target.checked)}
+                className="accent-primary size-4"
+              />
+              Autocheck
+              <span aria-hidden="true" className="text-muted-foreground w-5 text-xs">
+                {progress.autocheck ? "On" : "Off"}
+              </span>
+            </label>
+            {/* Touch screens have a rebus key on the on-screen keyboard instead. */}
+            <Button
+              variant={rebus === undefined ? "ghost" : "default"}
+              aria-label={rebus === undefined ? "Enter rebus" : "Save rebus"}
+              aria-pressed={rebus !== undefined}
+              disabled={locked}
+              title={rebus === undefined ? "Rebus (Esc)" : "Save rebus (Enter); cancel (Esc)"}
+              className="min-h-10 pointer-coarse:hidden"
+              onClick={event => {
+                if (rebus === undefined) startRebus()
+                else commitRebus()
+                event.currentTarget.blur()
+              }}
+            >
+              {rebus === undefined ? "Rebus" : "Done"}
+            </Button>
+          </div>,
           toolbar,
         )}
-      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5 pointer-coarse:hidden">
-        <span className="text-muted-foreground mr-auto font-mono text-sm tabular-nums">
-          {formatDuration(progress.elapsed)}
-        </span>
-        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            role="switch"
-            checked={progress.autocheck ?? false}
-            onChange={event => changeAutocheck(event.target.checked)}
-            className="accent-primary size-4"
-          />
-          Autocheck
-          <span aria-hidden="true" className="text-muted-foreground w-5 text-xs">
-            {progress.autocheck ? "On" : "Off"}
-          </span>
-        </label>
-        <Button
-          variant={rebus === undefined ? "ghost" : "default"}
-          aria-label={rebus === undefined ? "Enter rebus" : "Save rebus"}
-          aria-pressed={rebus !== undefined}
-          disabled={locked}
-          title={rebus === undefined ? "Rebus (Esc)" : "Save rebus (Enter); cancel (Esc)"}
-          className="min-h-10"
-          onClick={event => {
-            if (rebus === undefined) startRebus()
-            else commitRebus()
-            event.currentTarget.blur()
-          }}
-        >
-          {rebus === undefined ? "Rebus" : "Done"}
-        </Button>
-      </div>
 
       {solved && (
         <p className="bg-(--game-crossword) px-4 py-2 text-center text-sm font-medium text-(--game-crossword-foreground)">
@@ -272,45 +255,6 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
   )
 }
 
-/** The touch-screen header controls: the timer, and a menu with autocheck and rebus. */
-function TouchToolbar({
-  elapsed,
-  autocheck,
-  rebus,
-  rebusDisabled,
-  onAutocheck,
-  onRebus,
-}: TouchToolbarProps) {
-  return (
-    <div className="hidden min-w-0 flex-1 items-center pointer-coarse:flex">
-      <span className="mr-auto font-mono tabular-nums">{formatDuration(elapsed)}</span>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon" aria-label="Puzzle options" />}
-        >
-          <IconDots className="size-5" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuCheckboxItem
-            checked={autocheck}
-            onCheckedChange={onAutocheck}
-            className="min-h-11 text-base"
-          >
-            Autocheck
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuItem
-            disabled={rebusDisabled}
-            onClick={onRebus}
-            className="min-h-11 text-base"
-          >
-            {rebus ? "Save rebus" : "Rebus"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  )
-}
-
 // TYPES
 
 /** Saved crossword progress. */
@@ -330,24 +274,9 @@ type ClueBarProps = {
   onToggle: () => void
 }
 
-type TouchToolbarProps = {
-  /** Seconds spent. */
-  elapsed: number
-  /** Whether autocheck is on. */
-  autocheck: boolean
-  /** Whether a rebus is being entered. */
-  rebus: boolean
-  /** Whether the current square is locked against a rebus. */
-  rebusDisabled: boolean
-  /** Turn autocheck on or off. */
-  onAutocheck: (on: boolean) => void
-  /** Start or save a rebus. */
-  onRebus: () => void
-}
-
 type Props = {
   /** The puzzle. */
   puzzle: CrosswordPuzzle
-  /** Header element to render the touch-screen controls into, when there is a header. */
-  toolbar?: HTMLElement | null
+  /** Header element to render the puzzle controls into. */
+  toolbar: HTMLElement | null
 }

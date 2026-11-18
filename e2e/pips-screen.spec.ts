@@ -165,3 +165,21 @@ test("shows tray dominoes smaller than board cells, growing to full size once pi
   await expect.poll(async () => (await domino.boundingBox())!.width).toBeCloseTo(2 * cellWidth, 0)
   await page.mouse.up()
 })
+
+test("undoes and redoes moves", async ({ page }) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const start = await centerOf(domino)
+  const undo = page.getByRole("button", { name: "Undo" })
+  const redo = page.getByRole("button", { name: "Redo" })
+  await expect(undo).toBeDisabled()
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, domino, [x + box.width / 2, y])
+  const placed = await centerOf(domino)
+  await undo.click()
+  await expect.poll(async () => distance(await centerOf(domino), start)).toBeLessThan(2)
+  await redo.click()
+  await expect.poll(async () => distance(await centerOf(domino), placed)).toBeLessThan(2)
+  await expect(redo).toBeDisabled()
+})

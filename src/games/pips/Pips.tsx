@@ -1,5 +1,6 @@
-import { IconCheck } from "@tabler/icons-react"
+import { IconArrowBackUp, IconArrowForwardUp, IconCheck } from "@tabler/icons-react"
 import { useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/lib/formatDuration"
 import { readStored } from "@/lib/readStored"
@@ -7,6 +8,7 @@ import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
+import { useUndo } from "@/lib/useUndo"
 import { cn } from "@/lib/utils"
 import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
 import { PipsTable } from "./PipsTable"
@@ -23,7 +25,7 @@ import { type Placements, type Point } from "./logic/types"
 /** Pips: place every domino so each region's rule holds. */
 export function Pips(
   /** The component props. */
-  { puzzle }: Props,
+  { puzzle, toolbar }: Props,
 ) {
   const [difficulty, setDifficulty] = usePersistentState<PipsDifficulty>(
     `progress:pips:${puzzle.date}:difficulty`,
@@ -36,6 +38,12 @@ export function Pips(
   )
   const { placements } = progress
   const turns = progress.turns ?? []
+  const spots = progress.spots ?? []
+  const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(
+    difficulty,
+    { placements, turns, spots },
+    pieces => setProgress(p => ({ ...p, ...pieces })),
+  )
   const [chosen, setSelected] = useState<number>()
   const [cursor, setCursor] = useState<Cell>(() => boardCells(board)[0])
   // The cursor and the picked domino only matter, and only show, while playing by keyboard.
@@ -59,30 +67,30 @@ export function Pips(
 
   /** Save new placements, turning each moved domino to match how it now lies. A domino on the board has no loose spot. */
   const update = (next: Placements, loose?: { index: number; at: Point }) =>
-    setProgress(p => ({
-      ...p,
+    change({
       placements: next,
       turns: next.map((pair, i) => {
-        const turn = p.turns?.[i] ?? 0
+        const turn = turns[i] ?? 0
         return pair ? turnTo(turn, directionOf(pair)) : turn
       }),
       spots: next.map((pair, i) =>
-        i === loose?.index ? loose.at : pair ? null : (p.spots?.[i] ?? null),
+        i === loose?.index ? loose.at : pair ? null : (spots[i] ?? null),
       ),
-    }))
+    })
 
   const turn = (i: number) =>
-    setProgress(p => ({
-      ...p,
-      turns: board.dominoes.map((_, j) => (p.turns?.[j] ?? 0) + (i === j ? 1 : 0)),
-    }))
+    change({
+      placements,
+      spots,
+      turns: board.dominoes.map((_, j) => (turns[j] ?? 0) + (i === j ? 1 : 0)),
+    })
 
   /** Put every domino back in its tray slot, facing its starting way. */
   const clear = () => {
-    setProgress(p => ({ ...p, placements: board.dominoes.map(() => null), turns: [], spots: [] }))
+    change({ placements: board.dominoes.map(() => null), turns: [], spots: [] })
     setSelected(undefined)
   }
-  const cleared = !placements.some(Boolean) && !(progress.spots ?? []).some(Boolean)
+  const cleared = !placements.some(Boolean) && !spots.some(Boolean)
 
   const switchDifficulty = (d: PipsDifficulty) => {
     setDifficulty(d)
@@ -142,6 +150,13 @@ export function Pips(
 
   useKeydown(event => {
     const key = event.key
+    if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "z") {
+      event.preventDefault()
+      if (solved) return
+      if (event.shiftKey) redo()
+      else undo()
+      return
+    }
     const arrows: Record<string, [number, number]> = {
       ArrowUp: [-1, 0],
       ArrowDown: [1, 0],
@@ -169,41 +184,64 @@ export function Pips(
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-4 sm:pt-6">
-      <div className="flex w-full items-center gap-3">
-        <div className="bg-muted flex rounded-full p-1" role="tablist" aria-label="Difficulty">
-          {DIFFICULTIES.map(d => (
-            <button
-              key={d}
-              type="button"
-              role="tab"
-              aria-selected={d === difficulty}
-              onClick={() => switchDifficulty(d)}
-              className={cn(
-                "flex items-center gap-1 rounded-full px-3 py-1 text-sm capitalize outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                d === difficulty ? "bg-card font-semibold shadow-sm" : "text-muted-foreground",
-              )}
-            >
-              {d}
-              {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && (
-                <IconCheck className="size-3.5" aria-label="solved" />
-              )}
-            </button>
-          ))}
-        </div>
-        <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
-          {formatDuration(progress.elapsed)}
-        </span>
-        <Button variant="ghost" disabled={solved || cleared} onClick={clear}>
-          Clear
-        </Button>
-      </div>
+      {toolbar &&
+        createPortal(
+          <>
+            <div className="bg-muted flex rounded-full p-1" role="tablist" aria-label="Difficulty">
+              {DIFFICULTIES.map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  role="tab"
+                  aria-selected={d === difficulty}
+                  onClick={() => switchDifficulty(d)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-full px-2.5 py-1 text-sm capitalize outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:px-3",
+                    d === difficulty ? "bg-card font-semibold shadow-sm" : "text-muted-foreground",
+                  )}
+                >
+                  {d}
+                  {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && (
+                    <IconCheck className="size-3.5" aria-label="solved" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Undo"
+                title="Undo (⌘Z)"
+                disabled={solved || !canUndo}
+                onClick={undo}
+              >
+                <IconArrowBackUp />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Redo"
+                title="Redo (⇧⌘Z)"
+                disabled={solved || !canRedo}
+                onClick={redo}
+              >
+                <IconArrowForwardUp />
+              </Button>
+              <Button variant="ghost" className="px-2" disabled={solved || cleared} onClick={clear}>
+                Clear
+              </Button>
+            </div>
+          </>,
+          toolbar,
+        )}
 
       <div className="w-full" onPointerDown={() => setUsingKeyboard(false)}>
         <PipsTable
           board={board}
           placements={placements}
           turns={turns}
-          spots={progress.spots ?? []}
+          spots={spots}
           solved={solved}
           cursor={usingKeyboard && !solved ? cursor : undefined}
           selected={usingKeyboard && !solved ? selected : undefined}
@@ -253,6 +291,9 @@ const DIFFICULTIES: PipsDifficulty[] = ["easy", "medium", "hard"]
 
 // TYPES
 
+/** Where the dominoes are and which way they face: the part of a board's progress that undo restores. */
+type Pieces = Pick<PipsProgress, "placements" | "turns" | "spots">
+
 /** Saved progress for one board. */
 type PipsProgress = {
   /** Where each domino sits. */
@@ -268,4 +309,6 @@ type PipsProgress = {
 type Props = {
   /** The puzzle. */
   puzzle: PipsPuzzle
+  /** Header element to render the board controls into. */
+  toolbar: HTMLElement | null
 }
