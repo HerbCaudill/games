@@ -120,7 +120,7 @@ test("solves Letter Boxed", async ({ page }) => {
   await tap("ADG")
   await expect(page.getByText("ADG", { exact: true })).toBeVisible()
   await tap("JBEHKCFIL")
-  await expect(page.getByText("Solved in 2 words!")).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: "solution in 2 words" })).toBeVisible()
 })
 
 test("solves a Pips board by turning and dragging dominoes", async ({ page }) => {

@@ -23,7 +23,7 @@ export function GameScreen(
   const load = usePuzzle(game.id, date, token)
   const [toolbar, setToolbar] = useState<HTMLElement | null>(null)
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-game={game.id}>
       <header className="app-header">
         <Button
           variant="ghost"
@@ -77,7 +77,9 @@ function GameBody({ game, puzzle, date, token, toolbar }: GameBodyProps) {
     case "connections":
       return <Connections key={date} puzzle={puzzle as PuzzleFor["connections"]} />
     case "letter-boxed":
-      return <LetterBoxed key={date} puzzle={puzzle as PuzzleFor["letter-boxed"]} />
+      return (
+        <LetterBoxed key={date} puzzle={puzzle as PuzzleFor["letter-boxed"]} toolbar={toolbar} />
+      )
   }
 }
 

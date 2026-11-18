@@ -1,14 +1,13 @@
+import { isSolution } from "./isSolution"
 import type { LetterBoxedState } from "./types"
 import type { LetterBoxedPuzzle } from "@/types"
 
-/** Whether exactly two submitted words use every letter on the board. */
+/** Whether any chain so far has used every letter in exactly two words. */
 export function isSolved(
   /** Current state. */
   state: LetterBoxedState,
   /** The puzzle. */
   puzzle: LetterBoxedPuzzle,
 ) {
-  if (state.words.length !== 2) return false
-  const used = new Set(state.words.join(""))
-  return [...puzzle.sides.join("")].every(letter => used.has(letter))
+  return state.history.some(words => words.length === 2 && isSolution(words, puzzle))
 }

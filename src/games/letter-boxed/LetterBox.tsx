@@ -1,9 +1,10 @@
+import type { CSSProperties } from "react"
 import type { LetterBoxedPuzzle } from "@/types"
 import { cn } from "@/lib/utils"
 import { usedLetters } from "./logic/usedLetters"
 import { type LetterBoxedState } from "./logic/types"
 
-/** The square with three letters on each side and the paths drawn between them. */
+/** The white square with three letters on each side and the paths drawn between them. */
 export function LetterBox(
   /** The component props. */
   { puzzle, state, onLetter, acceptedWordIndex }: Props,
@@ -13,48 +14,43 @@ export function LetterBox(
   )
   const used = usedLetters(state)
   const path = (word: string) => [...word].map(l => spots.get(l)!.join(",")).join(" ")
-  const last = state.current.at(-1)
+  const count = state.words.length
 
   return (
-    <svg
-      viewBox="-24 -24 148 148"
-      className="w-[min(22rem,88vw)] select-none"
-      role="group"
-      aria-label="Letters"
-    >
+    <svg viewBox="0 0 100 100" className="w-full select-none" role="group" aria-label="Letters">
       <rect
-        x="0"
-        y="0"
-        width="100"
-        height="100"
-        className="fill-card stroke-foreground"
-        strokeWidth="1.5"
+        x={ORIGIN}
+        y={ORIGIN}
+        width={SQUARE}
+        height={SQUARE}
+        fill="white"
+        stroke="black"
+        strokeWidth={STROKE}
       />
+      {state.current.length > 1 && (
+        <polyline
+          points={path(state.current)}
+          className="fill-none stroke-(--letter-boxed-background)"
+          strokeWidth={STROKE * 1.5}
+          strokeDasharray={STROKE * 3}
+        />
+      )}
       {state.words.map((word, i) => (
         <polyline
           key={i}
           points={path(word)}
           className={cn(
-            "fill-none stroke-(--game-letter-boxed)",
+            "letter-boxed-path fill-none stroke-(--letter-boxed-background)",
             i === acceptedWordIndex && "letter-boxed-accepted-path",
           )}
+          // Older words fade so the chain reads from faint to strong.
+          style={{ "--path-opacity": 0.8 - (0.6 / count) * (count - i) } as CSSProperties}
           pathLength="1"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-          opacity={0.55}
+          strokeWidth={STROKE * 1.5}
         />
       ))}
-      {state.current.length > 1 && (
-        <polyline
-          points={path(state.current)}
-          className="fill-none stroke-(--game-letter-boxed)"
-          strokeWidth="1.6"
-          strokeDasharray="3 2"
-          strokeLinejoin="round"
-        />
-      )}
       {[...spots].map(([letter, [x, y]]) => {
-        const [lx, ly] = labelSpot(x, y)
+        const [dx, dy, anchor] = labelOffset(x, y)
         const isUsed = used.has(letter)
         return (
           <g
@@ -68,25 +64,21 @@ export function LetterBox(
             }}
           >
             {/* A generous invisible hit area around the dot and its label. */}
-            <circle cx={(x + lx) / 2} cy={(y + ly) / 2} r="11" fill="transparent" />
+            <circle cx={x + dx / 2} cy={y + dy / 2} r="7.5" fill="transparent" />
             <circle
               cx={x}
               cy={y}
-              r={letter === last ? 4 : 3.2}
-              className={
-                isUsed
-                  ? "fill-(--game-letter-boxed) stroke-(--game-letter-boxed)"
-                  : "fill-card stroke-foreground"
-              }
-              strokeWidth="1.2"
+              r={DOT}
+              fill={isUsed ? "black" : "white"}
+              stroke={isUsed ? "white" : "black"}
+              strokeWidth={STROKE}
             />
             <text
-              x={lx}
-              y={ly}
-              dy="3.6"
-              textAnchor="middle"
-              className={isUsed ? "fill-muted-foreground" : "fill-foreground"}
-              style={{ font: "600 10.5px var(--font-sans)" }}
+              x={x + dx}
+              y={y + dy}
+              textAnchor={anchor}
+              fill={isUsed ? "black" : "white"}
+              style={{ font: `600 ${LETTER}px var(--font-mono)` }}
             >
               {letter}
             </text>
@@ -104,29 +96,51 @@ function spot(
   /** Position along the side. */
   i: number,
 ): [number, number] {
-  const along = (100 * (2 * i + 1)) / 6
+  const along = ORIGIN + (SQUARE * (2 * i + 1)) / 6
+  const near = ORIGIN
+  const far = ORIGIN + SQUARE
   return (
     [
-      [along, 0],
-      [100, along],
-      [along, 100],
-      [0, along],
+      [along, near],
+      [far, along],
+      [along, far],
+      [near, along],
     ] as [number, number][]
   )[side]
 }
 
-/** Where a letter's label sits, just outside its dot. */
-function labelSpot(
+/** Where a letter's label sits relative to its dot, just outside the square, and how it aligns. */
+function labelOffset(
   /** Dot x. */
   x: number,
   /** Dot y. */
   y: number,
-): [number, number] {
-  if (y === 0) return [x, -12]
-  if (y === 100) return [x, 112]
-  if (x === 0) return [-13, y]
-  return [113, y]
+): [number, number, "start" | "middle" | "end"] {
+  const gap = LETTER * 0.7
+  if (y === ORIGIN) return [0, -gap, "middle"]
+  if (y === ORIGIN + SQUARE) return [0, gap * 2, "middle"]
+  if (x === ORIGIN) return [-gap, gap / 2, "end"]
+  return [gap, gap / 2, "start"]
 }
+
+// CONSTANTS
+
+/** The square's side, in a 100-unit view box. */
+const SQUARE = 70
+
+/** Where the square starts. */
+const ORIGIN = (100 - SQUARE) / 2
+
+/** Letter size. */
+const LETTER = 8
+
+/** Radius of each letter's dot. */
+const DOT = LETTER * 0.3
+
+/** Line width for the square, dots and paths. */
+const STROKE = LETTER * 0.135
+
+// TYPES
 
 type Props = {
   /** The puzzle. */

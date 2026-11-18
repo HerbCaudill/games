@@ -64,6 +64,7 @@ export const SHORTCUTS: Record<ShortcutContext, ShortcutGroup> = {
       [["A", "–", "Z"], "Type a letter"],
       [["Enter"], "Submit the word"],
       [["⌫"], "Delete a letter"],
+      [["Esc"], "Start over"],
     ],
   },
 }

@@ -8,6 +8,7 @@
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-serif: "IBM Plex Serif", Georgia, serif;
   --font-mono: "IBM Plex Mono", monospace;
+  --font-condensed: "IBM Plex Sans Condensed", var(--font-sans);
   --font-heading: var(--font-sans);
 
   /* A text cursor's hard on-off blink. */
@@ -88,6 +89,8 @@
   --game-spelling-bee: oklch(0.87 0.17 90);
   --game-connections: #b4a0ff;
   --game-letter-boxed: #f5786d;
+  /* The old Letterboxd clone's pink, behind the whole game. */
+  --letter-boxed-background: #faa6a4;
 
   /* Connections groups, easiest first. */
   --connections-selected: #4a4a4a;

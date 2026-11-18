@@ -1,3 +1,32 @@
+/* Letter Boxed plays on pink, header included. */
+.app-shell[data-game="letter-boxed"],
+.app-shell[data-game="letter-boxed"] .app-header {
+  background: var(--letter-boxed-background);
+}
+
+.app-shell[data-game="letter-boxed"] .app-header {
+  border-color: rgb(0 0 0 / 0.15);
+}
+
+.letter-boxed-button {
+  border: 1px solid rgb(0 0 0 / 0.5);
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.letter-boxed-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.letter-boxed-path {
+  opacity: var(--path-opacity);
+}
+
 .letter-boxed-accepted-path {
   animation: letter-boxed-accept 700ms ease-out;
 }
@@ -6,25 +35,95 @@
   from {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    stroke-width: 2.6;
     opacity: 1;
   }
   75% {
     stroke-dasharray: 1;
     stroke-dashoffset: 0;
-    stroke-width: 2.6;
     opacity: 1;
   }
   to {
     stroke-dasharray: 1;
     stroke-dashoffset: 0;
-    stroke-width: 1.6;
-    opacity: 0.55;
+    opacity: var(--path-opacity);
+  }
+}
+
+/* A message floats up a little and fades away. */
+.letter-boxed-rise {
+  animation: letter-boxed-rise 2s ease-out forwards;
+}
+
+@keyframes letter-boxed-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+.letter-boxed-celebrate {
+  animation: letter-boxed-celebrate 1s ease-in-out;
+}
+
+@keyframes letter-boxed-celebrate {
+  50% {
+    transform: scale(1.5) rotate(3deg);
+  }
+}
+
+.letter-boxed-shake {
+  animation: letter-boxed-shake 500ms;
+}
+
+@keyframes letter-boxed-shake {
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-3px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(3px, 0, 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .letter-boxed-accepted-path {
+  .letter-boxed-accepted-path,
+  .letter-boxed-celebrate,
+  .letter-boxed-shake {
     animation: none;
+  }
+
+  .letter-boxed-rise {
+    animation: letter-boxed-fade 2s ease-out forwards;
+  }
+}
+
+@keyframes letter-boxed-fade {
+  from,
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

@@ -1,8 +1,12 @@
+import { isSolution } from "./isSolution"
 import { sideOf } from "./sideOf"
 import type { LetterBoxedState } from "./types"
 import type { LetterBoxedPuzzle } from "@/types"
 
-/** Add a letter if the rules allow it: on the board, and not on the same side as the previous letter. */
+/**
+ * Add a letter if the rules allow it: on the board, and not on the same side as the previous
+ * letter. After a finished chain, the letter starts a new one.
+ */
 export function addLetter(
   /** Current state. */
   state: LetterBoxedState,
@@ -14,6 +18,7 @@ export function addLetter(
   const upper = letter.toUpperCase()
   const side = sideOf(upper, puzzle)
   if (side < 0) return state
+  if (isSolution(state.words, puzzle)) return { ...state, words: [], current: upper }
   const previous = state.current.at(-1)
   if (previous && sideOf(previous, puzzle) === side) return state
   return { ...state, current: state.current + upper }
