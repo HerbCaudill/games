@@ -48,6 +48,33 @@ test("scores a Spelling Bee word and shows the rank", async ({ page }) => {
   await expect(page.getByText("You have found 1 word")).toBeVisible()
 })
 
+test("shows Spelling Bee hints, the word grid and player stats from the header", async ({
+  page,
+}) => {
+  await page.goto("/spelling-bee")
+  for (const letter of "moat")
+    await page
+      .getByRole("button", { name: letter.toUpperCase(), exact: true })
+      .dispatchEvent("pointerdown")
+  await page.getByRole("button", { name: "Enter" }).click()
+
+  await page.getByRole("button", { name: "Hints" }).click()
+  const hints = page.getByRole("dialog", { name: "Hints" })
+  await hints.getByText("to", { exact: true }).click()
+  await expect(hints.getByText("Scroll in an ark")).toBeVisible()
+  // Found words stay hidden unless asked for.
+  await expect(hints.getByText("Castle ring")).toHaveCount(0)
+  // Typing in a panel doesn't reach the game behind it.
+  await page.keyboard.press("t")
+  await hints.getByRole("button", { name: "Close" }).click()
+  await expect(page.getByLabel("Current word")).toHaveText("")
+
+  await page.getByRole("button", { name: "Word grid and stats" }).click()
+  const grid = page.getByRole("dialog", { name: "Word grid and stats" })
+  await expect(grid.getByLabel("M, 4 letters: 1 of 1 found")).toBeVisible()
+  await expect(grid.getByText("1,234 players")).toBeVisible()
+})
+
 test("rejects a Spelling Bee word without the center letter", async ({ page }) => {
   await page.goto("/spelling-bee")
   for (const letter of "boom")

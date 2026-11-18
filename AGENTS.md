@@ -8,12 +8,14 @@ A personal client for five NYT daily games, in this order: Crossword, Pips, Spel
 
 The API needs an NYT token: the value of the `NYT-S` cookie from a signed-in nytimes.com session. The server never stores it. The app saves it in localStorage on each device, asks for it when the API answers 401, and sends it in the `X-NYT-Token` header. In development the plugin falls back to `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). Spelling Bee Buddy (`../spelling-bee-buddy/.env`, `VITE_NYT_TOKEN`) uses the same token.
 
+Spelling Bee hints are written by Claude with the server's `ANTHROPIC_API_KEY`: in `.env` for development and a Vercel environment variable in production. Without it, the hints route answers 503 and everything else works.
+
 ## Architecture
 
-- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<game>/<YYYY-MM-DD>`. Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. NYT's puzzle feeds answer without any token, so before serving a puzzle it checks the token against an NYT account endpoint and trusts an accepted token for an hour. The token is the API's only access control.
+- `server/` fetches each game's NYT feed with the token and converts it to the app's own types in `src/types.ts`. Routes are `/api/<resource>/<YYYY-MM-DD>`, where a resource is a game, `spelling-bee-hints` (Claude's clues, written once per puzzle per server instance; the prompt came from Spelling Bee Buddy) or `spelling-bee-stats` (the share of NYT players who found each word). Each `parse*.ts` handles one feed. `handleApiRequest` serves both the dev plugin and the Vercel function. NYT's puzzle feeds answer without any token, so before serving a puzzle it checks the token against an NYT account endpoint and trusts an accepted token for an hour. The token is the API's only access control.
 - `src/games/<game>/` holds each game. `logic/` has the pure game rules, one function per file, tested in `logic/tests/`. The `.tsx` files are the UI.
-- `src/lib/` holds shared hooks: puzzle loading (`usePuzzle`, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
-- Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, and the NYT token under `nyt-token`.
+- `src/lib/` holds shared hooks: API requests (`useApi`, and `usePuzzle` on top of it, cached in localStorage for offline use), saved progress (`usePersistentState`), and routing (`useRoute`).
+- Progress lives in localStorage under `progress:<game>:<date>`, menu status under `status:<game>:<date>`, Spelling Bee hints under `hints:spelling-bee:<date>`, and the NYT token under `nyt-token`.
 
 ## NYT feeds
 

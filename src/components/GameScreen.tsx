@@ -51,7 +51,7 @@ export function GameScreen(
         )}
         {load.status === "needs-token" && <TokenForm message={load.message} onSave={setToken} />}
         {load.status === "ready" && (
-          <GameBody game={game.id} puzzle={load.puzzle} date={date} toolbar={toolbar} />
+          <GameBody game={game.id} puzzle={load.data} date={date} token={token} toolbar={toolbar} />
         )}
       </main>
     </div>
@@ -59,14 +59,21 @@ export function GameScreen(
 }
 
 /** The game itself; keyed by date so each puzzle starts with fresh component state. */
-function GameBody({ game, puzzle, date, toolbar }: GameBodyProps) {
+function GameBody({ game, puzzle, date, token, toolbar }: GameBodyProps) {
   switch (game) {
     case "crossword":
       return <Crossword key={date} puzzle={puzzle as PuzzleFor["crossword"]} toolbar={toolbar} />
     case "pips":
       return <Pips key={date} puzzle={puzzle as PuzzleFor["pips"]} toolbar={toolbar} />
     case "spelling-bee":
-      return <SpellingBee key={date} puzzle={puzzle as PuzzleFor["spelling-bee"]} />
+      return (
+        <SpellingBee
+          key={date}
+          puzzle={puzzle as PuzzleFor["spelling-bee"]}
+          token={token}
+          toolbar={toolbar}
+        />
+      )
     case "connections":
       return <Connections key={date} puzzle={puzzle as PuzzleFor["connections"]} />
     case "letter-boxed":
@@ -81,6 +88,8 @@ type GameBodyProps = {
   puzzle: PuzzleFor[GameId]
   /** Puzzle date as YYYY-MM-DD. */
   date: string
+  /** The NYT-S cookie value saved on this device. */
+  token: string
   /** Header element a game can render its controls into. */
   toolbar: HTMLElement | null
 }

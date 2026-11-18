@@ -162,39 +162,43 @@ export function Pips(
     }
   }
 
-  useKeydown(event => {
-    const key = event.key
-    if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "z") {
+  useKeydown(
+    event => {
+      const key = event.key
+      if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "z") {
+        event.preventDefault()
+        if (solved) return
+        if (event.shiftKey) redo()
+        else undo()
+        return
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const arrows: Record<string, [number, number]> = {
+        ArrowUp: [-1, 0],
+        ArrowDown: [1, 0],
+        ArrowLeft: [0, -1],
+        ArrowRight: [0, 1],
+      }
+      if (arrows[key]) moveCursor(...arrows[key])
+      else if (key === "Enter" || key === " ") activate(cursor)
+      else if (key === "Backspace") {
+        const here = dominoAt(cursor)
+        if (here < 0 || solved) return
+        update(removeDomino(placements, here))
+        setSelected(here)
+      } else if (key === "[") cycle(-1)
+      else if (key === "]") cycle(1)
+      else if (key.toLowerCase() === "r") {
+        if (selected !== undefined && !solved) turn(selected)
+      } else if (key.toLowerCase() === "e") switchDifficulty("easy")
+      else if (key.toLowerCase() === "m") switchDifficulty("medium")
+      else if (key.toLowerCase() === "h") switchDifficulty("hard")
+      else return
       event.preventDefault()
-      if (solved) return
-      if (event.shiftKey) redo()
-      else undo()
-      return
-    }
-    const arrows: Record<string, [number, number]> = {
-      ArrowUp: [-1, 0],
-      ArrowDown: [1, 0],
-      ArrowLeft: [0, -1],
-      ArrowRight: [0, 1],
-    }
-    if (arrows[key]) moveCursor(...arrows[key])
-    else if (key === "Enter" || key === " ") activate(cursor)
-    else if (key === "Backspace") {
-      const here = dominoAt(cursor)
-      if (here < 0 || solved) return
-      update(removeDomino(placements, here))
-      setSelected(here)
-    } else if (key === "[") cycle(-1)
-    else if (key === "]") cycle(1)
-    else if (key.toLowerCase() === "r") {
-      if (selected !== undefined && !solved) turn(selected)
-    } else if (key.toLowerCase() === "e") switchDifficulty("easy")
-    else if (key.toLowerCase() === "m") switchDifficulty("medium")
-    else if (key.toLowerCase() === "h") switchDifficulty("hard")
-    else return
-    event.preventDefault()
-    setUsingKeyboard(true)
-  })
+      setUsingKeyboard(true)
+    },
+    { withModifiers: true },
+  )
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-4 sm:pt-6">

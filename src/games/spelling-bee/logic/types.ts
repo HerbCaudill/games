@@ -14,3 +14,11 @@ export type Rank = {
   /** The maximum possible score. */
   max: number
 }
+
+/** How many of a set of answers have been found. */
+export type WordCount = {
+  /** Found so far. */
+  found: number
+  /** In the set. */
+  total: number
+}

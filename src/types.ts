@@ -124,6 +124,22 @@ export type SpellingBeePuzzle = {
   pangrams: string[]
 }
 
+/** AI-written clues for a Spelling Bee's answers. */
+export type SpellingBeeHints = {
+  /** Print date as YYYY-MM-DD. */
+  date: string
+  /** A clue for each answer, keyed by the lowercase word. */
+  hints: Record<string, string>
+}
+
+/** How other players are doing on a Spelling Bee. */
+export type SpellingBeeStats = {
+  /** How many people have played it. */
+  players: number
+  /** The share of players, from 0 to 1, who found each answer, keyed by the lowercase word. */
+  found: Record<string, number>
+}
+
 /** A daily Connections puzzle. */
 export type ConnectionsPuzzle = {
   /** NYT puzzle ID. */

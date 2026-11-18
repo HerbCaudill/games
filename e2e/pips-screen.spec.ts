@@ -182,4 +182,10 @@ test("undoes and redoes moves", async ({ page }) => {
   await redo.click()
   await expect.poll(async () => distance(await centerOf(domino), placed)).toBeLessThan(2)
   await expect(redo).toBeDisabled()
+
+  // The same by keyboard.
+  await page.keyboard.press("ControlOrMeta+z")
+  await expect.poll(async () => distance(await centerOf(domino), start)).toBeLessThan(2)
+  await page.keyboard.press("ControlOrMeta+Shift+z")
+  await expect.poll(async () => distance(await centerOf(domino), placed)).toBeLessThan(2)
 })

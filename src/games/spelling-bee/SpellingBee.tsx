@@ -1,5 +1,7 @@
-import { IconArrowsShuffle, IconBackspace } from "@tabler/icons-react"
+import { IconArrowsShuffle, IconBackspace, IconBulb, IconLayoutGrid } from "@tabler/icons-react"
 import { useState } from "react"
+import { createPortal } from "react-dom"
+import { Panel } from "@/components/Panel"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
 import { useGameStatus } from "@/lib/useGameStatus"
@@ -8,6 +10,8 @@ import { usePersistentState } from "@/lib/usePersistentState"
 import { shuffle } from "@/lib/shuffle"
 import { useToast } from "@/lib/useToast"
 import type { SpellingBeePuzzle } from "@/types"
+import { GridPanel } from "./GridPanel"
+import { HintsPanel } from "./HintsPanel"
 import { Hive } from "./Hive"
 import { RankMeter } from "./RankMeter"
 import { checkGuess } from "./logic/checkGuess"
@@ -17,8 +21,9 @@ import { totalScore } from "./logic/totalScore"
 /** Spelling Bee: make words from seven letters, always using the center one. */
 export function SpellingBee(
   /** The component props. */
-  { puzzle }: Props,
+  { puzzle, token, toolbar }: Props,
 ) {
+  const [panel, setPanel] = useState<"hints" | "grid">()
   const [found, setFound] = usePersistentState<string[]>(
     `progress:spelling-bee:${puzzle.date}`,
     () => [],
@@ -68,6 +73,42 @@ export function SpellingBee(
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 md:flex-row-reverse md:items-start md:pt-8">
+      {toolbar &&
+        createPortal(
+          <div className="ml-auto flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              aria-label="Hints"
+              title="Hints"
+              onClick={() => setPanel("hints")}
+            >
+              <IconBulb className="size-6" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              aria-label="Word grid and stats"
+              title="Word grid and stats"
+              onClick={() => setPanel("grid")}
+            >
+              <IconLayoutGrid className="size-6" />
+            </Button>
+          </div>,
+          toolbar,
+        )}
+      <Panel open={panel === "hints"} title="Hints" onClose={() => setPanel(undefined)}>
+        <HintsPanel date={puzzle.date} token={token} found={found} />
+      </Panel>
+      <Panel
+        open={panel === "grid"}
+        title="Word grid and stats"
+        onClose={() => setPanel(undefined)}
+      >
+        <GridPanel puzzle={puzzle} token={token} found={found} />
+      </Panel>
       <section className="flex-1 md:max-w-sm">
         <RankMeter score={score} rank={rank} />
         <details className="bg-card mt-4 rounded-lg border">
@@ -142,4 +183,8 @@ export function SpellingBee(
 type Props = {
   /** The puzzle. */
   puzzle: SpellingBeePuzzle
+  /** The NYT-S cookie value saved on this device, for hints and player stats. */
+  token: string
+  /** Header element to render the hints and grid buttons into. */
+  toolbar: HTMLElement | null
 }

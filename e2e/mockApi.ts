@@ -1,19 +1,28 @@
 import type { Page } from "@playwright/test"
-import type { GameId, PuzzleFor } from "../src/types"
+import type { GameId, PuzzleFor, SpellingBeeHints, SpellingBeeStats } from "../src/types"
 
-/** Serve the test puzzles in place of the API. */
+/** Serve the test puzzles, and the Spelling Bee's hints and stats, in place of the API. */
 export async function mockApi(
   /** The Playwright page to intercept requests on. */
   page: Page,
 ) {
   await page.route("**/api/**", route => {
-    const [, , game, date] = new URL(route.request().url()).pathname.split("/")
-    const puzzle = PUZZLES[game as GameId]
+    const [, , resource, date] = new URL(route.request().url()).pathname.split("/")
+    if (resource === "spelling-bee-hints")
+      return route.fulfill({ json: { date, hints: HINTS } satisfies SpellingBeeHints })
+    if (resource === "spelling-bee-stats") return route.fulfill({ json: STATS })
+    const puzzle = PUZZLES[resource as GameId]
     return route.fulfill({ json: { ...puzzle, date } })
   })
 }
 
 // CONSTANTS
+
+/** Clues for the test Spelling Bee. */
+const HINTS = { moat: "Castle ring", torah: "Scroll in an ark", bathroom: "Where the tub is" }
+
+/** Player stats for the test Spelling Bee. */
+const STATS: SpellingBeeStats = { players: 1234, found: { moat: 0.9, torah: 0.6, bathroom: 0.4 } }
 
 /** Small made-up puzzles for each game, so tests never depend on NYT. */
 const PUZZLES: { [G in GameId]: Omit<PuzzleFor[G], "date"> } = {

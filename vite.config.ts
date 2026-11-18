@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    nytApiPlugin(loadEnv(mode, process.cwd(), "").NYT_TOKEN),
+    nytApiPlugin(loadEnv(mode, process.cwd(), "")),
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
