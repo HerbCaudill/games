@@ -42,11 +42,12 @@ export function DominoTile(
           {regions.map(
             (region, half) =>
               region !== undefined && (
+                // Reach past the outer edges, not into the other half, so the face stays covered once shifted.
                 <rect
                   key={half}
-                  x={half * U - DEPTH}
+                  x={half === 0 ? -DEPTH : U}
                   y={-DEPTH}
-                  width={U + 2 * DEPTH}
+                  width={U + DEPTH}
                   height={U + 2 * DEPTH}
                   style={{ fill: regionColors.fill(region) }}
                 />

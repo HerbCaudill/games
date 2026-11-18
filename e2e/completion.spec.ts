@@ -76,7 +76,8 @@ async function finish(
     }
   } else {
     for (const difficulty of ["easy", "medium", "hard"]) {
-      await page.getByRole("tab", { name: difficulty, exact: true }).click()
+      await page.getByRole("button", { name: /^Difficulty/ }).click()
+      await page.getByRole("menuitemradio", { name: new RegExp(`^${difficulty}`, "i") }).click()
       for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
         const domino = page.getByRole("button", { name, exact: true })
         await domino.click()

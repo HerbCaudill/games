@@ -1,7 +1,19 @@
-import { IconArrowBackUp, IconArrowForwardUp, IconCheck } from "@tabler/icons-react"
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconCheck,
+  IconChevronDown,
+} from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { formatDuration } from "@/lib/formatDuration"
 import { readStored } from "@/lib/readStored"
 import { useGameStatus } from "@/lib/useGameStatus"
@@ -9,7 +21,6 @@ import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
 import { useUndo } from "@/lib/useUndo"
-import { cn } from "@/lib/utils"
 import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
 import { PipsTable } from "./PipsTable"
 import { boardCells } from "./logic/boardCells"
@@ -187,36 +198,44 @@ export function Pips(
       {toolbar &&
         createPortal(
           <>
-            <div className="bg-muted flex rounded-full p-1" role="tablist" aria-label="Difficulty">
-              {DIFFICULTIES.map(d => (
-                <button
-                  key={d}
-                  type="button"
-                  role="tab"
-                  aria-selected={d === difficulty}
-                  onClick={() => switchDifficulty(d)}
-                  className={cn(
-                    "flex items-center gap-1 rounded-full px-2.5 py-1 text-sm capitalize outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:px-3",
-                    d === difficulty ? "bg-card font-semibold shadow-sm" : "text-muted-foreground",
-                  )}
-                >
-                  {d}
-                  {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && (
-                    <IconCheck className="size-3.5" aria-label="solved" />
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="ml-auto flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Undo"
-                title="Undo (⌘Z)"
-                disabled={solved || !canUndo}
-                onClick={undo}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    className="gap-1 px-2 text-base capitalize"
+                    aria-label={`Difficulty: ${capitalize(difficulty)}`}
+                  />
+                }
               >
-                <IconArrowBackUp />
+                {difficulty}
+                {solved && <IconCheck className="size-4" aria-hidden="true" />}
+                <IconChevronDown className="text-muted-foreground size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                <DropdownMenuRadioGroup
+                  value={difficulty}
+                  onValueChange={value => switchDifficulty(value as PipsDifficulty)}
+                >
+                  {DIFFICULTIES.map(d => (
+                    <DropdownMenuRadioItem
+                      key={d}
+                      value={d}
+                      closeOnClick
+                      className="min-h-11 text-base"
+                    >
+                      {capitalize(d)}
+                      {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && (
+                        <span className="text-muted-foreground ml-auto text-xs">Solved</span>
+                      )}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="ml-auto flex items-center">
+              <Button variant="ghost" className="px-2" disabled={solved || cleared} onClick={clear}>
+                Clear
               </Button>
               <Button
                 variant="ghost"
@@ -228,8 +247,15 @@ export function Pips(
               >
                 <IconArrowForwardUp />
               </Button>
-              <Button variant="ghost" className="px-2" disabled={solved || cleared} onClick={clear}>
-                Clear
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Undo"
+                title="Undo (⌘Z)"
+                disabled={solved || !canUndo}
+                onClick={undo}
+              >
+                <IconArrowBackUp />
               </Button>
             </div>
           </>,
@@ -274,6 +300,14 @@ function isStoredSolved(
 ) {
   const saved = readStored<PipsProgress>(progressKey(puzzle.date, difficulty))
   return Boolean(saved && isSolved(saved.placements, puzzle.boards[difficulty]))
+}
+
+/** A word with its first letter in capitals. */
+function capitalize(
+  /** The word. */
+  word: string,
+) {
+  return word[0].toUpperCase() + word.slice(1)
 }
 
 /** A turn count as a direction, 0 to 3. */
