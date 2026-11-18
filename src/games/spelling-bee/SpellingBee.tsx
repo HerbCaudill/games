@@ -10,6 +10,7 @@ import { usePersistentState } from "@/lib/usePersistentState"
 import { shuffle } from "@/lib/shuffle"
 import { useToast } from "@/lib/useToast"
 import type { SpellingBeePuzzle } from "@/types"
+import { FoundWords } from "./FoundWords"
 import { GridPanel } from "./GridPanel"
 import { HintsPanel } from "./HintsPanel"
 import { Hive } from "./Hive"
@@ -69,8 +70,6 @@ export function SpellingBee(
     event.preventDefault()
   })
 
-  const sorted = [...found].sort()
-
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 md:flex-row-reverse md:items-start md:pt-8">
       {toolbar &&
@@ -118,21 +117,9 @@ export function SpellingBee(
             total: puzzle.pangrams.length,
           }}
         />
-        <details className="bg-card mt-4 rounded-lg border">
-          <summary className="cursor-pointer px-3 py-2 text-sm">
-            You have found {found.length} {found.length === 1 ? "word" : "words"}
-          </summary>
-          <ul className="columns-2 gap-4 px-3 pb-3 text-sm sm:columns-3 md:columns-2">
-            {sorted.map(word => (
-              <li
-                key={word}
-                className={puzzle.pangrams.includes(word) ? "font-semibold" : undefined}
-              >
-                {word[0].toUpperCase() + word.slice(1)}
-              </li>
-            ))}
-          </ul>
-        </details>
+        <div className="mt-4">
+          <FoundWords found={found} pangrams={puzzle.pangrams} />
+        </div>
       </section>
 
       <section className="flex flex-1 flex-col items-center">

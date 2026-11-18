@@ -224,3 +224,26 @@ function center(
 ): [number, number] {
   return [box.x + box.width / 2, box.y + box.height / 2]
 }
+
+test("opens the Spelling Bee found-word list over the board on phones", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "Wide screens show the list beside the board")
+  await page.goto("/spelling-bee")
+  for (const letter of "moat")
+    await page
+      .getByRole("button", { name: letter.toUpperCase(), exact: true })
+      .dispatchEvent("pointerdown")
+  await page.getByRole("button", { name: "Enter" }).click()
+  const hive = page.getByRole("group", { name: "Letters" })
+  const before = (await hive.boundingBox())!
+  await page.getByRole("button", { name: "You have found 1 word" }).click()
+  const list = page.getByRole("list", { name: "Found words" })
+  await expect(list.getByText("Moat")).toBeVisible()
+  expect((await hive.boundingBox())!.y).toBe(before.y)
+  // The list covers the board.
+  expect((await list.boundingBox())!.y + (await list.boundingBox())!.height).toBeGreaterThan(
+    before.y,
+  )
+})
