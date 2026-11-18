@@ -41,6 +41,13 @@ test("celebrates without motion when reduced motion is requested", async ({ page
   await expect(celebration).toHaveCount(0)
 })
 
+test("celebrates each Pips board as it is solved", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/pips?date=2026-11-16")
+  await solvePipsBoard(page, "medium")
+  await expect(page.getByRole("status").filter({ hasText: "Puzzle complete!" })).toBeVisible()
+})
+
 /** Complete a synthetic puzzle through its public controls. */
 async function finish(
   /** Browser page. */
@@ -75,26 +82,34 @@ async function finish(
       await page.getByRole("button", { name: "Submit", exact: true }).click()
     }
   } else {
-    for (const difficulty of ["easy", "medium", "hard"]) {
-      await page.getByRole("button", { name: /^Difficulty/ }).click()
-      await page.getByRole("menuitemradio", { name: new RegExp(`^${difficulty}`, "i") }).click()
-      for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
-        const domino = page.getByRole("button", { name, exact: true })
-        await domino.click()
-        const top = (await page
-          .getByRole("gridcell", { name: `Row 1, column ${col + 1}` })
-          .boundingBox())!
-        const bottom = (await page
-          .getByRole("gridcell", { name: `Row 2, column ${col + 1}` })
-          .boundingBox())!
-        const start = (await domino.boundingBox())!
-        await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
-        await page.mouse.down()
-        await page.mouse.move(top.x + top.width / 2, (top.y + bottom.y + bottom.height) / 2, {
-          steps: 8,
-        })
-        await page.mouse.up()
-      }
-    }
+    for (const difficulty of ["easy", "medium", "hard"]) await solvePipsBoard(page, difficulty)
+  }
+}
+
+/** Switch to a Pips board and solve it by dragging both dominoes into place. */
+async function solvePipsBoard(
+  /** Browser page. */
+  page: Page,
+  /** Board to solve. */
+  difficulty: string,
+) {
+  await page.getByRole("button", { name: /^Difficulty/ }).click()
+  await page.getByRole("menuitemradio", { name: new RegExp(`^${difficulty}`, "i") }).click()
+  for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
+    const domino = page.getByRole("button", { name, exact: true })
+    await domino.click()
+    const top = (await page
+      .getByRole("gridcell", { name: `Row 1, column ${col + 1}` })
+      .boundingBox())!
+    const bottom = (await page
+      .getByRole("gridcell", { name: `Row 2, column ${col + 1}` })
+      .boundingBox())!
+    const start = (await domino.boundingBox())!
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(top.x + top.width / 2, (top.y + bottom.y + bottom.height) / 2, {
+      steps: 8,
+    })
+    await page.mouse.up()
   }
 }

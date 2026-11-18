@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { formatDuration } from "@/lib/formatDuration"
 import { readStored } from "@/lib/readStored"
+import { useCelebration } from "@/lib/useCelebration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
@@ -64,6 +65,8 @@ export function Pips(
   const anyStarted =
     placements.some(Boolean) || DIFFICULTIES.some(d => readStored(progressKey(puzzle.date, d)))
   useGameStatus("pips", puzzle.date, allSolved ? "solved" : anyStarted ? "started" : "new")
+  // Each board is a puzzle of its own, so each one celebrates when solved.
+  useCelebration(`pips:${puzzle.date}:${difficulty}`, solved)
   useTimer(!solved, () => setProgress(p => ({ ...p, elapsed: p.elapsed + 1 })))
 
   const unplaced = board.dominoes.map((_, i) => i).filter(i => !placements[i])
