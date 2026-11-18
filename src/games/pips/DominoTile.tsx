@@ -5,12 +5,13 @@ import { PipDots } from "./PipDots"
 import { regionColors } from "./regionColors"
 
 /**
- * A domino lying flat, first half on the left, filling its box. Its parent turns it. On the board,
- * each half takes the color of the region under it.
+ * A domino lying flat, first half on the left, filling its box. Its parent turns it by `turn`
+ * quarter turns. The face sits raised above a dark edge that stays at the bottom of the screen
+ * however the domino is turned. On the board, each half takes the color of the region under it.
  */
 export function DominoTile(
   /** The component props. */
-  { domino, regions = [undefined, undefined] }: Props,
+  { domino, turn = 0, regions = [undefined, undefined] }: Props,
 ) {
   const clip = `domino-${useId().replace(/[^\w-]/g, "")}`
   const body = {
@@ -20,43 +21,57 @@ export function DominoTile(
     height: U - 2 * INSET,
     rx: dominoGeometry.radius,
   }
+  // The tile's own direction that points down the screen once it is turned.
+  const [downX, downY] = DOWN[((turn % 4) + 4) % 4]
+  const face = {
+    ...body,
+    x: body.x + Math.max(0, -downX) * DEPTH,
+    y: body.y + Math.max(0, -downY) * DEPTH,
+    width: body.width - Math.abs(downX) * DEPTH,
+    height: body.height - Math.abs(downY) * DEPTH,
+  }
   return (
     <svg viewBox={`0 0 ${2 * U} ${U}`} className="block size-full" aria-hidden="true">
       <clipPath id={clip}>
-        <rect {...body} />
+        <rect {...face} />
       </clipPath>
-      <rect {...body} className="fill-card" />
-      {regions.map(
-        (region, half) =>
-          region !== undefined && (
-            <rect
+      <rect {...body} className="fill-foreground" />
+      <rect {...face} className="fill-card" />
+      <g clipPath={`url(#${clip})`}>
+        <g transform={`translate(${(-downX * DEPTH) / 2} ${(-downY * DEPTH) / 2})`}>
+          {regions.map(
+            (region, half) =>
+              region !== undefined && (
+                <rect
+                  key={half}
+                  x={half * U - DEPTH}
+                  y={-DEPTH}
+                  width={U + 2 * DEPTH}
+                  height={U + 2 * DEPTH}
+                  style={{ fill: regionColors.fill(region) }}
+                />
+              ),
+          )}
+          <line
+            x1={U}
+            x2={U}
+            y1="2.5"
+            y2={U - 2.5}
+            className="stroke-foreground/40"
+            strokeWidth="0.4"
+          />
+          {domino.map((value, half) => (
+            <PipDots
               key={half}
+              value={value}
               x={half * U}
-              width={U}
-              height={U}
-              clipPath={`url(#${clip})`}
-              style={{ fill: regionColors.fill(region) }}
+              y={0}
+              size={U}
+              color={regions[half] === undefined ? undefined : regionColors.ink(regions[half])}
             />
-          ),
-      )}
-      <line
-        x1={U}
-        x2={U}
-        y1="2.5"
-        y2={U - 2.5}
-        className="stroke-foreground/40"
-        strokeWidth="0.4"
-      />
-      {domino.map((value, half) => (
-        <PipDots
-          key={half}
-          value={value}
-          x={half * U}
-          y={0}
-          size={U}
-          color={regions[half] === undefined ? undefined : regionColors.ink(regions[half])}
-        />
-      ))}
+          ))}
+        </g>
+      </g>
       <rect
         {...body}
         className="stroke-foreground fill-none"
@@ -74,11 +89,24 @@ const U = dominoGeometry.unit
 /** Gap between the domino's edge and its cells' edges. */
 const INSET = dominoGeometry.inset
 
+/** Thickness of the dark edge under the face. */
+const DEPTH = 0.7
+
+/** For each quarter turn clockwise, the tile's own direction that ends up pointing down the screen. */
+const DOWN: [number, number][] = [
+  [0, 1],
+  [1, 0],
+  [0, -1],
+  [-1, 0],
+]
+
 // TYPES
 
 type Props = {
   /** Pip counts. */
   domino: Domino
+  /** Quarter turns clockwise the parent applies. */
+  turn?: number
   /** The region index under each half, when the domino is on the board. */
   regions?: [number | undefined, number | undefined]
 }

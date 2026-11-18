@@ -200,6 +200,7 @@ export function PipsTable(
               >
                 <DominoTile
                   domino={domino}
+                  turn={turn}
                   regions={pair && !dragging ? halfRegions(board, pair) : undefined}
                 />
               </button>

@@ -243,7 +243,11 @@ export function Crossword(
 /** The current clue, with buttons to move between clues; tapping it switches direction. */
 function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
   return (
-    <div className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:pointer-fine:rounded-lg">
+    <div
+      role="group"
+      aria-label="Current clue"
+      className="flex min-h-14 items-stretch bg-(--xw-word) text-(--xw-highlight-foreground) md:pointer-fine:rounded-lg"
+    >
       <button
         type="button"
         tabIndex={-1}

@@ -1,5 +1,6 @@
 import { IconCheck } from "@tabler/icons-react"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/lib/formatDuration"
 import { readStored } from "@/lib/readStored"
 import { useGameStatus } from "@/lib/useGameStatus"
@@ -75,6 +76,13 @@ export function Pips(
       ...p,
       turns: board.dominoes.map((_, j) => (p.turns?.[j] ?? 0) + (i === j ? 1 : 0)),
     }))
+
+  /** Put every domino back in its tray slot, facing its starting way. */
+  const clear = () => {
+    setProgress(p => ({ ...p, placements: board.dominoes.map(() => null), turns: [], spots: [] }))
+    setSelected(undefined)
+  }
+  const cleared = !placements.some(Boolean) && !(progress.spots ?? []).some(Boolean)
 
   const switchDifficulty = (d: PipsDifficulty) => {
     setDifficulty(d)
@@ -185,6 +193,9 @@ export function Pips(
         <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
           {formatDuration(progress.elapsed)}
         </span>
+        <Button variant="ghost" disabled={solved || cleared} onClick={clear}>
+          Clear
+        </Button>
       </div>
 
       <div className="w-full" onPointerDown={() => setUsingKeyboard(false)}>

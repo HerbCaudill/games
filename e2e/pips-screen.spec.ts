@@ -132,3 +132,19 @@ function distance(
 ) {
   return Math.hypot(a[0] - b[0], a[1] - b[1])
 }
+
+test("clears the board, putting every domino back in the tray", async ({ page }) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const start = await centerOf(domino)
+  const clear = page.getByRole("button", { name: "Clear" })
+  await expect(clear).toBeDisabled()
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, domino, [x + box.width / 2, y])
+  await expect(page.getByRole("img", { name: "Broken constraint: 5" })).toBeVisible()
+  await clear.click()
+  await expect(page.getByRole("img", { name: "Broken constraint: 5" })).not.toBeVisible()
+  await expect.poll(async () => distance(await centerOf(domino), start)).toBeLessThan(2)
+  await expect(clear).toBeDisabled()
+})

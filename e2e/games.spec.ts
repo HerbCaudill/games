@@ -32,7 +32,7 @@ test("solves the crossword", async ({ page, isMobile }) => {
   }
   // Filling 1-Across moves on to 3-Across, then to the one empty square of 1-Down, then 2-Down.
   await type("CATWET")
-  await expect(page.getByText("1D", { exact: true })).toBeVisible()
+  await expect(page.getByRole("group", { name: "Current clue" })).toContainText("Bovine")
   await type("OO")
   await expect(page.getByText(/Solved in/)).toBeVisible()
 })
