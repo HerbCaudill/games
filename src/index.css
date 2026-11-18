@@ -89,6 +89,9 @@
   --group-2: #b0c4ef;
   --group-3: #ba81c5;
 
+  /* Marks a finished puzzle or board. */
+  --solved: #2e9e5b;
+
   /* Crossword squares. */
   --xw-cursor: var(--game-spelling-bee);
   --xw-word: #a7d8ff;

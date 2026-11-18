@@ -1,8 +1,8 @@
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
-  IconCheck,
   IconChevronDown,
+  IconCircleCheckFilled,
 } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
@@ -209,7 +209,7 @@ export function Pips(
                 }
               >
                 {difficulty}
-                {solved && <IconCheck className="size-4" aria-hidden="true" />}
+                {solved && <SolvedMark />}
                 <IconChevronDown className="text-muted-foreground size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44">
@@ -225,9 +225,7 @@ export function Pips(
                       className="min-h-11 text-base"
                     >
                       {capitalize(d)}
-                      {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && (
-                        <span className="text-muted-foreground ml-auto text-xs">Solved</span>
-                      )}
+                      {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && <SolvedMark />}
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
@@ -300,6 +298,11 @@ function isStoredSolved(
 ) {
   const saved = readStored<PipsProgress>(progressKey(puzzle.date, difficulty))
   return Boolean(saved && isSolved(saved.placements, puzzle.boards[difficulty]))
+}
+
+/** Marks a board as solved. */
+function SolvedMark() {
+  return <IconCircleCheckFilled className="size-4 text-(--solved)" aria-label="solved" />
 }
 
 /** A word with its first letter in capitals. */
