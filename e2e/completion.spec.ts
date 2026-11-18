@@ -95,6 +95,7 @@ async function solvePipsBoard(
 ) {
   await page.getByRole("button", { name: /^Difficulty/ }).click()
   await page.getByRole("menuitemradio", { name: new RegExp(`^${difficulty}`, "i") }).click()
+  await expect(page.getByRole("menu")).toBeHidden()
   for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
     const domino = page.getByRole("button", { name, exact: true })
     await domino.click()
@@ -112,4 +113,5 @@ async function solvePipsBoard(
     })
     await page.mouse.up()
   }
+  await expect(page.getByText(/Solved in/)).toBeVisible()
 }

@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole("button", { name: /^Difficulty/ }).click()
   await page.getByRole("menuitemradio", { name: /^Hard/ }).click()
   await expect(page.getByRole("button", { name: "Difficulty: Hard" })).toBeVisible()
+  await expect(page.getByRole("menu")).toBeHidden()
 })
 
 test("centers each diamond exactly on its region cell's bottom-right corner", async ({ page }) => {
