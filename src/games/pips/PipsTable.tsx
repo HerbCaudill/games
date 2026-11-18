@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type PointerEvent } from "react"
 import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard } from "@/types"
 import { DominoTile } from "./DominoTile"
+import { dominoGeometry } from "./dominoGeometry"
 import { PipsGrid } from "./PipsGrid"
 import { boardCells } from "./logic/boardCells"
 import { directionOf } from "./logic/directionOf"
@@ -180,7 +181,7 @@ export function PipsTable(
                 aria-label={`Domino ${domino.join("–")}`}
                 className={cn(
                   // Fixed positioning lets loose dominoes escape the content scroller without enlarging it.
-                  "fixed touch-none rounded-[14%/28%] outline-none",
+                  "fixed touch-none outline-none",
                   solved
                     ? "z-10"
                     : dragging
@@ -194,6 +195,9 @@ export function PipsTable(
                   top: room.top + origin[1] + (y - 0.5) * size,
                   width: 2 * size,
                   height: size,
+                  // Round the button like the domino inside it, so the selection ring follows its corners.
+                  borderRadius:
+                    ((dominoGeometry.radius + dominoGeometry.inset) / dominoGeometry.unit) * size,
                   transform: `translate(${dx}px, ${dy}px) rotate(${turn * 90}deg) scale(${scale})`,
                 }}
                 onPointerDown={event => down(event, i)}
