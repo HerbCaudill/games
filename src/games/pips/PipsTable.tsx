@@ -146,21 +146,6 @@ export function PipsTable(
             origin={origin}
           />
 
-          {!solved &&
-            slots.map(([x, y], i) => (
-              <div
-                key={i}
-                hidden={Boolean(placements[i] || spots[i] || drag?.index === i)}
-                className="bg-muted absolute rounded-md"
-                style={{
-                  left: origin[0] + (x - TRAY_SCALE) * size + INSET,
-                  top: origin[1] + (y - TRAY_SCALE / 2) * size + INSET,
-                  width: 2 * TRAY_SCALE * size - 2 * INSET,
-                  height: TRAY_SCALE * size - 2 * INSET,
-                }}
-              />
-            ))}
-
           {board.dominoes.map((domino, i) => {
             const [x, y] = centerOf(i)
             const pair = placements[i]
@@ -250,9 +235,6 @@ const TAP_SLOP = 6
 
 /** Space kept free below the table, in pixels. */
 const BOTTOM_ROOM = 16
-
-/** How far an empty tray slot sits inside its domino's outline, in pixels. */
-const INSET = 2
 
 // TYPES
 
