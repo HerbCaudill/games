@@ -78,7 +78,12 @@ export function Connections(
         tiles.map((element, index) => ({
           element,
           keyframes: [0, -10, 0].map(y => ({ transform: `translateY(${y}px)` })),
-          options: { duration: 180, delay: index * 60, easing: "ease-in-out", fill: "both" },
+          options: {
+            duration: HOP_MS,
+            delay: index * HOP_STAGGER_MS,
+            easing: "ease-in-out",
+            fill: "both",
+          },
         })),
       ))
     )
@@ -105,7 +110,7 @@ export function Connections(
                   { transform: `translate(${from.x - to.x}px, ${from.y - to.y}px)`, zIndex },
                   { transform: "translate(0px, 0px)", zIndex },
                 ],
-                options: { duration: 280, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+                options: { duration: MOVE_MS, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
               }
             }),
           ))
@@ -121,7 +126,7 @@ export function Connections(
                 { opacity: 0, transform: "scale(0.96)" },
                 { opacity: 1, transform: "scale(1)" },
               ],
-              options: { duration: 180, easing: "ease-out", fill: "forwards" },
+              options: { duration: BAND_MS, easing: "ease-out", fill: "forwards" },
             },
           ]))
         )
@@ -137,7 +142,7 @@ export function Connections(
           tiles.map(element => ({
             element,
             keyframes: [0, -7, 7, -5, 5, 0].map(x => ({ transform: `translateX(${x}px)` })),
-            options: { duration: 320, easing: "ease-in-out" },
+            options: { duration: SHAKE_MS, easing: "ease-in-out" },
           })),
         ))
       )
@@ -295,6 +300,23 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
     </div>
   )
 }
+
+// CONSTANTS
+
+/** How long each selected tile's hop takes when a guess is submitted, in milliseconds. */
+const HOP_MS = 270
+
+/** The gap between one tile's hop and the next. */
+const HOP_STAGGER_MS = 90
+
+/** How long a solved group's words take to slide into the top row. */
+const MOVE_MS = 420
+
+/** How long a solved group's band takes to settle in. */
+const BAND_MS = 270
+
+/** How long a wrong guess's tiles shake. */
+const SHAKE_MS = 480
 
 type Props = {
   /** The puzzle. */

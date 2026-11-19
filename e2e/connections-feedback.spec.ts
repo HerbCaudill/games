@@ -69,7 +69,7 @@ test("submission bounces in sequence before moving the words into a solved band"
         ),
       { intervals: [25] },
     )
-    .toEqual([0, 60, 120, 180])
+    .toEqual([0, 90, 180, 270])
   await expect(page.getByText("FRUIT", { exact: true })).toHaveCount(0)
   await expect(grid).toHaveAttribute("aria-busy", "true")
   await page.keyboard.press("Enter")
