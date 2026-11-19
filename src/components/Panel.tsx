@@ -1,11 +1,12 @@
 import { IconX } from "@tabler/icons-react"
 import { useEffect, useRef, type ReactNode } from "react"
+import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
 
 /** A modal panel: full screen on phones, a centered card on wider screens. */
 export function Panel(
   /** The component props. */
-  { open, title, onClose, children }: Props,
+  { open, title, onClose, flush = false, children }: Props,
 ) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -37,7 +38,14 @@ export function Panel(
             <IconX className="size-6" />
           </Button>
         </header>
-        <div className="min-h-0 flex-1 overflow-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-auto",
+            flush
+              ? "pb-[env(safe-area-inset-bottom)]"
+              : "p-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
+          )}
+        >
           {open && children}
         </div>
       </div>
@@ -52,6 +60,8 @@ type Props = {
   title: string
   /** Called when the panel asks to close, by its button, Escape or a click outside. */
   onClose: () => void
+  /** Whether its content runs to the edges, for something with its own margins. */
+  flush?: boolean
   /** What it shows; rendered only while open. */
   children: ReactNode
 }

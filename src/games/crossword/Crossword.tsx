@@ -174,7 +174,7 @@ export function Crossword(
           </div>,
           toolbar,
         )}
-      <Panel open={statsOpen} title="Stats" onClose={() => setStatsOpen(false)}>
+      <Panel open={statsOpen} title="Stats" flush onClose={() => setStatsOpen(false)}>
         {/* Herb's xword-stats app charts every solve time from his NYT account. */}
         {statsOpen && (
           <iframe
