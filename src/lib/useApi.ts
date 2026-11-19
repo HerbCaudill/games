@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import { NYT_TOKEN_HEADER } from "../../server/constants.ts"
+import { NeedsToken } from "./NeedsToken"
 import { readStored } from "./readStored"
-import { writeStored } from "./writeStored"
+import { requestApi } from "./requestApi"
 
 /**
  * Load something from the app's API with the NYT token. Without a path it waits. With a storage
@@ -24,15 +24,8 @@ export function useApi<T>(
   useEffect(() => {
     if (!path || (storageKey && readStored(storageKey))) return
     let cancelled = false
-    fetch(path, { headers: token ? { [NYT_TOKEN_HEADER]: token } : {} })
-      .then(async response => {
-        const body = await response.json()
-        if (response.status === 401) throw new NeedsToken(body.error)
-        if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`)
-        return body as T
-      })
+    requestApi<T>(path, token, storageKey)
       .then(data => {
-        if (storageKey) writeStored(storageKey, data)
         if (!cancelled) setLoad({ request, status: "ready", data })
       })
       .catch((error: Error) => {
@@ -60,9 +53,6 @@ function initialLoad<T>(
   if (data) return { status: "ready", data }
   return path ? { status: "loading" } : { status: "idle" }
 }
-
-/** The API needs a valid NYT token. */
-class NeedsToken extends Error {}
 
 // TYPES
 

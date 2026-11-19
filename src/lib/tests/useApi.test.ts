@@ -36,3 +36,13 @@ it("asks for a token when the server answers 401, and can try again", async () =
   result.current.retry()
   await waitFor(() => expect(result.current.status).toBe("ready"))
 })
+
+it("shares one request among everything asking for the same thing at once", async () => {
+  const fetch = vi.fn(async () => Response.json({ hello: "world" }))
+  vi.stubGlobal("fetch", fetch)
+  const first = renderHook(() => useApi("/api/thing/2026-01-01", "token", { storageKey: "k" }))
+  const second = renderHook(() => useApi("/api/thing/2026-01-01", "token", { storageKey: "k" }))
+  await waitFor(() => expect(first.result.current.status).toBe("ready"))
+  await waitFor(() => expect(second.result.current.status).toBe("ready"))
+  expect(fetch).toHaveBeenCalledTimes(1)
+})

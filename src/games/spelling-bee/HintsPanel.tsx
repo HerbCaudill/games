@@ -4,6 +4,7 @@ import { useApi } from "@/lib/useApi"
 import { cn } from "@/lib/utils"
 import type { SpellingBeeHints } from "@/types"
 import { hintGroups } from "./logic/hintGroups"
+import { hintsRequest } from "./hintsRequest"
 import { WordDots } from "./WordDots"
 
 /** AI-written clues for the answers, grouped by first two letters, with found answers hidden by default. */
@@ -11,9 +12,8 @@ export function HintsPanel(
   /** The component props. */
   { date, token, found }: Props,
 ) {
-  const load = useApi<SpellingBeeHints>(`/api/spelling-bee-hints/${date}`, token, {
-    storageKey: `hints:spelling-bee:${date}`,
-  })
+  const { path, storageKey } = hintsRequest(date)
+  const load = useApi<SpellingBeeHints>(path, token, { storageKey })
   const [showFound, setShowFound] = useState(false)
 
   if (load.status === "idle" || load.status === "loading")
