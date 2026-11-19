@@ -36,6 +36,13 @@ body {
   border-bottom: 1px solid var(--border, #ddd);
 }
 
+/* An empty header that only gives the page its opaque top edge. */
+.app-header-bare {
+  height: 1rem;
+  padding: 0;
+  border-bottom: 0;
+}
+
 .app-content {
   flex: 1;
   min-height: 0;

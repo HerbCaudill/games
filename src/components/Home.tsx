@@ -20,10 +20,13 @@ export function Home(
 
   return (
     <div className="app-shell">
-      <h1 className="sr-only">Games</h1>
+      {/* No visible header, but iOS only keeps the status bar clear of blur above an opaque sticky one. */}
+      <header className="app-header app-header-bare">
+        <h1 className="sr-only">Games</h1>
+      </header>
       <ShortcutsButton context="home" showButton={false} />
       <main className="app-content">
-        <ul className="mx-auto grid max-w-xl gap-3 p-4 sm:pt-8">
+        <ul className="mx-auto grid max-w-xl gap-3 px-4 pb-4 sm:pt-4">
           {GAMES.map((game, i) => (
             <li key={game.id}>
               <HomeTile
