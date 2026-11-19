@@ -6,7 +6,7 @@ A personal client for five NYT daily games, in this order: Crossword, Pips, Spel
 
 `pnpm dev` starts everything. In development the puzzle API is a Vite plugin (`server/nytApiPlugin.ts`), so there is no separate server process. In production it is a Vercel function (`api/[game]/[date].ts`); `vercel.json` sends every other path to the app.
 
-The API needs an NYT token: the value of the `NYT-S` cookie from a signed-in nytimes.com session. The server never stores it. The app saves it in localStorage on each device, asks for it when the API answers 401, and sends it in the `X-NYT-Token` header. In development the plugin falls back to `NYT_TOKEN` in `.env` (git-ignored; see `.env.example`). Spelling Bee Buddy (`../spelling-bee-buddy/.env`, `VITE_NYT_TOKEN`) uses the same token.
+The API needs each player's own NYT token: the value of the `NYT-S` cookie from a signed-in nytimes.com session. The server never stores it, in development or production. The app asks for it on first load, saves it in localStorage on each device, asks again when the API answers 401, and sends it in the `X-NYT-Token` header. Playwright's `e2e/mockApi.ts` saves a test token before each page loads.
 
 Spelling Bee hints are written by Claude with the server's `ANTHROPIC_API_KEY`: in `.env` for development and a Vercel environment variable in production. Without it, the hints route answers 503 and everything else works.
 

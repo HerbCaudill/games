@@ -9,8 +9,6 @@ export function nytApiPlugin(
   /** Settings from `.env`. */
   env: Record<string, string>,
 ): Plugin {
-  // The NYT-S cookie value is used when the app doesn't send one.
-  const envToken = env.NYT_TOKEN || undefined
   const services: ApiServices = {
     writeHints: env.ANTHROPIC_API_KEY ? spellingBeeHintWriter(env.ANTHROPIC_API_KEY) : undefined,
   }
@@ -18,7 +16,7 @@ export function nytApiPlugin(
     const path = req.url?.split("?")[0]
     if (!path?.startsWith("/api/")) return next()
     const header = req.headers[NYT_TOKEN_HEADER]
-    const token = (typeof header === "string" ? header : undefined) ?? envToken
+    const token = typeof header === "string" ? header : undefined
     const { status, body } = await handleApiRequest(path, token, services, {
       method: req.method,
       body: req.method === "PUT" ? await readJson(req) : undefined,
@@ -30,8 +28,6 @@ export function nytApiPlugin(
   return {
     name: "nyt-api",
     configureServer: server => {
-      if (!envToken)
-        server.config.logger.warn("NYT_TOKEN is not set; the app will ask for a token.")
       if (!services.writeHints)
         server.config.logger.warn("ANTHROPIC_API_KEY is not set; Spelling Bee hints are off.")
       server.middlewares.use(middleware)

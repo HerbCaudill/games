@@ -1,11 +1,12 @@
 import type { Page } from "@playwright/test"
 import type { GameId, PuzzleFor, SpellingBeeHints, SpellingBeeStats } from "../src/types"
 
-/** Serve the test puzzles, the Spelling Bee's hints and stats, and an empty NYT account, in place of the API. */
+/** Serve the test puzzles, the Spelling Bee's hints and stats, and an empty NYT account, in place of the API, with a token already saved. */
 export async function mockApi(
   /** The Playwright page to intercept requests on. */
   page: Page,
 ) {
+  await page.addInitScript(() => localStorage.setItem("nyt-token", JSON.stringify("test-token")))
   await page.route("**/api/**", route => {
     const [, , resource, date] = new URL(route.request().url()).pathname.split("/")
     // Nothing is saved in the test account, and saves go nowhere.

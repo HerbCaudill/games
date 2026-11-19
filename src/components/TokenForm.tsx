@@ -15,13 +15,14 @@ export function TokenForm(
         if (value.trim()) onSave(value.trim())
       }}
     >
-      <p className="text-destructive">{message}</p>
+      {message && <p className="text-destructive">{message}</p>}
       <label htmlFor="nyt-token" className="font-medium">
         NYT token
       </label>
       <p id="nyt-token-help" className="text-muted-foreground text-sm">
-        Paste the value of the <code>NYT-S</code> cookie from a signed-in nytimes.com session. It
-        stays on this device.
+        Paste the value of the <code>NYT-S</code> cookie from a browser signed in to nytimes.com.
+        You’ll find it in the browser’s developer tools, under the site’s cookies. It stays on this
+        device.
       </p>
       <input
         id="nyt-token"
@@ -41,8 +42,8 @@ export function TokenForm(
 }
 
 type Props = {
-  /** Why a token is needed: none saved yet, or NYT rejected it. */
-  message: string
+  /** Why a new token is needed, such as NYT rejecting the saved one. */
+  message?: string
   /** Save the entered token. */
   onSave: (token: string) => void
 }

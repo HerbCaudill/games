@@ -6,7 +6,6 @@ import { Crossword } from "@/games/crossword/Crossword"
 import { LetterBoxed } from "@/games/letter-boxed/LetterBoxed"
 import { Pips } from "@/games/pips/Pips"
 import { SpellingBee } from "@/games/spelling-bee/SpellingBee"
-import { usePersistentState } from "@/lib/usePersistentState"
 import { usePuzzle } from "@/lib/usePuzzle"
 import { navigate } from "@/lib/navigate"
 import type { GameId, PuzzleFor } from "@/types"
@@ -17,9 +16,8 @@ import { Button } from "./ui/button"
 /** A game with its header, loading and error states. */
 export function GameScreen(
   /** The component props. */
-  { game, date, isToday }: Props,
+  { game, date, isToday, token, onToken }: Props,
 ) {
-  const [token, setToken] = usePersistentState("nyt-token", () => "")
   const load = usePuzzle(game.id, date, token)
   const [toolbar, setToolbar] = useState<HTMLElement | null>(null)
   return (
@@ -49,7 +47,7 @@ export function GameScreen(
             Couldn’t load the puzzle: {load.message}
           </p>
         )}
-        {load.status === "needs-token" && <TokenForm message={load.message} onSave={setToken} />}
+        {load.status === "needs-token" && <TokenForm message={load.message} onSave={onToken} />}
         {load.status === "ready" && (
           <GameBody game={game.id} puzzle={load.data} date={date} token={token} toolbar={toolbar} />
         )}
@@ -110,4 +108,8 @@ type Props = {
   date: string
   /** Whether the date is today's. */
   isToday: boolean
+  /** The NYT-S cookie value saved on this device. */
+  token: string
+  /** Save a new token, when NYT rejects the saved one. */
+  onToken: (token: string) => void
 }
