@@ -115,6 +115,23 @@ describe("mergeSync", () => {
     expect(mergeSync({ ...here, updated: undefined }, remote).entries).toEqual(["C", "A", ""])
   })
 
+  it("keeps squares changed here since the last sync on top of NYT's grid", () => {
+    const base: CrosswordProgress = { ...initialState(puzzle), elapsed: 0 }
+    const typed = { ...base, entries: ["", "", "T"], cursor: 2, elapsed: 5, updated: 3000 }
+    expect(mergeSync(typed, remote, base)).toMatchObject({
+      entries: ["C", "A", "T"],
+      cursor: 2,
+      elapsed: 60,
+      updated: 3000,
+    })
+  })
+
+  it("lets a square typed or cleared here since the last sync win over NYT's", () => {
+    const base = { ...here, entries: ["C", "", ""] }
+    const changed = { ...base, entries: ["", "B", ""], updated: 1500 }
+    expect(mergeSync(changed, remote, base).entries).toEqual(["", "B", ""])
+  })
+
   it("keeps help and the first solve from either side", () => {
     const firstSolve = { seconds: 50, date: "2026-01-02T09:00:00Z" }
     const merged = mergeSync({ ...here, updated: 3000 }, { ...remote, usedAid: true, firstSolve })

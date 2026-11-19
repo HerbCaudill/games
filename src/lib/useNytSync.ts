@@ -24,7 +24,7 @@ export function useNytSync<G extends SyncedGame, P>(
 ) {
   const { toSync, changeKey = p => JSON.stringify(toSync(p) ?? null) } = adapter
   const key = changeKey(progress)
-  const sync = useRef<SyncState>({ started: false, running: Promise.resolve() })
+  const sync = useRef<SyncState<P>>({ started: false, running: Promise.resolve(), base: progress })
   // The latest values for a sync that a timer starts after this render.
   const latest = useRef({ progress, token, adapter, setProgress })
   useEffect(() => {
@@ -37,7 +37,7 @@ export function useNytSync<G extends SyncedGame, P>(
     const flush = () => {
       clearTimeout(state.timer)
       state.timer = undefined
-      state.running = state.running.then(() => syncOnce(game, date, latest.current)).catch(() => {})
+      state.running = state.running.then(() => syncOnce(game, date, latest, state)).catch(() => {})
     }
     state.flush = flush
     if (state.timer === undefined) state.timer = setTimeout(flush, state.started ? DELAY_MS : 0)
@@ -63,10 +63,12 @@ async function syncOnce<G extends SyncedGame, P>(
   game: G,
   /** Puzzle date as YYYY-MM-DD. */
   date: string,
-  /** The latest values from the hook. */
-  latest: Latest<P, SyncedProgressFor[G]>,
+  /** The hook's latest values, read again once NYT answers, since play goes on meanwhile. */
+  latest: { current: Latest<P, SyncedProgressFor[G]> },
+  /** Where syncing stands; this updates its record of the last sync. */
+  state: SyncState<P>,
 ) {
-  const { token, adapter, setProgress } = latest
+  const { token, adapter } = latest.current
   const path = `/api/${game}-progress/${date}`
   const headers: Record<string, string> = token ? { [NYT_TOKEN_HEADER]: token } : {}
   const response = await fetch(path, { headers })
@@ -74,15 +76,17 @@ async function syncOnce<G extends SyncedGame, P>(
   const { progress: remote } = (await response.json()) as {
     progress: SyncedProgressFor[G] | null
   }
-  let progress = latest.progress
+  const { base } = state
+  let { progress } = latest.current
   if (remote) {
-    const merged = adapter.merge(progress, remote)
+    const merged = adapter.merge(progress, remote, base)
     if (!isEqual(merged, progress)) {
       progress = merged
-      latest.progress = merged
-      setProgress(p => adapter.merge(p, remote))
+      latest.current.progress = merged
+      latest.current.setProgress(p => adapter.merge(p, remote, base))
     }
   }
+  state.base = progress
   const local = adapter.toSync(progress)
   if (!local || isEqual(local, remote)) return
   await fetch(path, {
@@ -105,8 +109,11 @@ const DELAY_MS = 2000
 export type SyncAdapter<P, S> = {
   /** The progress to save to NYT, or nothing when there's no progress worth saving. */
   toSync: (progress: P) => S | undefined
-  /** Fold NYT's progress into this device's. */
-  merge: (progress: P, remote: S) => P
+  /**
+   * Fold NYT's progress into this device's. `base` is this device's progress as of the last sync,
+   * so changes made here since then, such as moves made while NYT's progress loaded, can be kept.
+   */
+  merge: (progress: P, remote: S, base: P) => P
   /** A key that changes whenever there's something new to save; the saved progress by default. */
   changeKey?: (progress: P) => string
 }
@@ -124,7 +131,7 @@ type Latest<P, S> = {
 }
 
 /** Where syncing stands. */
-type SyncState = {
+type SyncState<P> = {
   /** Whether the first sync has been scheduled. */
   started: boolean
   /** A sync waiting for play to pause. */
@@ -133,4 +140,6 @@ type SyncState = {
   running: Promise<void>
   /** Runs the waiting sync now. */
   flush?: () => void
+  /** This device's progress as of the last sync, or as the puzzle opened before the first. */
+  base: P
 }

@@ -16,6 +16,37 @@ afterEach(() => {
   cleanup()
   toolbar.remove()
   vi.useRealTimers()
+  vi.unstubAllGlobals()
+})
+
+describe("syncing with NYT", () => {
+  it("keeps a letter typed while NYT's progress loads, on top of NYT's grid", async () => {
+    vi.useFakeTimers()
+    const saved: unknown[] = []
+    let answer!: (response: Response) => void
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_path: string, init?: RequestInit) => {
+        if (init?.method !== "PUT") return new Promise<Response>(resolve => (answer = resolve))
+        saved.push(JSON.parse(String(init.body)))
+        return Promise.resolve(Response.json({ saved: true }))
+      }),
+    )
+    render(<Crossword puzzle={puzzle} token="token" toolbar={toolbar} />)
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    fireEvent.keyDown(document.body, { key: "X" })
+    const remote = {
+      entries: ["", "A", "T"],
+      marks: [null, null, null],
+      elapsed: 90,
+      autocheck: false,
+      usedAid: false,
+      updated: 1767340800,
+    }
+    await act(async () => answer(Response.json({ progress: remote })))
+    expect(screen.getByRole("grid")).toHaveTextContent("XAT")
+    expect(saved.at(-1)).toMatchObject({ entries: ["X", "A", "T"] })
+  })
 })
 
 describe("crossword entry controls", () => {
