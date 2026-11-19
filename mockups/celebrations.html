@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Celebration prototypes</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@700&family=IBM+Plex+Serif:ital,wght@1,700&family=IBM+Plex+Mono:wght@600&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --fg: #1d2433;
+        --muted: #6a6f7b;
+        --border: #ddd7ca;
+        --solved: #2e9e5b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        background: #f0efec;
+        color: #1e2024;
+      }
+      header.page {
+        padding: 20px 28px 0;
+      }
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+      .sub {
+        font-size: 13px;
+        color: #77756f;
+        margin: 0 0 16px;
+        max-width: 760px;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 28px 16px;
+      }
+      button {
+        font: inherit;
+        font-size: 13px;
+        padding: 7px 14px;
+        border-radius: 7px;
+        border: 1px solid #d8d6d0;
+        background: #fff;
+        color: #45443f;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #b9b7b0;
+      }
+      button.active {
+        background: #1e2024;
+        border-color: #1e2024;
+        color: #fff;
+      }
+      main {
+        padding: 0 28px 28px;
+        display: grid;
+        grid-template-columns: 390px minmax(0, 420px);
+        gap: 32px;
+        align-items: start;
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: #45443f;
+      }
+      .side p {
+        margin: 0 0 6px;
+      }
+      .side h2 {
+        font-size: 16px;
+        margin: 0 0 8px;
+        color: #1e2024;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .controls .label {
+        font-size: 12px;
+        color: #77756f;
+        width: 100%;
+      }
+      #play {
+        background: var(--solved);
+        border-color: var(--solved);
+        color: #fff;
+        font-weight: 600;
+      }
+      kbd {
+        font-family: inherit;
+        background: #e3e1dc;
+        border-radius: 4px;
+        padding: 1px 6px;
+      }
+      @media (max-width: 860px) {
+        main {
+          grid-template-columns: 1fr;
+          padding: 0 16px 24px;
+        }
+        nav,
+        header.page {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .side {
+          order: -1;
+        }
+      }
+
+      /* The phone stage */
+      #stage {
+        position: relative;
+        width: 390px;
+        max-width: 100%;
+        height: 720px;
+        background: #fff;
+        color: var(--fg);
+        border-radius: 28px;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.06),
+          0 10px 30px rgba(25, 25, 30, 0.12);
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      #behind {
+        z-index: 0;
+      }
+      #content {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      #front {
+        z-index: 5;
+      }
+      .appbar {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 14px 0 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .back {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+      }
+      .back .badge {
+        position: absolute;
+        top: 5px;
+        right: 4px;
+        width: 13px;
+        height: 13px;
+        opacity: 0;
+      }
+      .appbar .title {
+        font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+        font-weight: 700;
+        font-size: 21px;
+        flex: 1;
+      }
+      .appbar .time {
+        font-size: 14px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 22px 20px 0;
+      }
+      .topline {
+        height: 40px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .board {
+        position: relative;
+        margin-top: 18px;
+      }
+      .pill-slot {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 22px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        visibility: hidden;
+      }
+      .pill .detail {
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .pill svg {
+        width: 20px;
+        height: 20px;
+        color: var(--solved);
+      }
+      .cell {
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Crossword */
+      .xw {
+        display: grid;
+        grid-template-columns: repeat(5, 60px);
+        border: 2px solid #1d2433;
+        background: #fff;
+      }
+      .xw .cell {
+        width: 60px;
+        height: 60px;
+        background: #fff;
+        border-right: 1px solid #1d2433;
+        border-bottom: 1px solid #1d2433;
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+        font-weight: 500;
+      }
+      .xw .cell:nth-child(5n) {
+        border-right: 0;
+      }
+      .xw .cell:nth-last-child(-n + 5) {
+        border-bottom: 0;
+      }
+      .xw .num {
+        position: absolute;
+        top: 2px;
+        left: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #1d2433;
+      }
+      .clue {
+        width: 100%;
+        background: #dbeeff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: var(--fg);
+        text-align: left;
+        justify-content: flex-start;
+      }
+      .clue b {
+        margin-right: 8px;
+      }
+
+      /* Connections */
+      .cx {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 350px;
+      }
+      .cx .cell {
+        height: 72px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+      }
+      .cx .name {
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .cx .words {
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+
+      /* Spelling Bee */
+      .hive {
+        position: relative;
+        width: 280px;
+        height: 290px;
+      }
+      .hex {
+        position: absolute;
+        width: 92px;
+        height: 80px;
+        clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+        background: #e8e6e1;
+        display: grid;
+        place-items: center;
+        font-size: 30px;
+        font-weight: 700;
+      }
+      /* Pips */
+      .pips {
+        position: relative;
+        width: 256px;
+        height: 256px;
+      }
+      .pips .shade {
+        position: absolute;
+        background: #ece8df;
+        border-radius: 10px;
+      }
+      .domino {
+        border: 2px solid #1d2433;
+        border-radius: 9px;
+        box-shadow: 0 3px 0 #b9b4a8;
+        display: flex;
+      }
+      .domino.v {
+        flex-direction: column;
+      }
+      .domino .half {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 9px);
+        grid-template-rows: repeat(3, 9px);
+        gap: 4px;
+        place-content: center;
+      }
+      .domino .half + .half {
+        border-left: 1px solid rgba(29, 36, 51, 0.35);
+      }
+      .domino.v .half + .half {
+        border-left: 0;
+        border-top: 1px solid rgba(29, 36, 51, 0.35);
+      }
+      .domino .pip {
+        border-radius: 50%;
+      }
+      .region {
+        position: absolute;
+        border: 2.5px dashed;
+        border-radius: 10px;
+        pointer-events: none;
+      }
+      .region-badge {
+        position: absolute;
+        right: -14px;
+        bottom: -14px;
+        min-width: 28px;
+        height: 28px;
+        padding: 0 5px;
+        border-radius: 7px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        display: grid;
+        place-items: center;
+      }
+      .difficulty {
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      /* Letter Boxed */
+      .lb {
+        width: 320px;
+        height: 320px;
+        overflow: visible;
+      }
+      .lb .cell {
+        overflow: visible;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .chain {
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 600;
+        color: var(--fg);
+        letter-spacing: 0.06em;
+        font-size: 16px;
+      }
+
+      .rank {
+        background: #f3d03e;
+        color: #1d2433;
+        font-weight: 700;
+        border-radius: 999px;
+        border: 2px solid #fff;
+        padding: 1px 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page">
+      <h1>Celebration prototypes</h1>
+      <p class="sub">
+        Eight replacements for the confetti, plus the current confetti for comparison. Each plays on
+        the same five made-up puzzles, just at the moment the last square, group or word lands.
+        Compare feel, not content.
+      </p>
+    </header>
+    <nav id="tabs"></nav>
+    <main>
+      <div id="stage">
+        <div class="layer" id="behind"></div>
+        <div id="content"></div>
+        <div class="layer" id="front"></div>
+      </div>
+      <div class="side">
+        <div id="meta"></div>
+        <div class="controls">
+          <span class="label">Game</span>
+          <span id="games" style="display: contents"></span>
+        </div>
+        <div class="controls">
+          <button id="play">Replay</button>
+          <span style="font-size: 12.5px; color: #77756f">
+            <kbd>Space</kbd> replays · <kbd>←</kbd> <kbd>→</kbd> switch options · <kbd>1</kbd>–<kbd
+              >5</kbd
+            >
+            switch games
+          </span>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // DATA
+
+      const CHECK =
+        '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"/></svg>'
+      const CHEVRON =
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg>'
+      const STAR_PATH =
+        "M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z"
+      const star = (fill, stroke) =>
+        `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="${STAR_PATH}" fill="${fill}" stroke="${stroke}" stroke-width="1.4" stroke-linejoin="round"/></svg>`
+      const SPARKLE = color =>
+        `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="${color}"/></svg>`
+
+      const XW = ["HEART", "EMBER", "ABUSE", "RESET", "TREES"]
+      const XW_NUMS = {
+        "0,0": 1,
+        "0,1": 2,
+        "0,2": 3,
+        "0,3": 4,
+        "0,4": 5,
+        "1,0": 6,
+        "2,0": 7,
+        "3,0": 8,
+        "4,0": 9,
+      }
+      const GROUPS = [
+        ["Breakfast foods", "TOAST, BACON, OATS, WAFFLE", "#f9df6d"],
+        ["___board", "CHESS, SURF, KEY, DASH", "#a0c35a"],
+        ["Card games", "BRIDGE, RUMMY, HEARTS, SNAP", "#b0c4ef"],
+        ["Hidden animals", "BEARD, SCOWL, PANTS, CRATE", "#ba81c5"],
+      ]
+      const HIVE = [
+        // letter, x, y, ring order
+        ["L", 94, 105, 0],
+        ["P", 94, 20, 1],
+        ["A", 167, 62, 2],
+        ["N", 167, 148, 3],
+        ["E", 94, 190, 4],
+        ["T", 21, 148, 5],
+        ["I", 21, 62, 6],
+      ]
+
+      // Pips: dominoes as [row, col, vertical, first, second], and regions as [cells, label, hue index].
+      const PIP_U = 64
+      const DOMINOES = [
+        [0, 0, true, 3, 5],
+        [0, 1, false, 2, 2],
+        [0, 3, true, 6, 1],
+        [1, 1, false, 4, 0],
+        [2, 1, true, 5, 3],
+        [2, 2, true, 1, 6],
+      ]
+      const PIP_REGIONS = [
+        [[0, 0, 2, 1], "8", 0],
+        [[0, 1, 1, 2], "=", 1],
+        [[2, 1, 2, 2], ">12", 2],
+      ]
+      const PIP_HUES = [
+        { fill: "#f5cfbc", stroke: "#c0683f", ink: "#5a3a2c" },
+        { fill: "#bedfd2", stroke: "#3f8a6e", ink: "#27453c" },
+        { fill: "#ccd6ef", stroke: "#5a74b0", ink: "#2e3a5c" },
+      ]
+      const PIP_SPOTS = [
+        [],
+        [4],
+        [0, 8],
+        [0, 4, 8],
+        [0, 2, 6, 8],
+        [0, 2, 4, 6, 8],
+        [0, 2, 3, 5, 6, 8],
+      ]
+
+      // Letter Boxed: sides top, right, bottom, left, and the two-word solution.
+      const LB_SIDES = ["FAC", "OLH", "RUE", "MNS"]
+      const LB_WORDS = ["FORMAL", "LUNCHES"]
+
+      const GAMES = {
+        crossword: {
+          name: "Crossword",
+          time: "4:12",
+          detail: "",
+          color: "#6492e5",
+          tint: "#dbe6fb",
+          flash: "#f6d860",
+          palette: ["#6492e5", "#a9c4f4", "#ebcc4c"],
+        },
+        pips: {
+          name: "Pips",
+          time: "1:52",
+          detail: "Hard",
+          color: "#d3a6ce",
+          tint: "#f3e6f1",
+          flash: null,
+          palette: ["#d3a6ce", "#e8956b", "#6fb59a", "#8ea5dc"],
+        },
+        connections: {
+          name: "Connections",
+          time: "2:38",
+          detail: "Perfect",
+          color: "#b4a0ff",
+          tint: "#ece6ff",
+          flash: null,
+          palette: GROUPS.map(g => g[2]),
+        },
+        "spelling-bee": {
+          name: "Spelling Bee",
+          time: "38:05",
+          detail: "Queen Bee",
+          color: "#f3d03e",
+          tint: "#fbf1c4",
+          flash: "#f3d03e",
+          palette: ["#f3d03e", "#e0a82e", "#f7e08a"],
+        },
+        "letter-boxed": {
+          name: "Letter Boxed",
+          time: "6:40",
+          detail: "2 words",
+          color: "#f5786d",
+          tint: "#fde0dd",
+          flash: null,
+          palette: ["#f5786d", "#1d2433", "#ffffff"],
+          background: "#faa6a4",
+        },
+      }
+
+      /** Menu order. */
+      const GAME_ORDER = ["crossword", "pips", "spelling-bee", "connections", "letter-boxed"]
+
+      // RENDERING
+
+      const $ = s => document.querySelector(s)
+      const stage = $("#stage")
+      const content = $("#content")
+      const behind = $("#behind")
+      const front = $("#front")
+
+      function renderGame(id) {
+        const g = GAMES[id]
+        let topline = ""
+        let board = ""
+        if (id === "crossword") {
+          topline = `<div class="topline clue"><b>9A</b>Maple and oak</div>`
+          board = `<div class="board xw">${XW.flatMap((row, r) =>
+            [...row].map((ch, c) => {
+              const n = XW_NUMS[`${r},${c}`]
+              return `<div class="cell" data-order="${r + c}" data-flash="${g.flash}" ${r === 4 && c === 4 ? "data-last" : ""}>${n ? `<span class="num">${n}</span>` : ""}${ch}</div>`
+            }),
+          ).join("")}</div>`
+        }
+        if (id === "connections") {
+          topline = `<div class="topline">Create four groups of four</div>`
+          board = `<div class="board cx">${GROUPS.map(
+            ([name, words, color], i) =>
+              `<div class="cell" data-order="${i}" style="background:${color}" ${i === 3 ? "data-last" : ""}><span class="name">${name}</span><span class="words">${words}</span></div>`,
+          ).join("")}</div>`
+        }
+        if (id === "spelling-bee") {
+          topline = `<div class="topline"><span class="rank">Queen Bee</span> 48 of 48 words · 212 points</div>`
+          board = `<div class="board hive">${HIVE.map(
+            ([ch, x, y, o]) =>
+              `<div class="cell hex" data-order="${o}" data-flash="${o ? g.flash : "#fff"}" style="left:${x}px;top:${y}px;${o ? "" : "background:#f3d03e"}" ${o ? "" : "data-last"}>${ch}</div>`,
+          ).join("")}</div>`
+        }
+        if (id === "pips") {
+          topline = `<div class="topline"><span class="difficulty">Hard</span> · 6 dominoes</div>`
+          const regionOf = {}
+          PIP_REGIONS.forEach(([[r, c, h, w]], i) => {
+            for (let y = r; y < r + h; y++)
+              for (let x = c; x < c + w; x++) regionOf[`${y},${x}`] = i
+          })
+          const shades = [
+            [0, 0, 4, 2],
+            [2, 1, 2, 2],
+          ]
+            .map(
+              ([r, c, w, h]) =>
+                `<div class="shade" style="left:${c * PIP_U}px;top:${r * PIP_U}px;width:${w * PIP_U}px;height:${h * PIP_U}px"></div>`,
+            )
+            .join("")
+          const half = (r, c, value) => {
+            const hue = PIP_HUES[regionOf[`${r},${c}`]]
+            const spots = PIP_SPOTS[value]
+            return `<div class="half" style="background:${hue ? hue.fill : "#fff"}">${Array.from({ length: 9 }, (_, i) => `<span class="pip" style="background:${spots.includes(i) ? (hue ? hue.ink : "#1d2433") : "transparent"}"></span>`).join("")}</div>`
+          }
+          const dominoes = DOMINOES.map(([r, c, v, a, b], i) => {
+            const [r2, c2] = v ? [r + 1, c] : [r, c + 1]
+            return `<div class="cell domino ${v ? "v" : ""}" data-order="${r + c}" style="position:absolute;left:${c * PIP_U + 4}px;top:${r * PIP_U + 4}px;width:${(v ? 1 : 2) * PIP_U - 8}px;height:${(v ? 2 : 1) * PIP_U - 8}px" ${i === 5 ? "data-last" : ""}>${half(r, c, a)}${half(r2, c2, b)}</div>`
+          }).join("")
+          const regions = PIP_REGIONS.map(([[r, c, h, w], label, i]) => {
+            const hue = PIP_HUES[i]
+            return `<div class="region" style="left:${c * PIP_U + 2}px;top:${r * PIP_U + 2}px;width:${w * PIP_U - 4}px;height:${h * PIP_U - 4}px;border-color:${hue.stroke}"><span class="region-badge" style="background:${hue.stroke}">${label}</span></div>`
+          }).join("")
+          board = `<div class="board pips">${shades}${dominoes}${regions}</div>`
+        }
+        if (id === "letter-boxed") {
+          topline = `<div class="topline chain">${LB_WORDS.join(" – ")}</div>`
+          const spots = {}
+          LB_SIDES.forEach((side, s) =>
+            [...side].forEach((letter, i) => {
+              const along = 15 + (70 * (2 * i + 1)) / 6
+              spots[letter] = [
+                [along, 15],
+                [85, along],
+                [along, 85],
+                [15, along],
+              ][s]
+            }),
+          )
+          const order = [...LB_WORDS.join("")].filter((l, i, all) => all.indexOf(l) === i)
+          const path = word => [...word].map(l => spots[l].join(",")).join(" ")
+          const paths = LB_WORDS.map(
+            (word, i) =>
+              `<polyline points="${path(word)}" fill="none" stroke="#faa6a4" stroke-width="1.6" stroke-linejoin="round" opacity="${0.8 - 0.3 * (LB_WORDS.length - i)}"/>`,
+          ).join("")
+          const letters = Object.entries(spots)
+            .map(([letter, [x, y]]) => {
+              const [dx, dy, anchor] =
+                y === 15
+                  ? [0, -5.6, "middle"]
+                  : y === 85
+                    ? [0, 11.2, "middle"]
+                    : x === 15
+                      ? [-5.6, 2.8, "end"]
+                      : [5.6, 2.8, "start"]
+              return `<g class="cell" data-order="${order.indexOf(letter)}" ${letter === "S" ? "data-last" : ""}><circle cx="${x}" cy="${y}" r="2.4" fill="#000" stroke="#fff" stroke-width="1.08"/><text x="${x + dx}" y="${y + dy}" text-anchor="${anchor}" style="font: 600 8px 'IBM Plex Mono', monospace">${letter}</text></g>`
+            })
+            .join("")
+          board = `<svg class="board lb" viewBox="0 0 100 100"><rect x="15" y="15" width="70" height="70" fill="#fff" stroke="#000" stroke-width="1.08"/>${paths}${letters}</svg>`
+        }
+        stage.style.background = g.background ?? ""
+        content.innerHTML = `
+          <div class="appbar"${g.background ? ' style="border-bottom-color:rgba(0,0,0,.15)"' : ""}>
+            <div class="back">${CHEVRON}<span class="badge">${star("#ebcc4c", "#c19533")}</span></div>
+            <div class="title">${g.name}</div>
+            <div class="time">${g.time}</div>
+          </div>
+          <div class="body">
+            ${topline}
+            ${board}
+            <div class="pill-slot"><div class="pill">${CHECK}<span>Solved in ${g.time}${g.detail ? `<span class="detail"> · ${g.detail}</span>` : ""}</span></div></div>
+          </div>`
+      }
+
+      // HELPERS
+
+      const wait = ms => new Promise(r => setTimeout(r, ms))
+      let rand = mulberry(7)
+      function mulberry(a) {
+        return () => {
+          a |= 0
+          a = (a + 0x6d2b79f5) | 0
+          let t = Math.imul(a ^ (a >>> 15), 1 | a)
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+        }
+      }
+      const between = (a, b) => a + rand() * (b - a)
+
+      /** A point's position relative to the stage. */
+      function centerOf(el) {
+        const s = stage.getBoundingClientRect()
+        const r = el.getBoundingClientRect()
+        return {
+          x: r.left - s.left + r.width / 2,
+          y: r.top - s.top + r.height / 2,
+          w: r.width,
+          h: r.height,
+        }
+      }
+
+      function el(parent, style, html = "") {
+        const d = document.createElement("div")
+        Object.assign(d.style, { position: "absolute", ...style })
+        d.innerHTML = html
+        parent.appendChild(d)
+        return d
+      }
+
+      /** The solved message's own entrance: fade in and zoom from 90%, like today. */
+      function showPill(delay = 0) {
+        const pill = $(".pill")
+        pill.style.visibility = "visible"
+        return pill.animate(
+          [
+            { opacity: 0, transform: "scale(.9)" },
+            { opacity: 1, transform: "scale(1)" },
+          ],
+          { duration: 300, delay, easing: "ease-out", fill: "backwards" },
+        )
+      }
+
+      /** Mix a hex color toward another hex color by t (0–1). */
+      function mix(a, b, t) {
+        const parse = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16))
+        const [x, y] = [parse(a), parse(b)]
+        return (
+          "#" +
+          x
+            .map((v, i) =>
+              Math.round(v + (y[i] - v) * t)
+                .toString(16)
+                .padStart(2, "0"),
+            )
+            .join("")
+        )
+      }
+
+      /** Lighter and darker versions of a color, nearest first. */
+      function toneRange(color) {
+        return {
+          tints: [0.35, 0.6, 0.85].map(t => mix(color, "#ffffff", t)),
+          shades: [0.2, 0.38, 0.55].map(t => mix(color, "#000000", t)),
+        }
+      }
+
+      /** The game's color pours out from the middle of the board, fills the screen, then drains away. */
+      async function flood(ctx) {
+        const o = centerOf(ctx.board)
+        const layer = el(behind, { inset: 0, background: ctx.game.color })
+        // Reach the farthest corner of the screen, no farther, so the spread reads as coming from the board.
+        const r = Math.hypot(
+          Math.max(o.x, stage.offsetWidth - o.x),
+          Math.max(o.y, stage.offsetHeight - o.y),
+        )
+        layer.animate(
+          [
+            {
+              clipPath: `circle(0px at ${o.x}px ${o.y}px)`,
+              opacity: 1,
+              easing: "cubic-bezier(.35,.1,.25,1)",
+            },
+            { clipPath: `circle(${r}px at ${o.x}px ${o.y}px)`, opacity: 1, offset: 0.4 },
+            {
+              clipPath: `circle(${r}px at ${o.x}px ${o.y}px)`,
+              opacity: 1,
+              offset: 0.65,
+              easing: "ease-in-out",
+            },
+            { clipPath: `circle(${r}px at ${o.x}px ${o.y}px)`, opacity: 0 },
+          ],
+          { duration: 2200, fill: "both" },
+        )
+        const appbar = $(".appbar")
+        appbar.style.borderBottomColor = "transparent"
+        const echo = el(behind, {
+          left: o.x - 60 + "px",
+          top: o.y - 60 + "px",
+          width: "120px",
+          height: "120px",
+          borderRadius: "50%",
+          border: "3px solid #fff",
+        })
+        echo.animate(
+          [
+            { transform: "scale(.3)", opacity: 0.9 },
+            { transform: "scale(5)", opacity: 0 },
+          ],
+          { duration: 900, delay: 200, easing: "ease-out", fill: "both" },
+        )
+        ctx.board.animate(
+          [
+            { filter: "none" },
+            { filter: "drop-shadow(0 10px 20px rgba(29,36,51,.25))", offset: 0.4 },
+            { filter: "drop-shadow(0 10px 20px rgba(29,36,51,.25))", offset: 0.7 },
+            { filter: "none" },
+          ],
+          { duration: 2000 },
+        )
+        await wait(2200)
+        if (ctx.stale()) return
+        appbar.style.borderBottomColor = ""
+      }
+
+      /** The solved message arrives with rings and sparkles bursting out from it. */
+      function halo(ctx, { delay = 0, rings, sparkles, count = 14 } = {}) {
+        rings ??= ["var(--solved)", ctx.game.color, ctx.game.color]
+        sparkles ??= ctx.game.palette
+        showPill(delay)
+        $(".pill svg").animate(
+          [
+            { transform: "scale(0) rotate(-90deg)" },
+            { transform: "scale(1.35) rotate(10deg)", offset: 0.6 },
+            { transform: "scale(1) rotate(0)" },
+          ],
+          { duration: 500, delay: delay + 80, easing: "ease-out", fill: "backwards" },
+        )
+        const pill = centerOf($(".pill"))
+        const box = g => ({
+          left: pill.x - pill.w / 2 - g + "px",
+          top: pill.y - pill.h / 2 - g + "px",
+          width: pill.w + g * 2 + "px",
+          height: pill.h + g * 2 + "px",
+        })
+        rings.forEach((color, i) => {
+          const ring = el(front, {
+            borderRadius: "999px",
+            border: `${2.5 - i * 0.6}px solid ${color}`,
+            opacity: 0,
+          })
+          ring.animate(
+            [
+              { ...box(0), opacity: 0.9 },
+              { ...box(46 + i * 34), opacity: 0 },
+            ],
+            {
+              duration: 800 + i * 150,
+              delay: delay + 160 + i * 140,
+              easing: "cubic-bezier(.2,.7,.3,1)",
+              fill: "forwards",
+            },
+          )
+        })
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2 + between(-0.15, 0.15)
+          const ux = Math.cos(angle)
+          const uy = Math.sin(angle)
+          const sx = pill.x + ux * (pill.w / 2 - 8)
+          const sy = pill.y + uy * (pill.h / 2)
+          const dist = between(28, 70)
+          const size = between(14, 26)
+          const color = sparkles[i % sparkles.length]
+          const s = el(
+            front,
+            {
+              left: sx - size / 2 + "px",
+              top: sy - size / 2 + "px",
+              width: size + "px",
+              height: size + "px",
+            },
+            SPARKLE(color),
+          )
+          const dx = ux * dist
+          const dy = uy * dist
+          s.animate(
+            [
+              { transform: "translate(0,0) scale(0) rotate(0)", opacity: 1 },
+              {
+                transform: `translate(${dx * 0.6}px,${dy * 0.6}px) scale(1.15) rotate(30deg)`,
+                opacity: 1,
+                offset: 0.3,
+                easing: "linear",
+              },
+              {
+                transform: `translate(${dx * 0.9}px,${dy * 0.9}px) scale(.9) rotate(70deg)`,
+                opacity: 1,
+                offset: 0.7,
+              },
+              { transform: `translate(${dx}px,${dy}px) scale(0) rotate(90deg)`, opacity: 0 },
+            ],
+            {
+              duration: between(900, 1150),
+              delay: delay + 200 + between(0, 140),
+              easing: "ease-out",
+              fill: "both",
+            },
+          )
+        }
+      }
+
+      // EFFECTS
+
+      const OPTIONS = [
+        {
+          name: "Wave",
+          why: "The puzzle itself celebrates: a wave of color rolls across the squares, groups or cells in the order they'd be read, so the joy comes from the thing you just finished.",
+          tradeoff:
+            "Each game has to expose its cells in a sensible order, so it's per-game wiring rather than one shared overlay.",
+          async play(ctx) {
+            for (const cell of ctx.cells) {
+              const order = Number(cell.dataset.order)
+              const flash = cell.dataset.flash
+              const base = getComputedStyle(cell).backgroundColor
+              const peak =
+                flash && flash !== "null"
+                  ? { background: flash }
+                  : { filter: "brightness(1.12) saturate(1.2)" }
+              cell.style.zIndex = 2
+              cell.animate(
+                [
+                  { transform: "none", background: base, filter: "none", boxShadow: "none" },
+                  {
+                    transform: "translateY(-10px) scale(1.07)",
+                    boxShadow: `0 8px 14px rgba(29,36,51,.18)${ctx.id === "crossword" ? ", 0 0 0 1px #1d2433" : ""}`,
+                    ...peak,
+                    offset: 0.35,
+                  },
+                  { transform: "translateY(1px) scale(.99)", offset: 0.7 },
+                  { transform: "none", background: base, filter: "none", boxShadow: "none" },
+                ],
+                { duration: 560, delay: order * 70, easing: "ease-out" },
+              )
+            }
+            const maxOrder = Math.max(...ctx.cells.map(c => Number(c.dataset.order)))
+            showPill(maxOrder * 70 + 250)
+          },
+        },
+        {
+          name: "Shine",
+          why: "A single band of light sweeps across the board, like turning a foil card in your hand. Quiet, quick and polished, it suits a daily ritual you'll see hundreds of times.",
+          tradeoff:
+            "It's subtle enough to miss on a mostly white crossword grid, and it reads as 'nice' rather than 'yay'.",
+          async play(ctx) {
+            const board = ctx.board
+            const bw = board.offsetWidth
+            const bh = board.offsetHeight
+            for (const cell of ctx.cells) {
+              const wrap = el(cell, {
+                left: -cell.offsetLeft + "px",
+                top: -cell.offsetTop + "px",
+                width: bw + "px",
+                height: bh + "px",
+                pointerEvents: "none",
+              })
+              wrap.className = "temp"
+              const band = el(wrap, {
+                left: 0,
+                top: "-20%",
+                width: "70%",
+                height: "140%",
+                background: `linear-gradient(100deg, transparent 0%, ${ctx.game.tint}00 20%, ${ctx.game.flash && ctx.game.flash !== "null" ? ctx.game.flash : "#ffffff"}88 42%, #ffffffee 50%, ${ctx.game.flash ?? "#ffffff"}88 58%, transparent 80%)`,
+                mixBlendMode: "multiply",
+              })
+              const glint = el(wrap, {
+                left: 0,
+                top: "-20%",
+                width: "70%",
+                height: "140%",
+                background:
+                  "linear-gradient(100deg, transparent 44%, #ffffffcc 50%, transparent 56%)",
+                mixBlendMode: "screen",
+              })
+              for (const b of [band, glint])
+                b.animate(
+                  [
+                    { transform: `translateX(-${bw * 0.8}px)` },
+                    { transform: `translateX(${bw * 1.5}px)` },
+                  ],
+                  {
+                    duration: 900,
+                    easing: "cubic-bezier(.4,0,.2,1)",
+                    fill: "both",
+                  },
+                )
+            }
+            board.animate(
+              [
+                { transform: "none", filter: "drop-shadow(0 0 0 rgba(0,0,0,0))" },
+                {
+                  transform: "translateY(-4px) scale(1.02)",
+                  filter: "drop-shadow(0 12px 16px rgba(29,36,51,.18))",
+                  offset: 0.45,
+                },
+                { transform: "none", filter: "drop-shadow(0 0 0 rgba(0,0,0,0))" },
+              ],
+              { duration: 1000, easing: "ease-in-out" },
+            )
+            showPill(550)
+          },
+        },
+        {
+          name: "Stamp",
+          why: "A 'Solved' seal thunks onto the board with a little shake, like a teacher's stamp on finished homework. It's a clear, physical full stop with a lot of personality.",
+          tradeoff:
+            "It briefly covers the board you might want to admire, and it's the most opinionated look of the set.",
+          async play(ctx) {
+            const c = centerOf(ctx.board)
+            const g = ctx.game
+            const seal = el(
+              front,
+              {
+                left: c.x - 88 + "px",
+                top: c.y - 88 + "px",
+                width: "176px",
+                height: "176px",
+                borderRadius: "50%",
+                border: "5px solid var(--solved)",
+                boxShadow: "inset 0 0 0 4px #fff, inset 0 0 0 7px var(--solved)",
+                background: "rgba(255,255,255,.9)",
+                color: "var(--solved)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "2px",
+              },
+              `<div style="font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:700;font-size:38px;line-height:1">Solved</div>
+               <div style="font-size:15px;font-weight:600;letter-spacing:.06em;font-variant-numeric:tabular-nums">${g.time}</div>
+               <div style="display:flex;gap:6px;margin-top:4px">${[0, 1, 2].map(() => `<span style="width:12px;height:12px;display:block">${star("var(--solved)", "none")}</span>`).join("")}</div>`,
+            )
+            seal.animate(
+              [
+                { transform: "scale(2.6) rotate(-2deg)", opacity: 0 },
+                { transform: "scale(.94) rotate(-11deg)", opacity: 1, offset: 0.55 },
+                { transform: "scale(1.02) rotate(-10deg)", opacity: 1, offset: 0.75 },
+                { transform: "scale(1) rotate(-10deg)", opacity: 1 },
+              ],
+              { duration: 420, easing: "cubic-bezier(.5,0,.75,0)", fill: "both" },
+            )
+            await wait(230)
+            if (ctx.stale()) return
+            ctx.board.animate(
+              [
+                { transform: "none" },
+                { transform: "translate(-3px, 2px)" },
+                { transform: "translate(3px, -1px)" },
+                { transform: "translate(-1px, 1px)" },
+                { transform: "none" },
+              ],
+              { duration: 240 },
+            )
+            const ring = el(front, {
+              left: c.x - 88 + "px",
+              top: c.y - 88 + "px",
+              width: "176px",
+              height: "176px",
+              borderRadius: "50%",
+              border: "2px solid var(--solved)",
+            })
+            ring.animate(
+              [
+                { transform: "scale(1)", opacity: 0.5 },
+                { transform: "scale(1.5)", opacity: 0 },
+              ],
+              { duration: 500, easing: "ease-out", fill: "both" },
+            )
+            await wait(1400)
+            if (ctx.stale()) return
+            seal.animate(
+              [
+                { transform: "scale(1) rotate(-10deg)", opacity: 1 },
+                { transform: "scale(.9) rotate(-10deg)", opacity: 0 },
+              ],
+              { duration: 350, easing: "ease-in", fill: "forwards" },
+            )
+            showPill(150)
+          },
+        },
+        {
+          name: "Halo",
+          why: "The solved message arrives with rings and a few sparkles bursting from its check mark, so the celebration and the result are the same thing in the same place.",
+          tradeoff:
+            "It's small and lives below the board, so on a big desktop screen it can feel modest compared with full-screen confetti.",
+          play: ctx => halo(ctx, { delay: 0 }),
+        },
+        {
+          name: "Flood",
+          why: "The game's own color pours out from the middle of the board, washes the whole screen and drains away. Bold and full-screen like confetti, but one clean gesture instead of a hundred pieces.",
+          tradeoff:
+            "It's the loudest option; seen every day it might feel like a lot, and it needs care so text stays readable mid-flood.",
+          async play(ctx) {
+            showPill(450)
+            await flood(ctx)
+          },
+        },
+        {
+          name: "Star",
+          why: "A gold star swells up over the board, then flies into the back button and pins itself there – a reward you've visibly earned that also hints the home screen now shows the puzzle as done.",
+          tradeoff:
+            "It's a story with a destination, so it takes the longest (about 1.7 s) and only makes sense if home really does show the star.",
+          async play(ctx) {
+            const c = centerOf(ctx.board)
+            const back = centerOf($(".back"))
+            const size = 96
+            const glow = el(front, {
+              left: c.x - 130 + "px",
+              top: c.y - 130 + "px",
+              width: "260px",
+              height: "260px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, #ebcc4c66 0%, #ebcc4c22 40%, transparent 70%)",
+            })
+            glow.animate(
+              [
+                { transform: "scale(.2)", opacity: 0 },
+                { transform: "scale(1)", opacity: 1, offset: 0.4 },
+                { transform: "scale(1.1)", opacity: 1, offset: 0.7 },
+                { transform: "scale(1.2)", opacity: 0 },
+              ],
+              { duration: 1100, easing: "ease-out", fill: "both" },
+            )
+            const s = el(
+              front,
+              {
+                left: c.x - size / 2 + "px",
+                top: c.y - size / 2 + "px",
+                width: size + "px",
+                height: size + "px",
+                filter: "drop-shadow(0 6px 10px rgba(193,149,51,.45))",
+              },
+              star("#ebcc4c", "#c19533"),
+            )
+            const appear = s.animate(
+              [
+                { transform: "scale(0) rotate(-200deg)" },
+                { transform: "scale(1.15) rotate(12deg)", offset: 0.7 },
+                { transform: "scale(1) rotate(0)" },
+              ],
+              { duration: 550, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "both" },
+            )
+            await appear.finished
+            if (ctx.stale()) return
+            await wait(380)
+            if (ctx.stale()) return
+            // Fly along a curve to the back button.
+            const frames = []
+            const p0 = { x: 0, y: 0 }
+            const p2 = { x: back.x - c.x, y: back.y - c.y }
+            const p1 = { x: p2.x * 0.1 + 90, y: p2.y * 0.55 }
+            for (let i = 0; i <= 20; i++) {
+              const t = i / 20
+              const x = (1 - t) ** 2 * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x
+              const y = (1 - t) ** 2 * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y
+              frames.push({
+                transform: `translate(${x}px, ${y}px) scale(${1 - 0.85 * t}) rotate(${-360 * t}deg)`,
+              })
+            }
+            showPill(100)
+            await s.animate(frames, {
+              duration: 620,
+              easing: "cubic-bezier(.5,0,.4,1)",
+              fill: "forwards",
+            }).finished
+            if (ctx.stale()) return
+            s.remove()
+            $(".back").animate(
+              [
+                { transform: "scale(1)" },
+                { transform: "scale(1.25)", background: "#fbf1c4" },
+                { transform: "scale(1)" },
+              ],
+              {
+                duration: 320,
+                easing: "ease-out",
+              },
+            )
+            const badge = $(".back .badge")
+            badge.style.opacity = 1
+            badge.animate(
+              [{ transform: "scale(0)" }, { transform: "scale(1.4)" }, { transform: "scale(1)" }],
+              { duration: 320 },
+            )
+          },
+        },
+        {
+          name: "Drift",
+          why: "Pieces of the game itself – letter tiles, group-colored squares, little hexagons – float up from behind the board like bubbles. It keeps confetti's festive feel but makes it calmer and specific to each game.",
+          tradeoff:
+            "It's still a particle effect, the closest cousin of what you have now, so it may not feel like enough of a change.",
+          async play(ctx) {
+            const id = ctx.id
+            const letters = id === "crossword" ? XW.join("") : "LPANETI"
+            const n = 26
+            for (let i = 0; i < n; i++) {
+              const color = ctx.game.palette[i % ctx.game.palette.length]
+              const size = between(18, 34)
+              let style = { width: size + "px", height: size + "px" }
+              let html = ""
+              if (id === "crossword") {
+                style = {
+                  ...style,
+                  background: "#fff",
+                  border: "1.5px solid #1d2433",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: size * 0.55 + "px",
+                  fontWeight: 600,
+                  color: "#1d2433",
+                }
+                html = letters[Math.floor(rand() * letters.length)]
+                if (i % 4 === 0) style.background = "#a9c4f4"
+              } else if (id === "connections") {
+                style = { ...style, background: color, borderRadius: size * 0.22 + "px" }
+              } else if (id === "pips") {
+                const hue = PIP_HUES[i % PIP_HUES.length]
+                style = {
+                  ...style,
+                  width: size * 1.8 + "px",
+                  height: size * 0.9 + "px",
+                  background: i % 2 ? "#fff" : hue.fill,
+                  border: "1.5px solid #1d2433",
+                  borderRadius: size * 0.2 + "px",
+                }
+              } else if (id === "letter-boxed") {
+                style = {
+                  ...style,
+                  width: size * 0.7 + "px",
+                  height: size * 0.7 + "px",
+                  borderRadius: "50%",
+                  background: i % 3 ? "#000" : "#fff",
+                  border: "2px solid " + (i % 3 ? "#fff" : "#000"),
+                }
+              } else {
+                style = {
+                  ...style,
+                  height: size * 0.87 + "px",
+                  background: i % 3 === 0 ? "#e8e6e1" : "#f3d03e",
+                  clipPath: "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
+                }
+                if (i % 3 === 1) {
+                  style.display = "grid"
+                  style.placeItems = "center"
+                  style.fontWeight = 700
+                  style.fontSize = size * 0.5 + "px"
+                  html = letters[Math.floor(rand() * letters.length)]
+                }
+              }
+              const x = between(10, 370)
+              const p = el(behind, { left: x + "px", top: "730px", ...style }, html)
+              const rise = between(420, 700)
+              const sway = between(14, 30) * (rand() < 0.5 ? -1 : 1)
+              const turn = between(-40, 40)
+              p.animate(
+                [
+                  { transform: "translate(0,0) rotate(0)", opacity: 0 },
+                  {
+                    transform: `translate(${sway}px, ${-rise * 0.33}px) rotate(${turn * 0.3}deg)`,
+                    opacity: 1,
+                    offset: 0.25,
+                  },
+                  {
+                    transform: `translate(${-sway}px, ${-rise * 0.66}px) rotate(${turn * 0.7}deg)`,
+                    opacity: 0.9,
+                    offset: 0.6,
+                  },
+                  {
+                    transform: `translate(${sway * 0.5}px, ${-rise}px) rotate(${turn}deg)`,
+                    opacity: 0,
+                  },
+                ],
+                {
+                  duration: between(1800, 2600),
+                  delay: between(0, 600),
+                  easing: "cubic-bezier(.25,.6,.4,1)",
+                  fill: "both",
+                },
+              )
+            }
+            showPill(300)
+          },
+        },
+        {
+          name: "Flood + halo",
+          why: "The flood pours out from the middle of the board, and as it reaches the solved message, rings and sparkles in lighter and darker versions of that same color burst from it. One color story, a big moment, then a clear result.",
+          tradeoff:
+            "It's the busiest of the set, and two effects at once cost more to build and tune than either one alone.",
+          async play(ctx) {
+            const tones = toneRange(ctx.game.color)
+            const floodDone = flood(ctx)
+            halo(ctx, {
+              delay: 420,
+              rings: [tones.tints[2], tones.shades[1], tones.tints[1]],
+              sparkles: [...tones.tints, ...tones.shades],
+              count: 18,
+            })
+            await floodDone
+          },
+        },
+        {
+          name: "Current · Confetti",
+          why: "Today's shared effect: 36 pastel strips fall from the top of the screen over about 1.8 s while the solved message zooms in.",
+          tradeoff:
+            "Generic and a little stock – it says 'done' the same way every app does and has nothing to do with the game.",
+          async play(ctx) {
+            const COLORS = ["#f4ce55", "#a0c35a", "#8cb7e8", "#bd9be5", "#e89e96"]
+            for (let i = 0; i < 36; i++) {
+              const p = el(front, {
+                left: `${(i * 37) % 100}%`,
+                top: "-14px",
+                width: "8px",
+                height: "14px",
+                borderRadius: "2px",
+                background: COLORS[i % COLORS.length],
+              })
+              const drift = ((i * 17) % 160) - 80
+              const turn = i % 2 ? 540 : -540
+              p.animate(
+                [
+                  { transform: "translate(0,0) rotate(0)" },
+                  { transform: `translate(${drift}px, 760px) rotate(${turn}deg)`, opacity: 0 },
+                ],
+                { duration: 1800, delay: (i % 6) * 60, easing: "ease-in", fill: "both" },
+              )
+            }
+            showPill(0)
+          },
+        },
+      ]
+
+      // STATE
+
+      let option = 0
+      let gameId = "crossword"
+      let run = 0
+
+      function reset() {
+        renderGame(gameId)
+        behind.innerHTML = ""
+        front.innerHTML = ""
+        for (const a of stage.getAnimations({ subtree: true })) a.cancel()
+        rand = mulberry(7)
+      }
+
+      async function play() {
+        const mine = ++run
+        reset()
+        await wait(350)
+        if (mine !== run) return
+        const board = $(".board")
+        const ctx = {
+          id: gameId,
+          game: GAMES[gameId],
+          board,
+          cells: [...board.querySelectorAll(".cell")],
+          stale: () => mine !== run,
+        }
+        OPTIONS[option].play(ctx)
+      }
+
+      function renderChrome() {
+        $("#tabs").innerHTML = OPTIONS.map(
+          (o, i) =>
+            `<button class="${i === option ? "active" : ""}" data-i="${i}">${i < OPTIONS.length - 1 ? String.fromCharCode(65 + i) + " · " : ""}${o.name}</button>`,
+        ).join("")
+        $("#games").innerHTML = GAME_ORDER.map(id => [id, GAMES[id]])
+          .map(
+            ([id, g]) =>
+              `<button class="${id === gameId ? "active" : ""}" data-game="${id}">${g.name}</button>`,
+          )
+          .join("")
+        const o = OPTIONS[option]
+        $("#meta").innerHTML =
+          `<h2>${o.name}</h2><p><strong>Why:</strong> ${o.why}</p><p><strong>Tradeoff:</strong> ${o.tradeoff}</p>`
+        history.replaceState(null, "", `#${option + 1}-${gameId}`)
+      }
+
+      function select(i) {
+        option = (i + OPTIONS.length) % OPTIONS.length
+        renderChrome()
+        play()
+      }
+      function selectGame(id) {
+        gameId = id
+        renderChrome()
+        play()
+      }
+
+      $("#tabs").addEventListener(
+        "click",
+        e => e.target.dataset.i && select(Number(e.target.dataset.i)),
+      )
+      $("#games").addEventListener(
+        "click",
+        e => e.target.dataset.game && selectGame(e.target.dataset.game),
+      )
+      $("#play").addEventListener("click", play)
+      stage.addEventListener("click", play)
+      addEventListener("keydown", e => {
+        if (e.key === "ArrowRight") select(option + 1)
+        if (e.key === "ArrowLeft") select(option - 1)
+        if (e.key === " ") {
+          e.preventDefault()
+          play()
+        }
+        const n = Number(e.key)
+        if (n >= 1 && n <= 5) selectGame(GAME_ORDER[n - 1])
+      })
+
+      const [, hashOption, hashGame] = location.hash.match(/^#(\d+)-?([\w-]*)/) ?? []
+      if (hashGame && GAMES[hashGame]) gameId = hashGame
+      select(hashOption ? Number(hashOption) - 1 : 0)
+    </script>
+  </body>
+</html>
