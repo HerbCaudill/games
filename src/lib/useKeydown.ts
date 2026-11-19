@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useLayoutEffect, useRef } from "react"
 
 /**
  * Handle key presses anywhere on the page, ignoring typing in form fields and keys pressed in a
@@ -12,7 +12,9 @@ export function useKeydown(
 ) {
   const latest = useRef(handler)
   latest.current = handler
-  useEffect(() => {
+  // A layout effect listens from the moment the game is on screen; a passive effect can run after
+  // the first frame, dropping a key pressed right away.
+  useLayoutEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (!withModifiers && (event.metaKey || event.ctrlKey || event.altKey)) return
       const target = event.target as HTMLElement | null
