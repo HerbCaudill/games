@@ -125,11 +125,6 @@ export function SpellingBee(
             total: puzzle.pangrams.length,
           }}
         />
-        {solved && (
-          <div className="mt-4 flex justify-center">
-            <SolvedMessage seconds={elapsed} />
-          </div>
-        )}
         <div className="mt-4">
           <FoundWords found={found} pangrams={puzzle.pangrams} />
         </div>
@@ -182,6 +177,12 @@ export function SpellingBee(
             Enter
           </Button>
         </div>
+        {/* Below the puzzle, so it doesn't move anything when it appears. */}
+        {solved && (
+          <div className="mt-6">
+            <SolvedMessage seconds={elapsed} />
+          </div>
+        )}
       </section>
     </div>
   )
