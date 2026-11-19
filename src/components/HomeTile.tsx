@@ -2,6 +2,7 @@ import { IconCheck, IconClock, IconX } from "@tabler/icons-react"
 import type { GameInfo } from "@/constants"
 import { GroupsProgress } from "@/games/connections/GroupsProgress"
 import { GridProgress } from "@/games/crossword/GridProgress"
+import { StarBadge } from "@/games/crossword/StarBadge"
 import { HiveProgress } from "@/games/spelling-bee/HiveProgress"
 import { formatDuration } from "@/lib/formatDuration"
 import { navigate } from "@/lib/navigate"
@@ -60,7 +61,7 @@ export function HomeTile(
       </span>
       <span className="flex w-26 flex-col items-center gap-2">
         {progress ? (
-          <ProgressPicture progress={progress} failed={status === "failed"} />
+          <ProgressPicture progress={progress} status={status} />
         ) : (
           <GameGlyph game={game.id} className="size-22" />
         )}
@@ -77,16 +78,20 @@ export function HomeTile(
 /** The picture of a game's progress. */
 function ProgressPicture(
   /** The component props. */
-  { progress, failed }: { progress: HomeProgress; failed: boolean },
+  { progress, status }: { progress: HomeProgress; status: Tile["status"] },
 ) {
   const className = "size-22"
   switch (progress.game) {
     case "crossword":
-      return <GridProgress filled={progress.filled} className={className} />
+      return status === "solved" ? (
+        <StarBadge className={className} />
+      ) : (
+        <GridProgress filled={progress.filled} className={className} />
+      )
     case "spelling-bee":
       return <HiveProgress rank={progress.rank} className={className} />
     case "connections":
-      return <GroupsProgress {...progress} failed={failed} className={className} />
+      return <GroupsProgress {...progress} failed={status === "failed"} className={className} />
   }
 }
 

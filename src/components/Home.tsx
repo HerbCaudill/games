@@ -1,5 +1,4 @@
 import { GAMES } from "@/constants"
-import { formatDate } from "@/lib/formatDate"
 import { useKeydown } from "@/lib/useKeydown"
 import { navigate } from "@/lib/navigate"
 import { HomeTile } from "./HomeTile"
@@ -21,12 +20,8 @@ export function Home(
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <img src="/icon.svg" alt="" className="size-8 shrink-0 rounded-md" />
-        <h1 className="min-w-0 truncate font-semibold">Games</h1>
-        <span className="text-muted-foreground ml-auto truncate text-sm">{formatDate(date)}</span>
-        <ShortcutsButton context="home" />
-      </header>
+      <h1 className="sr-only">Games</h1>
+      <ShortcutsButton context="home" showButton={false} />
       <main className="app-content">
         <ul className="mx-auto grid max-w-xl gap-3 p-4 sm:pt-8">
           {GAMES.map((game, i) => (

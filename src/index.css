@@ -87,6 +87,9 @@
   /* NYT's crossword blue, behind the crossword's home tile, and the light blue that fills its picture. */
   --crossword-tile: #6492e5;
   --crossword-tile-fill: #a9c4f4;
+  /* The gold star that replaces the crossword's picture once it's solved. */
+  --crossword-star: #ebcc4c;
+  --crossword-star-inner: #c19533;
   --game-pips: #d3a6ce;
   /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
   --game-spelling-bee: oklch(0.87 0.17 90);

@@ -7,7 +7,7 @@ import { Button } from "./ui/button"
 /** A desktop-only button, also opened with `?`, that lists the keyboard shortcuts for the current screen. */
 export function ShortcutsButton(
   /** The component props. */
-  { context }: Props,
+  { context, showButton = true }: Props,
 ) {
   const dialog = useRef<HTMLDialogElement>(null)
   const open = () => dialog.current?.showModal()
@@ -20,16 +20,18 @@ export function ShortcutsButton(
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="hidden pointer-fine:inline-flex"
-        onClick={open}
-        title="Keyboard shortcuts (?)"
-        aria-label="Keyboard shortcuts"
-      >
-        <IconKeyboard />
-      </Button>
+      {showButton && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden pointer-fine:inline-flex"
+          onClick={open}
+          title="Keyboard shortcuts (?)"
+          aria-label="Keyboard shortcuts"
+        >
+          <IconKeyboard />
+        </Button>
+      )}
       <dialog
         ref={dialog}
         className="bg-popover text-popover-foreground m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border p-0 shadow-xl backdrop:bg-black/40"
@@ -77,4 +79,6 @@ export function ShortcutsButton(
 type Props = {
   /** Which screen's shortcuts to list. */
   context: ShortcutContext
+  /** Whether to show the button; `?` opens the list either way. */
+  showButton?: boolean
 }
