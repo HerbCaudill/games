@@ -36,13 +36,6 @@ test("celebrates without motion when reduced motion is requested", async ({ page
   await expect(confetti(page)).toHaveCount(0)
 })
 
-test("celebrates each Pips board as it is solved", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" })
-  await page.goto("/pips?date=2026-11-16")
-  await solvePipsBoard(page, "medium")
-  await expect(confetti(page)).toHaveCount(1)
-})
-
 /** The shared completion confetti, present only while it plays. */
 function confetti(
   /** Browser page. */
@@ -85,20 +78,15 @@ async function finish(
       await page.getByRole("button", { name: "Submit", exact: true }).click()
     }
   } else {
-    for (const difficulty of ["easy", "medium", "hard"]) await solvePipsBoard(page, difficulty)
+    await solvePips(page)
   }
 }
 
-/** Switch to a Pips board and solve it by dragging both dominoes into place. */
-async function solvePipsBoard(
+/** Solve the Pips board by dragging both dominoes into place. */
+async function solvePips(
   /** Browser page. */
   page: Page,
-  /** Board to solve. */
-  difficulty: string,
 ) {
-  await page.getByRole("button", { name: /^Difficulty/ }).click()
-  await page.getByRole("menuitemradio", { name: new RegExp(`^${difficulty}`, "i") }).click()
-  await expect(page.getByRole("menu")).toBeHidden()
   for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
     const domino = page.getByRole("button", { name, exact: true })
     await domino.click()

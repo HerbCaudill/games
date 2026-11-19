@@ -60,18 +60,15 @@ export type CrosswordClue = {
 /** A crossword direction. */
 export type Direction = "across" | "down"
 
-/** The three daily Pips boards. */
+/** The daily Pips puzzle: NYT's hard board. */
 export type PipsPuzzle = {
   /** Print date as YYYY-MM-DD. */
   date: string
   /** Editor name. */
   editor: string
-  /** One board per difficulty. */
-  boards: Record<PipsDifficulty, PipsBoard>
+  /** The hard board. */
+  board: PipsBoard
 }
-
-/** A Pips difficulty level. */
-export type PipsDifficulty = "easy" | "medium" | "hard"
 
 /** One Pips board. */
 export type PipsBoard = {

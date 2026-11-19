@@ -57,46 +57,41 @@ const PUZZLES: { [G in GameId]: Omit<PuzzleFor[G], "date"> } = {
   },
   pips: {
     editor: "Test Editor",
-    boards: Object.fromEntries(
-      (["easy", "medium", "hard"] as const).map(d => [
-        d,
+    board: {
+      id: 1,
+      constructors: "Test",
+      dominoes: [
+        [2, 1],
+        [3, 1],
+      ],
+      regions: [
         {
-          id: 1,
-          constructors: "Test",
-          dominoes: [
-            [2, 1],
-            [3, 1],
+          cells: [
+            [0, 0],
+            [0, 1],
           ],
-          regions: [
-            {
-              cells: [
-                [0, 0],
-                [0, 1],
-              ],
-              type: "sum",
-              target: 5,
-            },
-            {
-              cells: [
-                [1, 0],
-                [1, 1],
-              ],
-              type: "equals",
-            },
-          ],
-          solution: [
-            [
-              [0, 0],
-              [1, 0],
-            ],
-            [
-              [0, 1],
-              [1, 1],
-            ],
-          ],
+          type: "sum",
+          target: 5,
         },
-      ]),
-    ) as PuzzleFor["pips"]["boards"],
+        {
+          cells: [
+            [1, 0],
+            [1, 1],
+          ],
+          type: "equals",
+        },
+      ],
+      solution: [
+        [
+          [0, 0],
+          [1, 0],
+        ],
+        [
+          [0, 1],
+          [1, 1],
+        ],
+      ],
+    },
   },
   "spelling-bee": {
     id: 1,

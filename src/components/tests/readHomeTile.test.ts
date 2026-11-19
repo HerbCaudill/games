@@ -55,12 +55,11 @@ it("shows the Connections groups found, by color, and the mistakes made", () => 
   })
 })
 
-it("adds up the time spent on every Pips board", () => {
+it("reads the time spent on Pips from its progress", () => {
   writeStored("status:pips:" + DATE, "started")
-  writeStored(`progress:pips:${DATE}:easy`, { placements: [], elapsed: 40 })
-  writeStored(`progress:pips:${DATE}:hard`, { placements: [], elapsed: 60 })
+  writeStored("progress:pips:" + DATE, { placements: [], elapsed: 60 })
 
-  expect(readHomeTile("pips", DATE)).toEqual({ status: "started", elapsed: 100 })
+  expect(readHomeTile("pips", DATE)).toEqual({ status: "started", elapsed: 60 })
 })
 
 it("leaves out progress when the puzzle is not saved on this device", () => {

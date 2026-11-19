@@ -1,37 +1,21 @@
-import {
-  IconArrowBackUp,
-  IconArrowForwardUp,
-  IconChevronDown,
-  IconCircleCheckFilled,
-} from "@tabler/icons-react"
+import { IconArrowBackUp, IconArrowForwardUp } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { SolvedMessage } from "@/components/SolvedMessage"
-import { readStored } from "@/lib/readStored"
-import { useCelebration } from "@/lib/useCelebration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { usePersistentState } from "@/lib/usePersistentState"
 import { useTimer } from "@/lib/useTimer"
 import { useUndo } from "@/lib/useUndo"
-import type { Cell, PipsDifficulty, PipsPuzzle } from "@/types"
+import type { Cell, PipsPuzzle } from "@/types"
 import { PipsTable } from "./PipsTable"
 import { boardCells } from "./logic/boardCells"
-import { DIFFICULTIES } from "./logic/constants"
 import { cellKey } from "./logic/cellKey"
 import { directionOf } from "./logic/directionOf"
 import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
 import { placeAt } from "./logic/placeAt"
-import { progressKey } from "./logic/progressKey"
 import { removeDomino } from "./logic/removeDomino"
 import { turnTo } from "./logic/turnTo"
 import { type Placements, type Point } from "./logic/types"
@@ -41,20 +25,16 @@ export function Pips(
   /** The component props. */
   { puzzle, toolbar }: Props,
 ) {
-  const [difficulty, setDifficulty] = usePersistentState<PipsDifficulty>(
-    `progress:pips:${puzzle.date}:difficulty`,
-    () => "easy",
-  )
-  const board = puzzle.boards[difficulty]
+  const { board } = puzzle
   const [progress, setProgress] = usePersistentState<PipsProgress>(
-    progressKey(puzzle.date, difficulty),
+    `progress:pips:${puzzle.date}`,
     () => ({ placements: board.dominoes.map(() => null), turns: [], spots: [], elapsed: 0 }),
   )
   const { placements } = progress
   const turns = progress.turns ?? []
   const spots = progress.spots ?? []
   const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(
-    difficulty,
+    puzzle.date,
     { placements, turns, spots },
     pieces => setProgress(p => ({ ...p, ...pieces })),
   )
@@ -63,12 +43,8 @@ export function Pips(
   // The cursor and the picked domino only matter, and only show, while playing by keyboard.
   const [usingKeyboard, setUsingKeyboard] = useState(false)
   const solved = isSolved(placements, board)
-  const allSolved = DIFFICULTIES.every(d => (d === difficulty ? solved : isStoredSolved(puzzle, d)))
-  const anyStarted =
-    placements.some(Boolean) || DIFFICULTIES.some(d => readStored(progressKey(puzzle.date, d)))
-  useGameStatus("pips", puzzle.date, allSolved ? "solved" : anyStarted ? "started" : "new")
-  // Each board is a puzzle of its own, so each one celebrates when solved.
-  useCelebration(`pips:${puzzle.date}:${difficulty}`, solved)
+  const started = placements.some(Boolean) || spots.some(Boolean)
+  useGameStatus("pips", puzzle.date, solved ? "solved" : started ? "started" : "new")
   useTimer(!solved, () => setProgress(p => ({ ...p, elapsed: p.elapsed + 1 })))
 
   const unplaced = board.dominoes.map((_, i) => i).filter(i => !placements[i])
@@ -107,12 +83,6 @@ export function Pips(
     setSelected(undefined)
   }
   const cleared = !placements.some(Boolean) && !spots.some(Boolean)
-
-  const switchDifficulty = (d: PipsDifficulty) => {
-    setDifficulty(d)
-    setSelected(undefined)
-    setCursor(boardCells(puzzle.boards[d])[0])
-  }
 
   /** Turn a domino a quarter clockwise; on the board, it pivots on its first half to the next spot that fits. */
   const rotate = (i: number) => {
@@ -192,10 +162,7 @@ export function Pips(
       else if (key === "]") cycle(1)
       else if (key.toLowerCase() === "r") {
         if (selected !== undefined && !solved) turn(selected)
-      } else if (key.toLowerCase() === "e") switchDifficulty("easy")
-      else if (key.toLowerCase() === "m") switchDifficulty("medium")
-      else if (key.toLowerCase() === "h") switchDifficulty("hard")
-      else return
+      } else return
       event.preventDefault()
       setUsingKeyboard(true)
     },
@@ -206,66 +173,31 @@ export function Pips(
     <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-4 sm:pt-6">
       {toolbar &&
         createPortal(
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    className="gap-1 px-2 text-base capitalize"
-                    aria-label={`Difficulty: ${capitalize(difficulty)}`}
-                  />
-                }
-              >
-                {difficulty}
-                {solved && <SolvedMark />}
-                <IconChevronDown className="text-muted-foreground size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-44">
-                <DropdownMenuRadioGroup
-                  value={difficulty}
-                  onValueChange={value => switchDifficulty(value as PipsDifficulty)}
-                >
-                  {DIFFICULTIES.map(d => (
-                    <DropdownMenuRadioItem
-                      key={d}
-                      value={d}
-                      closeOnClick
-                      className="min-h-11 text-base"
-                    >
-                      {capitalize(d)}
-                      {(d === difficulty ? solved : isStoredSolved(puzzle, d)) && <SolvedMark />}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="ml-auto flex items-center">
-              <Button variant="ghost" className="px-2" disabled={solved || cleared} onClick={clear}>
-                Clear
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Redo"
-                title="Redo (⇧⌘Z)"
-                disabled={solved || !canRedo}
-                onClick={redo}
-              >
-                <IconArrowForwardUp />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Undo"
-                title="Undo (⌘Z)"
-                disabled={solved || !canUndo}
-                onClick={undo}
-              >
-                <IconArrowBackUp />
-              </Button>
-            </div>
-          </>,
+          <div className="ml-auto flex items-center">
+            <Button variant="ghost" className="px-2" disabled={solved || cleared} onClick={clear}>
+              Clear
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Redo"
+              title="Redo (⇧⌘Z)"
+              disabled={solved || !canRedo}
+              onClick={redo}
+            >
+              <IconArrowForwardUp />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Undo"
+              title="Undo (⌘Z)"
+              disabled={solved || !canUndo}
+              onClick={undo}
+            >
+              <IconArrowBackUp />
+            </Button>
+          </div>,
           toolbar,
         )}
 
@@ -286,30 +218,6 @@ export function Pips(
       {solved && <SolvedMessage seconds={progress.elapsed} />}
     </div>
   )
-}
-
-/** Whether a board not currently shown has been solved, from its saved progress. */
-function isStoredSolved(
-  /** The puzzle. */
-  puzzle: PipsPuzzle,
-  /** Difficulty. */
-  difficulty: PipsDifficulty,
-) {
-  const saved = readStored<PipsProgress>(progressKey(puzzle.date, difficulty))
-  return Boolean(saved && isSolved(saved.placements, puzzle.boards[difficulty]))
-}
-
-/** Marks a board as solved. */
-function SolvedMark() {
-  return <IconCircleCheckFilled className="size-4 text-(--solved)" aria-label="solved" />
-}
-
-/** A word with its first letter in capitals. */
-function capitalize(
-  /** The word. */
-  word: string,
-) {
-  return word[0].toUpperCase() + word.slice(1)
 }
 
 /** A turn count as a direction, 0 to 3. */

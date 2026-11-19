@@ -13,4 +13,4 @@ export function puzzleKey(
 // CONSTANTS
 
 /** Bump when the API's puzzle shape changes, so devices fetch puzzles again instead of using stale local copies. */
-const PUZZLE_FORMAT = 2
+const PUZZLE_FORMAT = 3

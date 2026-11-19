@@ -90,7 +90,7 @@ describe("parseCrossword", () => {
 })
 
 describe("parsePips", () => {
-  it("renames regions and keeps all three boards", () => {
+  it("renames regions and keeps the hard board", () => {
     const board = {
       id: 1,
       constructors: "Someone",
@@ -105,20 +105,18 @@ describe("parsePips", () => {
           [0, 1],
         ],
       ],
-    } as RawPips["easy"]
+    } as RawPips["hard"]
     const puzzle = parsePips({
       printDate: "2026-01-02",
       editor: "Ed",
-      easy: board,
-      medium: board,
       hard: board,
     })
     expect(puzzle.date).toBe("2026-01-02")
-    expect(puzzle.boards.hard.regions).toEqual([
+    expect(puzzle.board.regions).toEqual([
       { cells: [[0, 0]], type: "sum", target: 1 },
       { cells: [[0, 1]], type: "empty" },
     ])
-    expect(puzzle.boards.easy.solution).toEqual([
+    expect(puzzle.board.solution).toEqual([
       [
         [0, 0],
         [0, 1],

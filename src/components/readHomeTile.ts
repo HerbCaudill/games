@@ -1,7 +1,5 @@
 import type { ConnectionsState } from "@/games/connections/logic/types"
 import type { CrosswordProgress } from "@/games/crossword/logic/types"
-import { DIFFICULTIES } from "@/games/pips/logic/constants"
-import { progressKey } from "@/games/pips/logic/progressKey"
 import { rankFor } from "@/games/spelling-bee/logic/rankFor"
 import { totalScore } from "@/games/spelling-bee/logic/totalScore"
 import { puzzleKey } from "@/lib/puzzleKey"
@@ -34,13 +32,8 @@ function readElapsed(
   /** Date as YYYY-MM-DD. */
   date: string,
 ) {
-  if (game === "crossword")
-    return readStored<CrosswordProgress>(`progress:crossword:${date}`)?.elapsed
-  if (game === "pips") {
-    const boards = DIFFICULTIES.map(d => readStored<{ elapsed: number }>(progressKey(date, d)))
-    const times = boards.flatMap(board => (board ? [board.elapsed] : []))
-    return times.length ? times.reduce((sum, t) => sum + t, 0) : undefined
-  }
+  if (game === "crossword" || game === "pips")
+    return readStored<{ elapsed: number }>(`progress:${game}:${date}`)?.elapsed
   return readStored<number>(`time:${game}:${date}`)
 }
 

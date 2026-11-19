@@ -8,15 +8,11 @@ export function parsePips(
   return {
     date: raw.printDate,
     editor: raw.editor ?? "",
-    boards: {
-      easy: parseBoard(raw.easy),
-      medium: parseBoard(raw.medium),
-      hard: parseBoard(raw.hard),
-    },
+    board: parseBoard(raw.hard),
   }
 }
 
-/** Convert one difficulty's board. */
+/** Convert a board. */
 function parseBoard(
   /** The raw board. */
   board: RawBoard,
@@ -40,8 +36,6 @@ function parseBoard(
 export type RawPips = {
   printDate: string
   editor?: string
-  easy: RawBoard
-  medium: RawBoard
   hard: RawBoard
 }
 
