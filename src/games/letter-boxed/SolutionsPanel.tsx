@@ -1,4 +1,4 @@
-import { IconCheck, IconStarFilled } from "@tabler/icons-react"
+import { IconCircleCheckFilled, IconStarFilled } from "@tabler/icons-react"
 import type { LetterBoxedPuzzle } from "@/types"
 import { WordChain } from "./WordChain"
 
@@ -14,20 +14,29 @@ export function SolutionsPanel(
       {solutions.map(words => {
         const key = words.join(" ")
         return (
-          <li key={key} className="flex items-center gap-2 px-1 py-2">
-            <span className="flex-1">
-              <WordChain words={words} />
+          <li key={key} className="flex items-center gap-3 px-1 py-2">
+            {/* Fixed slots, so the words line up whichever marks a row has. */}
+            <span className="flex shrink-0 gap-1">
+              <span className="size-5">
+                {key === nyt && (
+                  <IconStarFilled
+                    className="size-5 text-(--nyt-star)"
+                    aria-label="NYT solution"
+                    role="img"
+                  />
+                )}
+              </span>
+              <span className="size-5">
+                {found.has(key) && (
+                  <IconCircleCheckFilled
+                    className="size-5 text-(--solved)"
+                    aria-label="You found this"
+                    role="img"
+                  />
+                )}
+              </span>
             </span>
-            {key === nyt && (
-              <IconStarFilled
-                className="size-4 text-(--nyt-star)"
-                aria-label="NYT solution"
-                role="img"
-              />
-            )}
-            {found.has(key) && (
-              <IconCheck className="size-4 text-(--solved)" aria-label="You found this" />
-            )}
+            <WordChain words={words} />
           </li>
         )
       })}
