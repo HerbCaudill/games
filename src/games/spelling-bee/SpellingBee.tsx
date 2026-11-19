@@ -140,7 +140,7 @@ export function SpellingBee(
           <Toast message={toast.message} />
         </div>
         <div
-          className="flex h-12 items-center text-3xl font-semibold tracking-wide uppercase"
+          className="flex h-12 items-center text-3xl font-bold tracking-wide uppercase"
           aria-live="polite"
           aria-label="Current word"
         >

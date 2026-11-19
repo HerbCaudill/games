@@ -39,7 +39,7 @@ export function Hive(
             dy="0.36em"
             textAnchor="middle"
             className={isCenter ? "fill-black" : "fill-foreground"}
-            style={{ font: `600 ${FONT_SIZE}px var(--font-sans)`, textTransform: "uppercase" }}
+            style={{ font: `700 ${FONT_SIZE}px var(--font-sans)`, textTransform: "uppercase" }}
           >
             {letter}
           </text>

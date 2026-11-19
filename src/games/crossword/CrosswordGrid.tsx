@@ -95,7 +95,7 @@ export function CrosswordGrid(
               <text
                 x={x + 1}
                 y={y + 3.4}
-                style={{ font: `100 ${U * 0.28}px var(--font-sans)`, fill: ink }}
+                style={{ font: `200 ${U * 0.28}px var(--font-sans)`, fill: ink }}
               >
                 {cell.label}
               </text>
@@ -111,7 +111,7 @@ export function CrosswordGrid(
                 textLength={entry.length > 2 ? U - 1.6 : undefined}
                 lengthAdjust="spacingAndGlyphs"
                 style={{
-                  font: `400 ${entry.length > 1 ? Math.max(3, 7 - entry.length * 0.7) : U * 0.64}px var(--font-sans)`,
+                  font: `500 ${entry.length > 1 ? Math.max(3, 7 - entry.length * 0.7) : U * 0.64}px var(--font-sans)`,
                   fill:
                     mark === "wrong"
                       ? "var(--xw-wrong)"
