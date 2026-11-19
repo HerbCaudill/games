@@ -2,6 +2,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { SolvedMessage } from "@/components/SolvedMessage"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -139,17 +140,8 @@ export function Crossword(
         createPortal(
           <div className="ml-auto flex items-center gap-2">
             <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                role="switch"
-                checked={progress.autocheck ?? false}
-                onChange={event => changeAutocheck(event.target.checked)}
-                className="accent-primary size-4"
-              />
               Autocheck
-              <span aria-hidden="true" className="text-muted-foreground w-5 text-xs">
-                {progress.autocheck ? "On" : "Off"}
-              </span>
+              <Switch checked={progress.autocheck ?? false} onCheckedChange={changeAutocheck} />
             </label>
             {/* Touch screens have a rebus key on the on-screen keyboard instead. */}
             <Button
