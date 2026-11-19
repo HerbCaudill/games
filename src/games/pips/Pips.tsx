@@ -180,22 +180,24 @@ export function Pips(
             <Button
               variant="ghost"
               size="icon"
+              className="size-10"
               aria-label="Redo"
               title="Redo (⇧⌘Z)"
               disabled={solved || !canRedo}
               onClick={redo}
             >
-              <IconArrowForwardUp />
+              <IconArrowForwardUp className="size-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
+              className="size-10"
               aria-label="Undo"
               title="Undo (⌘Z)"
               disabled={solved || !canUndo}
               onClick={undo}
             >
-              <IconArrowBackUp />
+              <IconArrowBackUp className="size-6" />
             </Button>
           </div>,
           toolbar,
