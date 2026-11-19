@@ -1,5 +1,5 @@
 import { IconEye, IconHistory } from "@tabler/icons-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import { Panel } from "@/components/Panel"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { submitWord } from "./logic/submitWord"
 import { type LetterBoxedState } from "./logic/types"
 import { Message, type LetterBoxedMessage } from "./Message"
 import { SolutionsPanel } from "./SolutionsPanel"
+import { twoWordSolutions } from "./logic/twoWordSolutions"
 import { WordChain } from "./WordChain"
 import "./letter-boxed.css"
 
@@ -38,6 +39,7 @@ export function LetterBoxed(
   const setState = (change: (s: LetterBoxedState) => LetterBoxedState) =>
     setSaved(s => change({ ...initialState(), ...s }))
   const [panel, setPanel] = useState<"history" | "solutions">()
+  const solutions = useMemo(() => twoWordSolutions(puzzle), [puzzle])
   const [acceptedWordIndex, setAcceptedWordIndex] = useState<number | null>(null)
   const [feedback, setFeedback] = useState<LetterBoxedMessage>()
   const finished = isSolution(state.words, puzzle)
@@ -134,8 +136,12 @@ export function LetterBoxed(
       <Panel open={panel === "history"} title="History" onClose={() => setPanel(undefined)}>
         <HistoryPanel puzzle={puzzle} history={state.history} onRestore={restore} />
       </Panel>
-      <Panel open={panel === "solutions"} title="Solutions" onClose={() => setPanel(undefined)}>
-        <SolutionsPanel puzzle={puzzle} history={state.history} />
+      <Panel
+        open={panel === "solutions"}
+        title={`Solutions (${solutions.length})`}
+        onClose={() => setPanel(undefined)}
+      >
+        <SolutionsPanel puzzle={puzzle} solutions={solutions} history={state.history} />
       </Panel>
 
       <div className="flex h-10 items-center justify-center">

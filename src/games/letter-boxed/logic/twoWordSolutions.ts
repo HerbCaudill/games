@@ -1,9 +1,6 @@
 import type { LetterBoxedPuzzle } from "@/types"
 
-/**
- * Every pair of dictionary words that chains together and uses all the letters: the official
- * solution first, then the rest from shortest to longest.
- */
+/** Every pair of dictionary words that chains together and uses all the letters, shortest first. */
 export function twoWordSolutions(
   /** The puzzle. */
   puzzle: LetterBoxedPuzzle,
@@ -15,7 +12,6 @@ export function twoWordSolutions(
   const byFirstLetter = new Map<string, string[]>()
   for (const word of puzzle.dictionary)
     byFirstLetter.set(word[0], [...(byFirstLetter.get(word[0]) ?? []), word])
-  const official = puzzle.solution.join(" ")
 
   return puzzle.dictionary
     .flatMap(first =>
@@ -23,10 +19,5 @@ export function twoWordSolutions(
         .filter(second => (masks.get(first)! | masks.get(second)!) === all)
         .map(second => [first, second]),
     )
-    .sort(
-      (a, b) =>
-        Number(b.join(" ") === official) - Number(a.join(" ") === official) ||
-        a.join("").length - b.join("").length ||
-        a.join(" ").localeCompare(b.join(" ")),
-    )
+    .sort((a, b) => a.join("").length - b.join("").length || a.join(" ").localeCompare(b.join(" ")))
 }

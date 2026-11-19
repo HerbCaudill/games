@@ -117,16 +117,8 @@ describe("remainingLetters", () => {
 })
 
 describe("twoWordSolutions", () => {
-  it("finds every two-word chain in the dictionary that uses all the letters, official one first", () => {
+  it("finds every two-word chain in the dictionary that uses all the letters, shortest first", () => {
     const solutions = twoWordSolutions({ ...puzzle, solution: ["GJA", "ADGJBEHKCFIL"] })
-    expect(solutions).toEqual([
-      ["GJA", "ADGJBEHKCFIL"],
-      ["ADG", "GJBEHKCFIL"],
-    ])
-  })
-
-  it("puts shorter solutions first", () => {
-    const solutions = twoWordSolutions({ ...puzzle, solution: [] })
     expect(solutions).toEqual([
       ["ADG", "GJBEHKCFIL"],
       ["GJA", "ADGJBEHKCFIL"],

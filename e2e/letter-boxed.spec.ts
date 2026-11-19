@@ -41,13 +41,17 @@ test("explains a rejected word and keeps it for editing", async ({ page }) => {
   await expect(page.getByLabel("Current word")).toHaveText("AD")
 })
 
-test("lists every two-word solution with the official one marked", async ({ page }) => {
+test("lists every two-word solution, counted in the heading, with NYT's starred", async ({
+  page,
+}) => {
   await page.getByRole("button", { name: "Solutions", exact: true }).click()
   const solutions = page.getByRole("dialog", { name: "Solutions" })
-  await expect(solutions.getByText("2 two-word solutions")).toBeVisible()
-  await expect(solutions.getByRole("listitem").first()).toContainText("Official")
-  await expect(solutions.getByRole("listitem").first()).toContainText("GJBEHKCFIL")
-  await expect(solutions.getByRole("listitem").nth(1)).toContainText("ADGJBEHKCFIL")
+  await expect(solutions.getByRole("heading", { name: "Solutions (2)" })).toBeVisible()
+  const items = solutions.getByRole("listitem")
+  await expect(items.first()).toContainText("GJBEHKCFIL")
+  await expect(items.first().getByRole("img", { name: "NYT solution" })).toBeVisible()
+  await expect(items.nth(1)).toContainText("ADGJBEHKCFIL")
+  await expect(items.nth(1).getByRole("img", { name: "NYT solution" })).toHaveCount(0)
 })
 
 test("animates accepted paths quickly while keeping word entry usable", async ({

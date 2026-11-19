@@ -142,6 +142,8 @@
 
   /* Marks a finished puzzle or board. */
   --solved: #2e9e5b;
+  /* Marks NYT's own answer among others. */
+  --nyt-star: #e0a800;
 
   /* Crossword squares. */
   --xw-cursor: var(--game-spelling-bee);
