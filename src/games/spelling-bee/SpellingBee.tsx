@@ -58,12 +58,13 @@ export function SpellingBee(
     setFound(f => [...f, result.word])
     toast.show(
       result.pangram
-        ? `Pangram! +${result.score}`
+        ? "Pangram!"
         : result.score === 1
-          ? "Good! +1"
+          ? "Good!"
           : result.word.length < 7
-            ? `Nice! +${result.score}`
-            : `Awesome! +${result.score}`,
+            ? "Nice!"
+            : "Awesome!",
+      { success: true, points: result.score },
     )
   }
   const mix = () => setOuter(o => shuffle(o))

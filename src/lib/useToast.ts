@@ -9,9 +9,14 @@ export function useToast(
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const clear = () => timers.current.forEach(clearTimeout)
   useEffect(() => clear, [])
-  const show = (text: string) => {
+  const show = (
+    /** What it says. */
+    text: string,
+    /** Whether it marks a success, and any points earned. */
+    options: Pick<ToastMessage, "success" | "points"> = {},
+  ) => {
     clear()
-    setMessage({ text, id: Date.now(), leaving: false })
+    setMessage({ text, ...options, id: Date.now(), leaving: false })
     timers.current = [
       setTimeout(() => setMessage(m => m && { ...m, leaving: true }), duration - EXIT_MS),
       setTimeout(() => setMessage(undefined), duration),
@@ -31,6 +36,10 @@ const EXIT_MS = 200
 export type ToastMessage = {
   /** What it says. */
   text: string
+  /** Whether it marks a success rather than a failure. */
+  success?: boolean
+  /** Points earned, shown beside the message. */
+  points?: number
   /** Distinguishes repeats of the same text, so each one replays its entrance. */
   id: number
   /** Whether it is on its way out. */
