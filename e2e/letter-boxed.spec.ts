@@ -41,17 +41,28 @@ test("explains a rejected word and keeps it for editing", async ({ page }) => {
   await expect(page.getByLabel("Current word")).toHaveText("AD")
 })
 
-test("lists every two-word solution, counted in the heading, with NYT's starred", async ({
+test("asks before showing the solutions to an unsolved puzzle, with NYT's in bold", async ({
   page,
 }) => {
   await page.getByRole("button", { name: "Solutions", exact: true }).click()
   const solutions = page.getByRole("dialog", { name: "Solutions" })
   await expect(solutions.getByRole("heading", { name: "Solutions (2)" })).toBeVisible()
   const items = solutions.getByRole("listitem")
+  await expect(items).toHaveCount(0)
+  await solutions.getByRole("button", { name: "Show solutions" }).click()
   await expect(items.first()).toContainText("GJBEHKCFIL")
-  await expect(items.first().getByRole("img", { name: "NYT solution" })).toBeVisible()
+  await expect(items.first().getByText("GJBEHKCFIL")).toHaveCSS("font-weight", "700")
   await expect(items.nth(1)).toContainText("ADGJBEHKCFIL")
-  await expect(items.nth(1).getByRole("img", { name: "NYT solution" })).toHaveCount(0)
+  await expect(items.nth(1).getByText("ADGJBEHKCFIL")).toHaveCSS("font-weight", "400")
+})
+
+test("shows the solutions straight away once the puzzle is solved", async ({ page }) => {
+  await enterWord(page, "ADG")
+  await enterWord(page, "JBEHKCFIL")
+  await page.getByRole("button", { name: "Solutions", exact: true }).click()
+  const solutions = page.getByRole("dialog", { name: "Solutions" })
+  await expect(solutions.getByRole("listitem")).toHaveCount(2)
+  await expect(solutions.getByRole("button", { name: "Show solutions" })).toHaveCount(0)
 })
 
 test("animates accepted paths quickly while keeping word entry usable", async ({

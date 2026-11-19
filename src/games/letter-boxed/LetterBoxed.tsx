@@ -141,7 +141,12 @@ export function LetterBoxed(
         title={`Solutions (${solutions.length})`}
         onClose={() => setPanel(undefined)}
       >
-        <SolutionsPanel puzzle={puzzle} solutions={solutions} history={state.history} />
+        <SolutionsPanel
+          puzzle={puzzle}
+          solutions={solutions}
+          history={state.history}
+          solved={solved}
+        />
       </Panel>
 
       <div className="flex h-10 items-center justify-center">
