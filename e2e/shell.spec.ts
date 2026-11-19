@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test("keeps the header still while long content scrolls", async ({ page }) => {
-  await page.goto("/")
+  await page.goto("/connections")
   const header = page.getByRole("banner")
   const content = page.getByRole("main")
   await expect(header).toBeVisible()
