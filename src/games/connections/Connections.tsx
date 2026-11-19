@@ -194,7 +194,7 @@ export function Connections(
                 disabled={busy}
                 onClick={() => toggle(word)}
                 className={cn(
-                  "flex aspect-square items-center justify-center rounded-lg px-1 text-center leading-tight font-semibold uppercase transition-colors outline-none select-none",
+                  "flex aspect-square items-center justify-center rounded-lg px-1 text-center leading-tight font-bold uppercase transition-colors outline-none select-none",
                   word.length > 9
                     ? "text-[0.65rem] sm:text-xs"
                     : word.length > 6
@@ -291,7 +291,7 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
       style={{ background: `var(--group-${group.level})` }}
     >
       <span className="text-sm font-bold uppercase sm:text-base">{group.title}</span>
-      <span className="text-xs uppercase sm:text-sm">{group.words.join(", ")}</span>
+      <span className="text-xs font-medium uppercase sm:text-sm">{group.words.join(", ")}</span>
     </div>
   )
 }
