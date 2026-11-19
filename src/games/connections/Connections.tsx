@@ -172,11 +172,10 @@ export function Connections(
 
   return (
     <div className="connections-feedback relative mx-auto flex max-w-md flex-col gap-4 p-4 sm:pt-8">
-      {/* Takes no space, so the toast still places itself against the game. */}
-      <div className="connections-toast contents">
+      {/* Takes no space; the toast floats over the middle of the top row. */}
+      <div className="connections-toast pointer-events-none absolute inset-x-0 top-10 sm:top-14">
         <Toast message={toast.message} />
       </div>
-      <p className="text-muted-foreground text-center text-sm">Create four groups of four!</p>
 
       {/* A container, so a solved group's band can be exactly one square tile tall. */}
       <div className="@container grid gap-2">
