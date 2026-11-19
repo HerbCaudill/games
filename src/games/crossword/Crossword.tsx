@@ -175,10 +175,10 @@ export function Crossword(
           toolbar,
         )}
       <Panel open={statsOpen} title="Stats" flush onClose={() => setStatsOpen(false)}>
-        {/* Herb's xword-stats app charts every solve time from his NYT account. */}
+        {/* Herb's xword-stats app charts every solve time from his NYT account, opened on this puzzle's day of the week. */}
         {statsOpen && (
           <iframe
-            src={XWORD_STATS_URL}
+            src={`${XWORD_STATS_URL}/?day=${isoWeekday(puzzle.date)}`}
             title="Crossword solve times"
             className="block h-full w-full border-0 sm:h-[75svh]"
           />
@@ -279,6 +279,14 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
       </button>
     </div>
   )
+}
+
+/** A date's day of the week as xword-stats numbers them, from 1 (Monday) to 7 (Sunday). */
+function isoWeekday(
+  /** Date as YYYY-MM-DD. */
+  date: string,
+) {
+  return new Date(`${date}T12:00:00Z`).getUTCDay() || 7
 }
 
 // CONSTANTS
