@@ -171,17 +171,6 @@ export function Crossword(
           toolbar,
         )}
 
-      {solved && (
-        <div className="flex justify-center px-4 py-2">
-          <SolvedMessage seconds={progress.elapsed} />
-        </div>
-      )}
-      {full && !solved && (
-        <p className="bg-muted px-4 py-2 text-center text-sm">
-          The grid is full, but something isn’t right yet.
-        </p>
-      )}
-
       <div className="flex min-h-0 flex-1 flex-col pointer-coarse:landscape:flex-row">
         <div className="mx-auto flex min-h-0 w-full max-w-7xl min-w-0 flex-1 flex-col gap-4 md:pointer-fine:flex-row md:pointer-fine:p-4">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col md:pointer-fine:gap-3">
@@ -200,6 +189,18 @@ export function Crossword(
                   update(s => selectCell(s, puzzle, cell))
                 }}
               />
+            </div>
+            {/* Always takes its room, so a message doesn't move or shrink the grid. */}
+            <div className="flex h-12 shrink-0 items-center justify-center px-4">
+              {solved ? (
+                <SolvedMessage seconds={progress.elapsed} />
+              ) : (
+                full && (
+                  <p className="text-muted-foreground text-center text-sm">
+                    The grid is full, but something isn’t right yet.
+                  </p>
+                )
+              )}
             </div>
             <p className="text-muted-foreground hidden truncate text-xs md:pointer-fine:block">
               {puzzle.title && <span className="font-semibold">{puzzle.title} · </span>}
