@@ -1,8 +1,9 @@
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+import { IconChartBar, IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { Panel } from "@/components/Panel"
 import { SolvedMessage } from "@/components/SolvedMessage"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
@@ -40,6 +41,7 @@ export function Crossword(
     () => ({ ...initialState(puzzle), elapsed: 0 }),
   )
   const [rebus, setRebus] = useState<string>()
+  const [statsOpen, setStatsOpen] = useState(false)
   const touch = useMediaQuery("(pointer: coarse)")
   const solved = isSolved(progress, puzzle)
   const full = progress.entries.every((entry, i) => !puzzle.cells[i] || entry)
@@ -159,9 +161,29 @@ export function Crossword(
             >
               {rebus === undefined ? "Rebus" : "Done"}
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              aria-label="Stats"
+              title="Stats"
+              onClick={() => setStatsOpen(true)}
+            >
+              <IconChartBar className="size-6" />
+            </Button>
           </div>,
           toolbar,
         )}
+      <Panel open={statsOpen} title="Stats" onClose={() => setStatsOpen(false)}>
+        {/* Herb's xword-stats app charts every solve time from his NYT account. */}
+        {statsOpen && (
+          <iframe
+            src={XWORD_STATS_URL}
+            title="Crossword solve times"
+            className="block h-full w-full border-0 sm:h-[75svh]"
+          />
+        )}
+      </Panel>
 
       <div className="flex min-h-0 flex-1 flex-col pointer-coarse:landscape:flex-row">
         <div className="mx-auto flex min-h-0 w-full max-w-7xl min-w-0 flex-1 flex-col gap-4 md:pointer-fine:flex-row md:pointer-fine:p-4">
@@ -258,6 +280,11 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
     </div>
   )
 }
+
+// CONSTANTS
+
+/** Herb's xword-stats app, which charts his crossword solve times. */
+const XWORD_STATS_URL = "https://xword-stats-2.vercel.app"
 
 // TYPES
 
