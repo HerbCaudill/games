@@ -26,6 +26,7 @@ export function CrosswordGrid(
       className="block touch-manipulation select-none"
       style={{ width: `min(100cqw, calc(100cqh * ${(w + 2 * BORDER) / (h + 2 * BORDER)}))` }}
       role="grid"
+      data-board
       tabIndex={0}
       aria-label="Crossword grid"
       onPointerUp={cancelHold}

@@ -15,6 +15,7 @@ export function Hive(
       className="w-[min(18rem,80vw,36svh)] select-none"
       role="group"
       aria-label="Letters"
+      data-board
     >
       {cells.map(({ letter, x, y, isCenter }) => (
         <g

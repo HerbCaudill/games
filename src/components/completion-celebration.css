@@ -1,32 +1,151 @@
+/* The celebration's layers place themselves: the flood behind the game, the halo above it. */
 .completion-celebration {
+  display: contents;
+}
+
+/* Sits behind the game's content, on the game screen's own background. */
+.completion-flood-layer {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: -1;
   overflow: hidden;
   pointer-events: none;
 }
 
-.completion-confetti span {
+.completion-flood {
   position: absolute;
-  top: -1rem;
-  width: 0.5rem;
-  height: 0.875rem;
-  border-radius: 2px;
-  animation: completion-confetti 1.8s ease-in both;
+  border-radius: 50%;
+  animation: completion-flood 2200ms both;
 }
 
-@keyframes completion-confetti {
-  from {
-    transform: translate(0, 0) rotate(0);
+@keyframes completion-flood {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.35, 0.1, 0.25, 1);
   }
-  to {
-    transform: translate(var(--confetti-drift), 105dvh) rotate(var(--confetti-turn));
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  65% {
+    transform: scale(1);
+    opacity: 1;
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: scale(1);
     opacity: 0;
   }
 }
 
+/* A white ring that ripples out from the board as the flood starts. */
+.completion-echo {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  animation: completion-echo 900ms ease-out 200ms both;
+}
+
+@keyframes completion-echo {
+  from {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+.completion-halo {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* Pill-shaped rings that grow outward from the solved message, keeping its shape. */
+.completion-ring {
+  position: absolute;
+  inset: 0;
+  border-style: solid;
+  border-radius: 9999px;
+  opacity: 0;
+  animation-name: completion-ring;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes completion-ring {
+  from {
+    inset: 0;
+    opacity: 0.9;
+  }
+  to {
+    inset: calc(-1 * var(--ring-grow));
+    opacity: 0;
+  }
+}
+
+.completion-sparkle {
+  position: absolute;
+  animation-name: completion-sparkle;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes completion-sparkle {
+  0% {
+    transform: translate(0, 0) scale(0) rotate(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(calc(var(--sparkle-x) * 0.6), calc(var(--sparkle-y) * 0.6)) scale(1.15)
+      rotate(30deg);
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  70% {
+    transform: translate(calc(var(--sparkle-x) * 0.9), calc(var(--sparkle-y) * 0.9)) scale(0.9)
+      rotate(70deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sparkle-x), var(--sparkle-y)) scale(0) rotate(90deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The game screen's backgrounds step aside so the flood shows; the flood layer carries them instead. */
+  :root[data-celebrating] .app-shell,
+  :root[data-celebrating] .app-shell .app-header {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  /* The board lifts a little while the color washes under it. */
+  :root[data-celebrating] [data-board] {
+    animation: completion-lift 2200ms;
+  }
+}
+
+@keyframes completion-lift {
+  0%,
+  100% {
+    filter: none;
+  }
+  40%,
+  70% {
+    filter: drop-shadow(0 10px 20px rgb(29 36 51 / 0.25));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .completion-confetti {
+  .completion-celebration {
     display: none;
   }
 }

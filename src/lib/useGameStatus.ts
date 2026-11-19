@@ -16,7 +16,7 @@ export function useGameStatus(
   useEffect(() => {
     writeStored(statusKey(game, date), status)
   }, [game, date, status])
-  useCelebration(`${game}:${date}`, status === "solved")
+  useCelebration(game, `${game}:${date}`, status === "solved")
 }
 
 // TYPES

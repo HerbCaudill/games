@@ -53,6 +53,8 @@ export function PipsGrid(
         height: (rows * U + 2 * PAD) * scale,
       }}
       {...(layer === "overlay" ? { role: "grid", "aria-label": "Board" } : {})}
+      // The celebration starts from the base, the layer that holds the board's whole shape.
+      data-board={layer === "base" || undefined}
     >
       {layer === "base" ? (
         <>

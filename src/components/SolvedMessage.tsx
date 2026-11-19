@@ -9,6 +9,7 @@ export function SolvedMessage(
   return (
     <div
       role="status"
+      data-solved-message
       className="bg-card text-foreground animate-in fade-in motion-safe:zoom-in-90 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold whitespace-nowrap shadow-sm duration-300"
     >
       <IconCircleCheckFilled className="size-5 text-(--solved)" aria-hidden="true" />

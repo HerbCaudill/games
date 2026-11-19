@@ -24,7 +24,11 @@ export function RankMeter(
           {score} / {rank.max} points
         </span>
       </div>
-      <div className="bg-muted relative h-3 overflow-hidden rounded-full" aria-hidden="true">
+      {/* The white ring keeps the yellow bar distinct when the completion celebration floods the screen yellow. */}
+      <div
+        className="bg-muted relative h-3 overflow-hidden rounded-full ring-2 ring-white"
+        aria-hidden="true"
+      >
         <div
           className="h-full rounded-full bg-(--game-spelling-bee) transition-[width] duration-300"
           style={{ width: `${Math.min((score / rank.max) * 100, 100)}%` }}

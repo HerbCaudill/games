@@ -4,11 +4,11 @@ import { CompletionCelebration } from "../CompletionCelebration"
 
 afterEach(cleanup)
 
-it("throws confetti when a game is completed, leaving the words to the game", () => {
+it("celebrates when a game is completed, leaving the words to the game", () => {
   const { container } = render(<CompletionCelebration />)
   expect(container).toBeEmptyDOMElement()
   act(() => {
-    window.dispatchEvent(new Event("game-completed"))
+    window.dispatchEvent(new CustomEvent("game-completed", { detail: "crossword" }))
   })
   expect(container).not.toBeEmptyDOMElement()
 })

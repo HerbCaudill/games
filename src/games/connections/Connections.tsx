@@ -178,7 +178,7 @@ export function Connections(
       </div>
 
       {/* A container, so a solved group's band can be exactly one square tile tall. */}
-      <div className="@container grid gap-2">
+      <div className="@container grid gap-2" data-board>
         {shownGroups.map(i => (
           <SolvedGroup key={i} group={puzzle.groups[i]} missed={!state.solved.includes(i)} />
         ))}
