@@ -46,7 +46,44 @@ test("scores a Spelling Bee word and shows the rank", async ({ page }) => {
   await expect(page.getByText("5 / 21 points")).toBeVisible()
   await expect(page.getByText("3 points to Great")).toBeVisible()
   await expect(page.getByLabel("0 of 1 pangram found")).toBeVisible()
-  await expect(page.getByText("You have found 1 word")).toBeVisible()
+  await expect(page.getByRole("button", { name: "You have found 1 word" })).toHaveText("Torah")
+})
+
+test("shows the newest Spelling Bee words that fit in the found-word bar, and the count once open", async ({
+  page,
+}) => {
+  const words = "moat torah abort tomato motor robot throat bathroom rotor tooth abbot morth".split(
+    " ",
+  )
+  await page.addInitScript(words => {
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(
+      new Date(),
+    )
+    localStorage.setItem(`progress:spelling-bee:${date}`, JSON.stringify(words))
+  }, words)
+  await page.goto("/spelling-bee")
+  const bar = page.getByRole("button", { name: `You have found ${words.length} words` })
+  const box = (await bar.boundingBox())!
+  const shown = []
+  for (const word of words) {
+    const item = bar.getByText(word[0].toUpperCase() + word.slice(1), { exact: true })
+    const at = (await item.boundingBox())!
+    if (
+      at.x >= box.x &&
+      at.x + at.width <= box.x + box.width &&
+      at.y >= box.y &&
+      at.y + at.height <= box.y + box.height
+    )
+      shown.push(word)
+  }
+  // Whole words only, from the newest back, oldest first.
+  expect(shown.length).toBeGreaterThan(1)
+  expect(shown.length).toBeLessThan(words.length)
+  expect(shown).toEqual(words.slice(-shown.length))
+  await expect(bar.getByText("Bathroom", { exact: true })).toHaveCSS("font-weight", "600")
+
+  await bar.click()
+  await expect(bar).toHaveText(`You have found ${words.length} words`)
 })
 
 test("shows Spelling Bee hints, the word grid and player stats from the header", async ({
@@ -171,7 +208,7 @@ test("keeps progress after a reload", async ({ page }) => {
   await page.getByRole("button", { name: "Enter" }).click()
   await expect(page.getByText("1 point", { exact: false }).first()).toBeVisible()
   await page.reload()
-  await expect(page.getByText("You have found 1 word")).toBeVisible()
+  await expect(page.getByRole("button", { name: "You have found 1 word" })).toHaveText("Moat")
 })
 
 /** Tap a Pips domino to turn it upright, then drag it onto two cells. */
