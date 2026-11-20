@@ -3,8 +3,8 @@ import { useLayoutEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * The words found so far, behind a bar that opens them. Closed, the bar shows the newest words that
- * fit; open, it gives the count. On phones the open list covers the board instead of pushing it
+ * The words found so far, behind a bar that opens them. Closed, the bar shows as many of the newest
+ * words as fit, newest first; open, it gives the count. On phones the open list covers the board instead of pushing it
  * down, as in the NYT app.
  */
 export function FoundWords(
@@ -36,8 +36,8 @@ export function FoundWords(
               You have found {found.length} {found.length === 1 ? "word" : "words"}
             </span>
           ) : found.length ? (
-            // Newest first, laid out from the right: whole words that don't fit wrap out of sight.
-            <span className="flex h-10 min-w-0 flex-1 flex-row-reverse flex-wrap justify-end gap-x-2 overflow-hidden">
+            // Newest first, from the left: whole words that don't fit wrap out of sight.
+            <span className="flex h-10 min-w-0 flex-1 flex-wrap gap-x-2 overflow-hidden">
               {[...found].reverse().map(word => (
                 <span
                   key={word}

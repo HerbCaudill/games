@@ -49,7 +49,7 @@ test("scores a Spelling Bee word and shows the rank", async ({ page }) => {
   await expect(page.getByRole("button", { name: "You have found 1 word" })).toHaveText("Torah")
 })
 
-test("shows the newest Spelling Bee words that fit in the found-word bar, and the count once open", async ({
+test("shows the newest Spelling Bee words that fit in the found-word bar, newest first, and the count once open", async ({
   page,
 }) => {
   const words = "moat torah abort tomato motor robot throat bathroom rotor tooth abbot morth".split(
@@ -64,7 +64,7 @@ test("shows the newest Spelling Bee words that fit in the found-word bar, and th
   await page.goto("/spelling-bee")
   const bar = page.getByRole("button", { name: `You have found ${words.length} words` })
   const box = (await bar.boundingBox())!
-  const shown = []
+  const shown: { word: string; x: number }[] = []
   for (const word of words) {
     const item = bar.getByText(word[0].toUpperCase() + word.slice(1), { exact: true })
     const at = (await item.boundingBox())!
@@ -74,12 +74,14 @@ test("shows the newest Spelling Bee words that fit in the found-word bar, and th
       at.y >= box.y &&
       at.y + at.height <= box.y + box.height
     )
-      shown.push(word)
+      shown.push({ word, x: at.x })
   }
-  // Whole words only, from the newest back, oldest first.
+  // Whole words only, newest first from the left, back as far as fit.
   expect(shown.length).toBeGreaterThan(1)
   expect(shown.length).toBeLessThan(words.length)
-  expect(shown).toEqual(words.slice(-shown.length))
+  expect(shown.sort((a, b) => a.x - b.x).map(s => s.word)).toEqual(
+    words.slice(-shown.length).reverse(),
+  )
   await expect(bar.getByText("Bathroom", { exact: true })).toHaveCSS("font-weight", "600")
 
   await bar.click()
