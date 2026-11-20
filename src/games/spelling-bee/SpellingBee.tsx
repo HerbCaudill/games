@@ -1,5 +1,5 @@
 import { IconArrowsShuffle, IconBackspace, IconBulb, IconLayoutGrid } from "@tabler/icons-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Panel } from "@/components/Panel"
 import { SolvedMessage } from "@/components/SolvedMessage"
@@ -10,6 +10,7 @@ import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { useNytSync } from "@/lib/useNytSync"
 import { usePersistentState } from "@/lib/usePersistentState"
+import { cn } from "@/lib/utils"
 import { shuffle } from "@/lib/shuffle"
 import { useToast } from "@/lib/useToast"
 import type { SpellingBeePuzzle } from "@/types"
@@ -39,24 +40,49 @@ export function SpellingBee(
     merge: (f, remote) => mergeSync(f, remote, puzzle),
   })
   const [guess, setGuess] = useState("")
+  // A word that wasn't accepted shakes for a moment before it clears.
+  const [rejected, setRejected] = useState(false)
+  useEffect(() => {
+    if (!rejected) return
+    const timer = setTimeout(() => {
+      setGuess("")
+      setRejected(false)
+    }, SHAKE_MS)
+    return () => clearTimeout(timer)
+  }, [rejected])
   const [outer, setOuter] = useState(puzzle.outer)
   const toast = useToast()
   const score = totalScore(found, puzzle)
   const rank = rankFor(score, puzzle)
   const solved = score === rank.max
-  // Hints show only once the player reaches Genius.
-  const hintsAllowed = score >= rank.ranks.find(r => r.name === "Genius")!.score
+  const reached = (name: string) => score >= rank.ranks.find(r => r.name === name)!.score
+  // The word grid and stats show only once the player reaches Amazing, and hints once they reach Genius.
+  const gridAllowed = reached("Amazing")
+  const hintsAllowed = reached("Genius")
   const elapsed = useElapsed(`time:spelling-bee:${puzzle.date}`, !solved)
   useGameStatus("spelling-bee", puzzle.date, solved ? "solved" : found.length ? "started" : "new")
 
   const letters = new Set([puzzle.center, ...puzzle.outer])
-  const add = (letter: string) => setGuess(g => (g.length < 19 ? g + letter.toLowerCase() : g))
-  const remove = () => setGuess(g => g.slice(0, -1))
+  // Typing over a shaking word starts a new one.
+  const add = (letter: string) => {
+    setRejected(false)
+    setGuess(g => {
+      const word = rejected ? "" : g
+      return word.length < 19 ? word + letter.toLowerCase() : word
+    })
+  }
+  const remove = () => {
+    setRejected(false)
+    setGuess(g => (rejected ? "" : g.slice(0, -1)))
+  }
   const submit = () => {
-    if (!guess) return
+    if (!guess || rejected) return
     const result = checkGuess(guess, puzzle, found)
+    if (!result.ok) {
+      setRejected(true)
+      return toast.show(result.message)
+    }
     setGuess("")
-    if (!result.ok) return toast.show(result.message)
     setFound(f => [...f, result.word])
     toast.show(
       result.pangram
@@ -97,16 +123,18 @@ export function SpellingBee(
                 <IconBulb className="size-6" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-10"
-              aria-label="Word grid and stats"
-              title="Word grid and stats"
-              onClick={() => setPanel("grid")}
-            >
-              <IconLayoutGrid className="size-6" />
-            </Button>
+            {gridAllowed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10"
+                aria-label="Word grid and stats"
+                title="Word grid and stats"
+                onClick={() => setPanel("grid")}
+              >
+                <IconLayoutGrid className="size-6" />
+              </Button>
+            )}
           </div>,
           toolbar,
         )}
@@ -118,7 +146,7 @@ export function SpellingBee(
         <HintsPanel date={puzzle.date} token={token} found={found} />
       </Panel>
       <Panel
-        open={panel === "grid"}
+        open={panel === "grid" && gridAllowed}
         title="Word grid and stats"
         onClose={() => setPanel(undefined)}
       >
@@ -144,7 +172,11 @@ export function SpellingBee(
           <Toast message={toast.message} />
         </div>
         <div
-          className="flex h-12 items-center text-3xl font-bold tracking-wide uppercase"
+          className={cn(
+            "flex h-12 items-center text-3xl font-bold tracking-wide uppercase",
+            rejected && "motion-safe:animate-shake",
+          )}
+          style={{ animationDuration: `${SHAKE_MS}ms` }}
           aria-live="polite"
           aria-label="Current word"
         >
@@ -195,6 +227,13 @@ export function SpellingBee(
     </div>
   )
 }
+
+// CONSTANTS
+
+/** How long a word that wasn't accepted shakes before it clears. */
+const SHAKE_MS = 500
+
+// TYPES
 
 type Props = {
   /** The puzzle. */

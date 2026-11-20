@@ -19,6 +19,28 @@
     }
   }
 
+  /* A word that wasn't accepted: a quick side-to-side shake that dies down. */
+  --animate-shake: shake 0.5s ease-in-out;
+  /* Spelling Bee sets its own duration to match how long it waits before clearing the word. */
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    15%,
+    45%,
+    75% {
+      transform: translateX(-0.4rem);
+    }
+    30%,
+    60% {
+      transform: translateX(0.4rem);
+    }
+    90% {
+      transform: translateX(0.15rem);
+    }
+  }
+
   /* Points a word earned: they rise past the message and fade, on their own clock. */
   --animate-points-rise: points-rise 1.4s ease-out forwards;
   @keyframes points-rise {

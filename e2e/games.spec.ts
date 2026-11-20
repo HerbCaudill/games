@@ -86,13 +86,15 @@ test("shows the newest Spelling Bee words that fit in the found-word bar, and th
   await expect(bar).toHaveText(`You have found ${words.length} words`)
 })
 
-test("shows Spelling Bee hints once the player reaches Genius, and the word grid and player stats from the header", async ({
+test("shows the Spelling Bee word grid and player stats from Amazing, and hints from Genius", async ({
   page,
 }) => {
   await page.goto("/spelling-bee")
   const hintsButton = page.getByRole("button", { name: "Hints" })
+  const gridButton = page.getByRole("button", { name: "Word grid and stats" })
   for (const word of ["moat", "bathroom"]) {
     await expect(hintsButton).toHaveCount(0)
+    await expect(gridButton).toHaveCount(0)
     for (const letter of word)
       await page
         .getByRole("button", { name: letter.toUpperCase(), exact: true })
@@ -118,7 +120,9 @@ test("shows Spelling Bee hints once the player reaches Genius, and the word grid
   await expect(grid.getByText("1,234 players")).toBeVisible()
 })
 
-test("rejects a Spelling Bee word without the center letter", async ({ page }) => {
+test("rejects a Spelling Bee word without the center letter, shaking it before clearing it", async ({
+  page,
+}) => {
   await page.goto("/spelling-bee")
   for (const letter of "boom")
     await page
@@ -126,8 +130,28 @@ test("rejects a Spelling Bee word without the center letter", async ({ page }) =
       .dispatchEvent("pointerdown")
   await page.getByRole("button", { name: "Enter" }).click()
   await expect(page.getByRole("status")).toHaveText("Missing center letter")
+  const current = page.getByLabel("Current word")
+  await expect(current).toHaveText("boom")
+  const lefts = await current
+    .locator("span")
+    .first()
+    .evaluate(
+      el =>
+        new Promise<number[]>(resolve => {
+          const points: number[] = []
+          const start = performance.now()
+          const sample = () => {
+            points.push(el.getBoundingClientRect().left)
+            if (performance.now() - start < 200) requestAnimationFrame(sample)
+            else resolve(points)
+          }
+          sample()
+        }),
+    )
+  expect(Math.max(...lefts) - Math.min(...lefts)).toBeGreaterThan(4)
+  await expect(current).toHaveText("")
   // The message has its own place above the word, clear of the cursor.
-  const word = (await page.getByLabel("Current word").boundingBox())!
+  const word = (await current.boundingBox())!
   await expect
     .poll(async () => {
       const message = (await page.getByRole("status").boundingBox())!
