@@ -29,7 +29,7 @@ export function FoundWords(
           aria-expanded={open}
           onClick={() => setOpen(o => !o)}
           aria-label={`You have found ${found.length} ${found.length === 1 ? "word" : "words"}`}
-          className="flex h-10 w-full items-center justify-between gap-3 px-3 text-left text-sm"
+          className="flex h-10 w-full items-center justify-between gap-3 px-3 text-left text-base"
         >
           {open ? (
             <span>
