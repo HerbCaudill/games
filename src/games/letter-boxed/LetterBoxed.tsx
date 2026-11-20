@@ -106,7 +106,7 @@ export function LetterBoxed(
 
   const shaking = feedback?.kind === "error"
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-8 pt-6 pb-12 text-black select-none">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-3 px-8 pt-6 pb-12 text-black">
       {toolbar &&
         createPortal(
           <div className="ml-auto flex items-center">

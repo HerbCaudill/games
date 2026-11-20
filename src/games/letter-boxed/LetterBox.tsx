@@ -17,13 +17,7 @@ export function LetterBox(
   const count = state.words.length
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      className="w-full select-none"
-      role="group"
-      aria-label="Letters"
-      data-board
-    >
+    <svg viewBox="0 0 100 100" className="w-full" role="group" aria-label="Letters" data-board>
       <rect
         x={ORIGIN}
         y={ORIGIN}

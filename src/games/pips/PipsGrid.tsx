@@ -42,7 +42,7 @@ export function PipsGrid(
     <svg
       viewBox={`${-PAD} ${-PAD} ${cols * U + 2 * PAD} ${rows * U + 2 * PAD}`}
       className={cn(
-        "pointer-events-none absolute select-none",
+        "pointer-events-none absolute",
         layer === "overlay" && "z-20",
         layer === "badges" && "z-40",
       )}

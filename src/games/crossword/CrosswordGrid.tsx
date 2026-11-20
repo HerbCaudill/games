@@ -23,7 +23,7 @@ export function CrosswordGrid(
   return (
     <svg
       viewBox={`${-BORDER} ${-BORDER} ${w + 2 * BORDER} ${h + 2 * BORDER}`}
-      className="block touch-manipulation select-none"
+      className="block touch-manipulation"
       style={{ width: `min(100cqw, calc(100cqh * ${(w + 2 * BORDER) / (h + 2 * BORDER)}))` }}
       role="grid"
       data-board
