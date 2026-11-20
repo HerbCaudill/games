@@ -1,10 +1,20 @@
-/** The seven letter cells, center letter in the middle. */
+import { useEffect, useState } from "react"
+
+/** The seven letter cells, center letter in the middle. A new order of outer letters fades in after the old one fades out. */
 export function Hive(
   /** The component props. */
   { center, outer, onLetter }: Props,
 ) {
+  const [shown, setShown] = useState(outer)
+  const fading = shown.join() !== outer.join()
+  useEffect(() => {
+    if (!fading) return
+    const timer = setTimeout(() => setShown(outer), FADE_MS)
+    return () => clearTimeout(timer)
+  }, [fading, outer])
+
   const cells = [{ letter: center, x: 0, y: 0, isCenter: true }].concat(
-    outer.map((letter, i) => {
+    shown.map((letter, i) => {
       const angle = ((-90 + 60 * i) * Math.PI) / 180
       return { letter, x: SPACING * Math.cos(angle), y: SPACING * Math.sin(angle), isCenter: false }
     }),
@@ -17,9 +27,10 @@ export function Hive(
       aria-label="Letters"
       data-board
     >
-      {cells.map(({ letter, x, y, isCenter }) => (
+      {cells.map(({ letter, x, y, isCenter }, i) => (
         <g
-          key={letter}
+          // Keyed by place, so a letter's text fades in where the old one faded out.
+          key={i}
           role="button"
           aria-label={letter.toUpperCase()}
           tabIndex={-1}
@@ -40,7 +51,12 @@ export function Hive(
             dy="0.36em"
             textAnchor="middle"
             className={isCenter ? "fill-black" : "fill-foreground"}
-            style={{ font: `700 ${FONT_SIZE}px var(--font-sans)`, textTransform: "uppercase" }}
+            style={{
+              font: `700 ${FONT_SIZE}px var(--font-sans)`,
+              textTransform: "uppercase",
+              opacity: fading && !isCenter ? 0 : 1,
+              transition: `opacity ${FADE_MS}ms ease-in-out`,
+            }}
           >
             {letter}
           </text>
@@ -51,6 +67,9 @@ export function Hive(
 }
 
 // CONSTANTS
+
+/** How long the outer letters take to fade out, and then back in, when shuffled. */
+const FADE_MS = 150
 
 /** Hexagon radius. */
 const RADIUS = 0.98
