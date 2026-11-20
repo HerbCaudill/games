@@ -17,8 +17,9 @@ import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
 import { placeAt } from "./logic/placeAt"
 import { removeDomino } from "./logic/removeDomino"
+import { restorePieces } from "./logic/restorePieces"
 import { turnTo } from "./logic/turnTo"
-import { type Placements, type Point } from "./logic/types"
+import { type Pieces, type Placements, type Point } from "./logic/types"
 
 /** Pips: place every domino so each region's rule holds. */
 export function Pips(
@@ -33,11 +34,15 @@ export function Pips(
   const { placements } = progress
   const turns = progress.turns ?? []
   const spots = progress.spots ?? []
-  const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(
-    puzzle.date,
-    { placements, turns, spots },
-    pieces => setProgress(p => ({ ...p, ...pieces })),
+  const pieces: Pieces = { placements, turns, spots }
+  const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(puzzle.date, pieces, saved =>
+    setProgress(p => ({ ...p, ...restorePieces(pieces, saved) })),
   )
+  /** Save new pieces, as an undo step only when the board changes. */
+  const save = (next: Pieces) =>
+    samePlacements(next.placements, placements)
+      ? setProgress(p => ({ ...p, ...next }))
+      : change(next)
   const [chosen, setSelected] = useState<number>()
   const [cursor, setCursor] = useState<Cell>(() => boardCells(board)[0])
   // The cursor and the picked domino only matter, and only show, while playing by keyboard.
@@ -59,7 +64,7 @@ export function Pips(
 
   /** Save new placements, turning each moved domino to match how it now lies. A domino on the board has no loose spot. */
   const update = (next: Placements, loose?: { index: number; at: Point }) =>
-    change({
+    save({
       placements: next,
       turns: next.map((pair, i) => {
         const turn = turns[i] ?? 0
@@ -71,7 +76,7 @@ export function Pips(
     })
 
   const turn = (i: number) =>
-    change({
+    save({
       placements,
       spots,
       turns: board.dominoes.map((_, j) => (turns[j] ?? 0) + (i === j ? 1 : 0)),
@@ -79,7 +84,7 @@ export function Pips(
 
   /** Put every domino back in its tray slot, facing its starting way. */
   const clear = () => {
-    change({ placements: board.dominoes.map(() => null), turns: [], spots: [] })
+    save({ placements: board.dominoes.map(() => null), turns: [], spots: [] })
     setSelected(undefined)
   }
   const cleared = !placements.some(Boolean) && !spots.some(Boolean)
@@ -222,6 +227,16 @@ export function Pips(
   )
 }
 
+/** Whether two sets of placements put every domino in the same cells. */
+function samePlacements(
+  /** One set. */
+  a: Placements,
+  /** The other. */
+  b: Placements,
+) {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 /** A turn count as a direction, 0 to 3. */
 function mod4(
   /** Quarter turns. */
@@ -231,9 +246,6 @@ function mod4(
 }
 
 // TYPES
-
-/** Where the dominoes are and which way they face: the part of a board's progress that undo restores. */
-type Pieces = Pick<PipsProgress, "placements" | "turns" | "spots">
 
 /** Saved progress for one board. */
 type PipsProgress = {

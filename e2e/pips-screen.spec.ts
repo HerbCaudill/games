@@ -189,3 +189,29 @@ test("undoes and redoes moves", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+Shift+z")
   await expect.poll(async () => distance(await centerOf(domino), placed)).toBeLessThan(2)
 })
+
+test("leaves out turning and moving dominoes off the board from undo", async ({ page }) => {
+  const placedDomino = page.getByRole("button", { name: "Domino 2–1" })
+  const looseDomino = page.getByRole("button", { name: "Domino 3–1" })
+  const start = await centerOf(placedDomino)
+  const undo = page.getByRole("button", { name: "Undo" })
+  const viewport = page.viewportSize()!
+  const aside: [number, number] = [viewport.width / 2, viewport.height - 60]
+
+  await looseDomino.click()
+  await dragTo(page, looseDomino, aside)
+  await expect(undo).toBeDisabled()
+
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, placedDomino, [x + box.width / 2, y])
+  await looseDomino.click()
+  await undo.click()
+  await expect.poll(async () => distance(await centerOf(placedDomino), start)).toBeLessThan(2)
+  await expect(undo).toBeDisabled()
+  // The loose domino stays where it was dropped, turned twice.
+  await expect.poll(async () => distance(await centerOf(looseDomino), aside)).toBeLessThan(2)
+  const turned = (await looseDomino.boundingBox())!
+  expect(turned.width).toBeGreaterThan(turned.height)
+})
