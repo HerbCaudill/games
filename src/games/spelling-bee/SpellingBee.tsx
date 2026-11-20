@@ -44,6 +44,8 @@ export function SpellingBee(
   const score = totalScore(found, puzzle)
   const rank = rankFor(score, puzzle)
   const solved = score === rank.max
+  // Hints show only once the player reaches Genius.
+  const hintsAllowed = score >= rank.ranks.find(r => r.name === "Genius")!.score
   const elapsed = useElapsed(`time:spelling-bee:${puzzle.date}`, !solved)
   useGameStatus("spelling-bee", puzzle.date, solved ? "solved" : found.length ? "started" : "new")
 
@@ -83,16 +85,18 @@ export function SpellingBee(
       {toolbar &&
         createPortal(
           <div className="ml-auto flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-10"
-              aria-label="Hints"
-              title="Hints"
-              onClick={() => setPanel("hints")}
-            >
-              <IconBulb className="size-6" />
-            </Button>
+            {hintsAllowed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10"
+                aria-label="Hints"
+                title="Hints"
+                onClick={() => setPanel("hints")}
+              >
+                <IconBulb className="size-6" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -106,7 +110,11 @@ export function SpellingBee(
           </div>,
           toolbar,
         )}
-      <Panel open={panel === "hints"} title="Hints" onClose={() => setPanel(undefined)}>
+      <Panel
+        open={panel === "hints" && hintsAllowed}
+        title="Hints"
+        onClose={() => setPanel(undefined)}
+      >
         <HintsPanel date={puzzle.date} token={token} found={found} />
       </Panel>
       <Panel

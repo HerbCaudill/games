@@ -86,17 +86,22 @@ test("shows the newest Spelling Bee words that fit in the found-word bar, and th
   await expect(bar).toHaveText(`You have found ${words.length} words`)
 })
 
-test("shows Spelling Bee hints, the word grid and player stats from the header", async ({
+test("shows Spelling Bee hints once the player reaches Genius, and the word grid and player stats from the header", async ({
   page,
 }) => {
   await page.goto("/spelling-bee")
-  for (const letter of "moat")
-    await page
-      .getByRole("button", { name: letter.toUpperCase(), exact: true })
-      .dispatchEvent("pointerdown")
-  await page.getByRole("button", { name: "Enter" }).click()
+  const hintsButton = page.getByRole("button", { name: "Hints" })
+  for (const word of ["moat", "bathroom"]) {
+    await expect(hintsButton).toHaveCount(0)
+    for (const letter of word)
+      await page
+        .getByRole("button", { name: letter.toUpperCase(), exact: true })
+        .dispatchEvent("pointerdown")
+    await page.getByRole("button", { name: "Enter" }).click()
+  }
+  await expect(page.getByText("Genius", { exact: true })).toBeVisible()
 
-  await page.getByRole("button", { name: "Hints" }).click()
+  await hintsButton.click()
   const hints = page.getByRole("dialog", { name: "Hints" })
   await hints.getByText("to", { exact: true }).click()
   await expect(hints.getByText("Scroll in an ark")).toBeVisible()
