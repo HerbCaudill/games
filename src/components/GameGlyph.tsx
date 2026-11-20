@@ -43,7 +43,8 @@ const GLYPHS: Record<Exclude<GameId, "spelling-bee" | "connections">, React.Reac
   pips: (
     <>
       <rect x="2" y="9" width="28" height="14" rx="3.5" fill="#fff" />
-      <path d="M16 9v14" fill="none" />
+      {/* The divider stops short of the edges. */}
+      <path d="M16 12.5v7" fill="none" strokeLinecap="round" />
       <circle cx="9" cy="16" r="2" stroke="none" />
       <circle cx="22" cy="13" r="1.8" stroke="none" />
       <circle cx="26" cy="19" r="1.8" stroke="none" />
