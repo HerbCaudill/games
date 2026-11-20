@@ -1,11 +1,12 @@
 import { IconArrowsShuffle, IconBackspace, IconBulb, IconLayoutGrid } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Panel } from "@/components/Panel"
 import { SolvedMessage } from "@/components/SolvedMessage"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/Toast"
 import { useElapsed } from "@/lib/useElapsed"
+import { useCelebration } from "@/lib/useCelebration"
 import { useGameStatus } from "@/lib/useGameStatus"
 import { useKeydown } from "@/lib/useKeydown"
 import { useNytSync } from "@/lib/useNytSync"
@@ -54,13 +55,18 @@ export function SpellingBee(
   const toast = useToast()
   const score = totalScore(found, puzzle)
   const rank = rankFor(score, puzzle)
-  const solved = score === rank.max
   const reached = (name: string) => score >= rank.ranks.find(r => r.name === name)!.score
+  // Genius counts as solved: it stops the clock and gets the big celebration, which Queen Bee gets too.
+  const solved = reached("Genius")
   // The word grid and stats show only once the player reaches Amazing, and hints once they reach Genius.
   const gridAllowed = reached("Amazing")
   const hintsAllowed = reached("Genius")
+  // Counts each new rank reached by playing, so it gets its own small celebration.
+  const [rankUp, setRankUp] = useState<number>()
+  const endRankUp = useCallback(() => setRankUp(undefined), [])
   const elapsed = useElapsed(`time:spelling-bee:${puzzle.date}`, !solved)
   useGameStatus("spelling-bee", puzzle.date, solved ? "solved" : found.length ? "started" : "new")
+  useCelebration("spelling-bee", `queen-bee:${puzzle.date}`, score === rank.max)
 
   const letters = new Set([puzzle.center, ...puzzle.outer])
   // Typing over a shaking word starts a new one.
@@ -84,6 +90,7 @@ export function SpellingBee(
     }
     setGuess("")
     setFound(f => [...f, result.word])
+    if (rankFor(score + result.score, puzzle).name !== rank.name) setRankUp(n => (n ?? 0) + 1)
     toast.show(
       result.pangram
         ? "Pangram!"
@@ -156,6 +163,8 @@ export function SpellingBee(
         <RankMeter
           score={score}
           rank={rank}
+          rankUp={rankUp}
+          onRankUpDone={endRankUp}
           pangrams={{
             found: puzzle.pangrams.filter(word => found.includes(word)).length,
             total: puzzle.pangrams.length,

@@ -122,6 +122,36 @@ test("shows the Spelling Bee word grid and player stats from Amazing, and hints 
   await expect(grid.getByText("1,234 players")).toBeVisible()
 })
 
+test("celebrates each Spelling Bee rank reached around its name, but not on load", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/spelling-bee")
+  const burst = page.locator("[data-rank-celebration]")
+  await expect(page.getByText("Good Start", { exact: true })).toBeVisible()
+  for (const letter of "moat")
+    await page
+      .getByRole("button", { name: letter.toUpperCase(), exact: true })
+      .dispatchEvent("pointerdown")
+  await page.getByRole("button", { name: "Enter" }).click()
+  await expect(page.getByText("Moving Up", { exact: true })).toBeVisible()
+  await expect(burst).toHaveCount(1)
+  const name = (await page.getByText("Moving Up", { exact: true }).boundingBox())!
+  const around = (await burst.boundingBox())!
+  // Centered on the name, which may be mid-pop.
+  const [cx, cy] = [around.x + around.width / 2, around.y + around.height / 2]
+  expect(cx).toBeGreaterThan(name.x + name.width / 3)
+  expect(cx).toBeLessThan(name.x + (name.width * 2) / 3)
+  expect(cy).toBeGreaterThan(name.y)
+  expect(cy).toBeLessThan(name.y + name.height)
+  await expect(burst).toHaveCount(0)
+  await expect(page.getByText("Moving Up", { exact: true })).toHaveCount(1)
+  await page.reload()
+  await expect(page.getByText("Moving Up", { exact: true })).toBeVisible()
+  await page.waitForTimeout(300)
+  await expect(burst).toHaveCount(0)
+})
+
 test("rejects a Spelling Bee word without the center letter, shaking it before clearing it", async ({
   page,
 }) => {

@@ -41,6 +41,32 @@ test("floods out from the middle of the board and bursts from the solved message
   )
 })
 
+test("solves Spelling Bee at Genius and celebrates again at Queen Bee, keeping the Genius time", async ({
+  page,
+  isMobile,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/spelling-bee?date=2026-11-16")
+  await finish(page, "spelling-bee", isMobile)
+  await expect(page.getByText("Genius", { exact: true })).toBeVisible()
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toBeVisible()
+  await expect(celebration(page)).toHaveCount(1)
+  await expect(celebration(page)).toHaveCount(0)
+  const time = await page
+    .getByRole("status")
+    .filter({ hasText: /^Solved in/ })
+    .textContent()
+  await page.waitForTimeout(1100)
+  for (const word of ["MOAT", "TORAH"]) {
+    for (const letter of word)
+      await page.getByRole("button", { name: letter, exact: true }).dispatchEvent("pointerdown")
+    await page.getByRole("button", { name: "Enter", exact: true }).click()
+  }
+  await expect(page.getByText("Queen Bee", { exact: true })).toBeVisible()
+  await expect(celebration(page)).toHaveCount(1)
+  await expect(page.getByRole("status").filter({ hasText: /^Solved in/ })).toHaveText(time!)
+})
+
 test("celebrates without motion when reduced motion is requested", async ({ page, isMobile }) => {
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/spelling-bee?date=2026-11-16")
@@ -87,7 +113,8 @@ async function finish(
       else await page.keyboard.press(letter)
     }
   } else if (game === "spelling-bee" || game === "letter-boxed") {
-    const words = game === "spelling-bee" ? ["MOAT", "TORAH", "BATHROOM"] : ["ADG", "JBEHKCFIL"]
+    // Spelling Bee counts as solved at Genius, which the pangram alone reaches.
+    const words = game === "spelling-bee" ? ["BATHROOM"] : ["ADG", "JBEHKCFIL"]
     for (const word of words) {
       for (const letter of word)
         await page.getByRole("button", { name: letter, exact: true }).dispatchEvent("pointerdown")

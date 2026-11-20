@@ -1,15 +1,22 @@
 import { cn } from "@/lib/utils"
+import { RankCelebration } from "./RankCelebration"
 import type { Rank, WordCount } from "./logic/types"
 
 /** The player's rank, pangrams found, score, and a bar of progress toward the top rank. */
 export function RankMeter(
   /** The component props. */
-  { score, rank, pangrams }: Props,
+  { score, rank, pangrams, rankUp, onRankUpDone }: Props,
 ) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-4">
-        <span className="mr-auto text-lg font-semibold">{rank.name}</span>
+        <span className="relative mr-auto text-lg font-semibold">
+          {/* Keyed so each new rank pops again. */}
+          <span key={`name-${rankUp}`} className={cn(rankUp && "rank-pop")}>
+            {rank.name}
+          </span>
+          {rankUp && <RankCelebration key={`burst-${rankUp}`} onDone={onRankUpDone} />}
+        </span>
         {pangrams.total > 0 && (
           <span
             className="inline-flex items-center gap-1"
@@ -80,4 +87,8 @@ type Props = {
   rank: Rank
   /** How many pangrams there are and how many are found. */
   pangrams: WordCount
+  /** Set while a rank just reached is being celebrated; a new value starts a new celebration. */
+  rankUp?: number
+  /** Called once the celebration has played. */
+  onRankUpDone: () => void
 }
