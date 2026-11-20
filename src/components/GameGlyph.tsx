@@ -1,10 +1,16 @@
+import { PICTURE_STROKE } from "@/constants"
+import { GroupsProgress } from "@/games/connections/GroupsProgress"
+import { HiveProgress } from "@/games/spelling-bee/HiveProgress"
 import type { GameId } from "@/types"
 
-/** A small drawing that stands for a game. */
+/** A small drawing that stands for a game. Spelling Bee and Connections show their progress pictures with nothing done yet. */
 export function GameGlyph(
   /** The component props. */
   { game, className }: Props,
 ) {
+  if (game === "spelling-bee") return <HiveProgress rank={0} className={className} />
+  if (game === "connections")
+    return <GroupsProgress levels={[]} mistakes={0} failed={false} className={className} />
   return (
     <svg
       viewBox="0 0 32 32"
@@ -23,10 +29,10 @@ export function GameGlyph(
 // CONSTANTS
 
 /** Stroke width, in the glyphs' 32-unit drawing. */
-const STROKE_WIDTH = 2
+const STROKE_WIDTH = PICTURE_STROKE * 32
 
 /** Glyph shapes by game. */
-const GLYPHS: Record<GameId, React.ReactNode> = {
+const GLYPHS: Record<Exclude<GameId, "spelling-bee" | "connections">, React.ReactNode> = {
   crossword: (
     <>
       <path d="M4 4h24v24H4z" fill="#fff" />
@@ -43,23 +49,15 @@ const GLYPHS: Record<GameId, React.ReactNode> = {
       <circle cx="26" cy="19" r="1.8" stroke="none" />
     </>
   ),
-  "spelling-bee": <path d="M16 3 27.3 9.5v13L16 29 4.7 22.5v-13z" fill="#fff" />,
-  connections: (
-    <>
-      <rect x="4" y="4" width="10" height="10" rx="2" />
-      <rect x="18" y="4" width="10" height="10" rx="2" fill="#fff" />
-      <rect x="4" y="18" width="10" height="10" rx="2" fill="#fff" />
-      <rect x="18" y="18" width="10" height="10" rx="2" />
-    </>
-  ),
   "letter-boxed": (
     <>
       <rect x="5" y="5" width="22" height="22" fill="#fff" />
-      <path d="M10 5 27 16 16 27 5 12" fill="none" />
-      <circle cx="10" cy="5" r="2.5" stroke="none" />
-      <circle cx="27" cy="16" r="2.5" stroke="none" />
-      <circle cx="16" cy="27" r="2.5" stroke="none" />
-      <circle cx="5" cy="12" r="2.5" stroke="none" />
+      {/* Top, bottom, left, right: the first and last strokes cross in the middle. */}
+      <path d="M11 5 21 27 5 19 27 11" fill="none" strokeLinejoin="round" />
+      <circle cx="11" cy="5" r="2.2" stroke="none" />
+      <circle cx="21" cy="27" r="2.2" stroke="none" />
+      <circle cx="5" cy="19" r="2.2" stroke="none" />
+      <circle cx="27" cy="11" r="2.2" stroke="none" />
     </>
   ),
 }

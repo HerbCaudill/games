@@ -29,6 +29,9 @@ export const GAMES: GameInfo[] = [
   },
 ]
 
+/** Width of the black strokes in the home menu's pictures, as a share of the picture's width, so every picture draws them alike. */
+export const PICTURE_STROKE = 0.0375
+
 // TYPES
 
 /** Display details for a game. */

@@ -1,4 +1,6 @@
-/** A white square that fills with light blue squares, in reading order, as the crossword is filled. */
+import { PICTURE_STROKE } from "@/constants"
+
+/** A white square with a black border that fills with light blue squares, in reading order, as the crossword is filled. */
 export function GridProgress(
   /** The component props. */
   { filled, className }: Props,
@@ -7,7 +9,7 @@ export function GridProgress(
   const count = filled > 0 ? Math.max(1, Math.floor(filled * SQUARES)) : 0
   return (
     <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className={className} aria-hidden="true">
-      <rect width={SIZE} height={SIZE} rx={0.1} fill="#fff" />
+      <rect width={SIZE} height={SIZE} fill="#fff" />
       {Array.from({ length: count }, (_, i) => (
         <rect
           key={i}
@@ -18,6 +20,15 @@ export function GridProgress(
           fill="var(--crossword-tile-fill)"
         />
       ))}
+      <rect
+        x={STROKE / 2}
+        y={STROKE / 2}
+        width={SIZE - STROKE}
+        height={SIZE - STROKE}
+        fill="none"
+        stroke="#000"
+        strokeWidth={STROKE}
+      />
     </svg>
   )
 }
@@ -32,6 +43,9 @@ const SQUARES = SIZE * SIZE
 
 /** White line between squares, in squares. */
 const HAIRLINE = 0.04
+
+/** Border width, in squares. */
+const STROKE = PICTURE_STROKE * SIZE
 
 // TYPES
 

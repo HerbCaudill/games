@@ -1,4 +1,6 @@
-/** A hive of seven cells that light up as the rank climbs, all lit from Amazing on. */
+import { PICTURE_STROKE } from "@/constants"
+
+/** A hive of seven cells, outlined in black, that light up as the rank climbs, all lit from Amazing on. */
 export function HiveProgress(
   /** The component props. */
   { rank, className }: Props,
@@ -10,6 +12,9 @@ export function HiveProgress(
           key={i}
           points={hexagon(x, y)}
           fill={i < rank ? "var(--spelling-bee-hive)" : WELL}
+          stroke="#000"
+          strokeWidth={PICTURE_STROKE * 88}
+          strokeLinejoin="round"
         />
       ))}
     </svg>
@@ -34,10 +39,10 @@ function hexagon(
 // CONSTANTS
 
 /** Cell size, center to corner. */
-const RADIUS = 15.5
+const RADIUS = 16
 
-/** Distance between neighboring cell centers, leaving a small gap. */
-const STEP = RADIUS * Math.sqrt(3) + 1.5
+/** Distance between neighboring cell centers: the cells touch, so neighbors share one line. */
+const STEP = RADIUS * Math.sqrt(3)
 
 /** Cell centers in the order they light up: the middle, then around it clockwise from the bottom. */
 const CELLS = [0, 90, 150, 210, 270, 330, 30].map((degrees, i) => {
