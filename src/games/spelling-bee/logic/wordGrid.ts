@@ -10,10 +10,13 @@ export function wordGrid(
   const have = new Set(found)
   const lengths = [...new Set(answers.map(w => w.length))].sort((a, b) => a - b)
   const letters = [...new Set(answers.map(w => w[0]))].sort()
+  const allFound = (words: string[]) => words.every(w => have.has(w))
   return {
     lengths,
+    completeLengths: lengths.map(length => allFound(answers.filter(w => w.length === length))),
     rows: letters.map(letter => ({
       letter,
+      complete: allFound(answers.filter(w => w[0] === letter)),
       cells: lengths.map(length => {
         const words = answers.filter(w => w[0] === letter && w.length === length)
         if (!words.length) return undefined
@@ -29,6 +32,13 @@ export function wordGrid(
 export type WordGrid = {
   /** The answer lengths, shortest first: one column each. */
   lengths: number[]
+  /** Whether every answer of each length is found, by column. */
+  completeLengths: boolean[]
   /** One row per first letter, with a cell per length; empty where no answer fits. */
-  rows: { letter: string; cells: (WordCount | undefined)[] }[]
+  rows: {
+    letter: string
+    /** Whether every answer starting with the letter is found. */
+    complete: boolean
+    cells: (WordCount | undefined)[]
+  }[]
 }

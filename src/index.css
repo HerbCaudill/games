@@ -147,6 +147,9 @@
   --game-pips: #d3a6ce;
   /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
   --game-spelling-bee: oklch(0.87 0.17 90);
+  /* Behind complete rows of the Spelling Bee word grid and two-letter list, and lighter behind complete grid columns. */
+  --spelling-bee-complete-row: color-mix(in oklch, var(--game-spelling-bee) 40%, transparent);
+  --spelling-bee-complete-column: color-mix(in oklch, var(--game-spelling-bee) 16%, transparent);
   /* The lit cells of the home menu's Spelling Bee hive. */
   --spelling-bee-hive: oklch(0.7 0.16 70);
   --game-connections: #b4a0ff;

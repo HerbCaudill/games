@@ -12,6 +12,8 @@ export function twoLetterList(
   const letters = [...new Set(prefixes.map(p => p[0]))]
   return letters.map(letter => ({
     letter,
+    /** Whether every answer starting with the letter is found. */
+    complete: answers.filter(w => w[0] === letter).every(w => have.has(w)),
     prefixes: prefixes
       .filter(prefix => prefix[0] === letter)
       .map((prefix): { prefix: string } & WordCount => {

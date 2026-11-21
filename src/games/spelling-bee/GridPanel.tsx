@@ -11,6 +11,13 @@ export function GridPanel(
   { puzzle, token, found }: Props,
 ) {
   const grid = wordGrid(puzzle.answers, found)
+  /** The shade behind a grid cell: its row's when the row is complete, else its column's when that is. */
+  const shade = (rowComplete: boolean, column?: number) =>
+    rowComplete
+      ? "bg-(--spelling-bee-complete-row)"
+      : column !== undefined &&
+        grid.completeLengths[column] &&
+        "bg-(--spelling-bee-complete-column)"
   return (
     <div className="flex flex-col gap-6">
       <section>
@@ -18,10 +25,13 @@ export function GridPanel(
           <thead>
             <tr>
               <th />
-              {grid.lengths.map(length => (
+              {grid.lengths.map((length, i) => (
                 <th
                   key={length}
-                  className="text-muted-foreground px-1 pb-1 text-left text-xs font-medium"
+                  className={cn(
+                    "text-muted-foreground px-1 pb-1 text-left text-xs font-medium",
+                    shade(false, i),
+                  )}
                 >
                   {length}
                 </th>
@@ -31,11 +41,18 @@ export function GridPanel(
           <tbody>
             {grid.rows.map(row => (
               <tr key={row.letter} className="border-t">
-                <th className="w-6 py-1.5 text-left font-semibold uppercase">{row.letter}</th>
+                <th
+                  className={cn(
+                    "w-7 py-1.5 pl-1.5 text-left font-semibold uppercase",
+                    shade(row.complete),
+                  )}
+                >
+                  {row.letter}
+                </th>
                 {row.cells.map((cell, i) => (
                   <td
                     key={grid.lengths[i]}
-                    className="px-1 py-1.5 align-middle"
+                    className={cn("px-1 py-1.5 align-middle", shade(row.complete, i))}
                     aria-label={
                       cell &&
                       `${row.letter.toUpperCase()}, ${grid.lengths[i]} letters: ${cell.found} of ${cell.total} found`
@@ -52,9 +69,15 @@ export function GridPanel(
 
       <section>
         <Heading>Two-letter list</Heading>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col">
           {twoLetterList(puzzle.answers, found).map(group => (
-            <div key={group.letter} className="flex flex-wrap gap-x-4 gap-y-1 border-t pt-1.5">
+            <div
+              key={group.letter}
+              className={cn(
+                "flex flex-wrap gap-x-4 gap-y-1 border-t px-1.5 py-1.5",
+                group.complete && "bg-(--spelling-bee-complete-row)",
+              )}
+            >
               {group.prefixes.map(({ prefix, ...count }) => (
                 <span
                   key={prefix}
