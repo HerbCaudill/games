@@ -1,4 +1,5 @@
-import { IconChartBar, IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+import { Popover } from "@base-ui/react/popover"
+import { IconChartBar, IconChevronLeft, IconChevronRight, IconLifebuoy } from "@tabler/icons-react"
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
@@ -141,10 +142,6 @@ export function Crossword(
       {toolbar &&
         createPortal(
           <div className="ml-auto flex items-center gap-2">
-            <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
-              Autocheck
-              <Switch checked={progress.autocheck ?? false} onCheckedChange={changeAutocheck} />
-            </label>
             {/* Touch screens have a rebus key on the on-screen keyboard instead. */}
             <Button
               variant={rebus === undefined ? "ghost" : "default"}
@@ -161,6 +158,34 @@ export function Crossword(
             >
               {rebus === undefined ? "Rebus" : "Done"}
             </Button>
+            <Popover.Root>
+              <Popover.Trigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-10"
+                    aria-label="Help"
+                    title="Help"
+                  />
+                }
+              >
+                <IconLifebuoy className="size-6" />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner side="bottom" align="end" sideOffset={4}>
+                  <Popover.Popup className="bg-popover text-popover-foreground rounded-xl border p-1 shadow-lg outline-none">
+                    <label className="hover:bg-muted flex min-h-10 cursor-pointer items-center justify-between gap-6 rounded-lg px-3 text-sm">
+                      Autocheck
+                      <Switch
+                        checked={progress.autocheck ?? false}
+                        onCheckedChange={changeAutocheck}
+                      />
+                    </label>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
             <Button
               variant="ghost"
               size="icon"

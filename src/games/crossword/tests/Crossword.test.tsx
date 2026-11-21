@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { CrosswordPuzzle } from "@/types"
 import { Crossword } from "../Crossword"
 
+/** Open the help menu that holds the autocheck switch. */
+function openHelp() {
+  fireEvent.click(screen.getByRole("button", { name: "Help" }))
+}
+
 /** Stands in for the app header the puzzle controls go into. */
 let toolbar: HTMLElement
 
@@ -83,16 +88,19 @@ describe("crossword entry controls", () => {
   it("checks existing entries when toggled on and remembers the setting after reload", () => {
     const view = render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
     fireEvent.keyDown(document.body, { key: "X" })
+    openHelp()
     fireEvent.click(screen.getByRole("switch", { name: "Autocheck" }))
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
     expect(screen.getByRole("gridcell", { name: /X, wrong/ })).toBeVisible()
     view.unmount()
     render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
+    openHelp()
     expect(screen.getByRole("switch", { name: "Autocheck" })).toBeChecked()
   })
 
   it("returns keyboard entry to the grid after using the autocheck switch", () => {
     render(<Crossword puzzle={puzzle} token="" toolbar={toolbar} />)
+    openHelp()
     const toggle = screen.getByRole("switch", { name: "Autocheck" })
     toggle.focus()
     fireEvent.click(toggle)
