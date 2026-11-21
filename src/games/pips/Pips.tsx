@@ -1,5 +1,5 @@
 import { IconArrowBackUp, IconArrowForwardUp } from "@tabler/icons-react"
-import { useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { SolvedMessage } from "@/components/SolvedMessage"
@@ -20,6 +20,7 @@ import { placeAt } from "./logic/placeAt"
 import { removeDomino } from "./logic/removeDomino"
 import { restorePieces } from "./logic/restorePieces"
 import { restingSpot } from "./logic/restingSpot"
+import { spreadOut } from "./logic/spreadOut"
 import { turnTo } from "./logic/turnTo"
 import { type LooseDomino, type Pieces, type Placements, type Point } from "./logic/types"
 import { useTable } from "./useTable"
@@ -56,6 +57,23 @@ export function Pips(
       spots: board.dominoes.map((_, i) => pushed.get(i) ?? next.spots[i] ?? null),
     }
   }
+
+  // When the screen changes size, untangle any loose dominoes it pulls in on top of each other.
+  const { width, height, left, top, contentTop } = table.room
+  useLayoutEffect(() => {
+    if (!width) return
+    const loose = board.dominoes.map((_, i) => looseIn(pieces, i))
+    const pulled = loose.flatMap((domino, i) =>
+      domino && !samePoint(domino.center, spots[i] ?? table.layout.slots[i]) ? [i] : [],
+    )
+    const moved = spreadOut(loose, pulled, table.surface)
+    if (!moved.size) return
+    setProgress(p => ({
+      ...p,
+      spots: board.dominoes.map((_, i) => moved.get(i) ?? p.spots?.[i] ?? null),
+    }))
+    // Only a change of screen pulls dominoes in; moves make room for themselves.
+  }, [width, height, left, top, contentTop])
 
   const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(puzzle.date, pieces, saved => {
     const restored = restorePieces(pieces, saved)
@@ -101,17 +119,23 @@ export function Pips(
     })
 
   /** Turn a domino off the board a quarter clockwise in place, pushing aside any it now covers. */
-  const turn = (i: number) =>
+  const turn = (i: number) => {
+    const turned = (turns[i] ?? 0) + 1
+    const from = looseIn(pieces, i)!.center
+    // Turned to reach onto the board, it steps clear of it.
+    const at = restingSpot(from, turned, table.surface)
+    const moved = !samePoint(at, from)
     save(
       settle(
         {
           placements,
-          spots,
+          spots: board.dominoes.map((_, j) => (moved && j === i ? at : (spots[j] ?? null))),
           turns: board.dominoes.map((_, j) => (turns[j] ?? 0) + (i === j ? 1 : 0)),
         },
         [i],
       ),
     )
+  }
 
   /** Put every domino back in its tray slot, facing its starting way. */
   const clear = () => {
@@ -283,6 +307,16 @@ function samePlacements(
   b: Placements,
 ) {
   return JSON.stringify(a) === JSON.stringify(b)
+}
+
+/** Whether two points are the same, give or take a rounding error. */
+function samePoint(
+  /** One. */
+  a: Point,
+  /** The other. */
+  b: Point,
+) {
+  return Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6
 }
 
 /** A turn count as a direction, 0 to 3. */

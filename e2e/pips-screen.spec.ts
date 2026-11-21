@@ -197,6 +197,46 @@ test("moves a domino dropped on the edge of the board clear of it", async ({ pag
     .toBeLessThanOrEqual(0.5)
 })
 
+test("moves a domino turned into the board clear of it", async ({ page }) => {
+  const domino = page.getByRole("button", { name: "Domino 3–1" })
+  const cell = (await page
+    .getByRole("gridcell", { name: "Row 2, column 1", exact: true })
+    .boundingBox())!
+  // Lying flat just under the board, so turning it upright would reach up onto it.
+  await dragTo(page, domino, [cell.x + cell.width / 2, cell.y + cell.height * 1.45])
+  await domino.click()
+  await expect
+    .poll(async () => {
+      const box = (await domino.boundingBox())!
+      return box.height > box.width
+    })
+    .toBe(true)
+  await expect
+    .poll(async () => Math.max(...(await Promise.all(cells(page).map(c => overlap(domino, c))))))
+    .toBeLessThanOrEqual(0.5)
+})
+
+test("spreads out loose dominoes a smaller screen pulls on top of each other", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "Wide-screen placement")
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const a = page.getByRole("button", { name: "Domino 2–1" })
+  const b = page.getByRole("button", { name: "Domino 3–1" })
+  await dragTo(page, a, [1000, 500])
+  await dragTo(page, b, [1200, 500])
+  await page.setViewportSize({ width: 600, height: 800 })
+  for (const domino of [a, b])
+    await expect
+      .poll(async () => {
+        const box = (await domino.boundingBox())!
+        return box.x + box.width
+      })
+      .toBeLessThanOrEqual(601)
+  await expect.poll(() => overlap(a, b)).toBeLessThanOrEqual(0.5)
+})
+
 /** The board's cells. */
 function cells(
   /** The page. */
