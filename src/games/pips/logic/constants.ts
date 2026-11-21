@@ -13,3 +13,6 @@ export const TRAY_SCALE = 0.75
 
 /** Spacing of the grid loose dominoes snap to, in cells: a quarter of a loose domino's width. */
 export const SNAP = TRAY_SCALE / 4
+
+/** How far a rule badge reaches from the corner it sits on, in cells. */
+export const BADGE_REACH = 0.3

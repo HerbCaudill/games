@@ -2,6 +2,7 @@ import { useId } from "react"
 import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
 import { dominoGeometry } from "./dominoGeometry"
+import { badgeCorner } from "./logic/badgeCorner"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
@@ -167,9 +168,7 @@ function RegionBadge(
   { region, shape, color, broken }: RegionBadgeProps,
 ) {
   const mask = `pips-notch-${useId().replace(/[^\w-]/g, "")}`
-  const [r, c] = region.cells.reduce((last, cell) =>
-    cell[0] > last[0] || (cell[0] === last[0] && cell[1] > last[1]) ? cell : last,
-  )
+  const corner = badgeCorner(region)
   const label = {
     sum: String(region.target),
     less: `<${region.target}`,
@@ -178,8 +177,8 @@ function RegionBadge(
     unequal: "≠",
     empty: "",
   }[region.type]
-  const x = (c + 1) * U
-  const y = (r + 1) * U
+  const x = corner[0] * U
+  const y = corner[1] * U
   return (
     <g
       role={broken ? "img" : undefined}
@@ -226,7 +225,7 @@ const REGION_STROKE_WIDTH = 0.45
 /** Room around the board for badges that hang off its edge. */
 const PAD = 4.5
 
-/** The rounded 4.2-unit diamond. */
+/** The rounded 4.2-unit diamond, reaching about `BADGE_REACH` cells from its center. */
 const BADGE_PATH =
   "M-0.389,-2.581 A0.55,0.55 0 0 1 0.389,-2.581 " +
   "L2.581,-0.389 A0.55,0.55 0 0 1 2.581,0.389 " +

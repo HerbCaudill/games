@@ -34,3 +34,13 @@ export type Rect = {
   right: number
   bottom: number
 }
+
+/** What loose dominoes have to fit around on the table. */
+export type Surface = {
+  /** Where loose dominoes shouldn't lie, such as the board's cells. */
+  walls: Rect[]
+  /** A point on the snap grid, in cell units from the board's corner. */
+  grid: Point
+  /** Bring a center back inside the screen, given the domino's quarter turns. */
+  fit: (center: Point, turn: number) => Point
+}

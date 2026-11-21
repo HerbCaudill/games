@@ -1,8 +1,9 @@
 import { useLayoutEffect, useState } from "react"
 import type { PipsBoard } from "@/types"
 import { boardCells } from "./logic/boardCells"
+import { boardWalls } from "./logic/boardWalls"
 import { tableLayout, type Layout } from "./logic/tableLayout"
-import type { Point } from "./logic/types"
+import type { Point, Surface } from "./logic/types"
 
 /** Measure the space the table has on screen, and lay the board and tray out in it. */
 export function useTable(
@@ -65,7 +66,13 @@ export function useTable(
     ]
   }
 
-  return { space, setSpace, room, layout, fit }
+  const surface: Surface = {
+    walls: boardWalls(board),
+    grid: layout.grid,
+    fit,
+  }
+
+  return { space, setSpace, room, layout, fit, surface }
 }
 
 // CONSTANTS
@@ -101,4 +108,6 @@ export type Table = {
   layout: Layout
   /** Bring a domino's center back inside the viewport, given its quarter turns. */
   fit: (center: Point, turn: number) => Point
+  /** What loose dominoes have to fit around: the board, the snap grid and the screen. */
+  surface: Surface
 }

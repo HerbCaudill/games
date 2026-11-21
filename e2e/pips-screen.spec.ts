@@ -19,6 +19,8 @@ test("keeps a loose domino beyond the game container and lets it return to the b
   const slack = await snapSlack(page)
   await expect.poll(async () => distance(await centerOf(domino), aside)).toBeLessThan(slack)
   await expect(page.getByText(/Solved in/)).not.toBeVisible()
+  // Read where it came to rest once it has finished sliding onto the grid.
+  await domino.evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)))
   const dropped = await centerOf(domino)
   await page.reload()
   await expect.poll(async () => distance(await centerOf(domino), dropped)).toBeLessThan(2)
@@ -157,6 +159,54 @@ test("pushes a loose domino out of the way of one turned into it", async ({ page
   await expect.poll(() => overlap(turned, other)).toBeLessThanOrEqual(0.5)
 })
 
+test("pushes a loose domino aside when undo brings another back to where it lies", async ({
+  page,
+}) => {
+  const undone = page.getByRole("button", { name: "Domino 2–1" })
+  const other = page.getByRole("button", { name: "Domino 3–1" })
+  const slot = await centerOf(undone)
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, undone, [x + box.width / 2, y])
+  await dragTo(page, other, slot)
+  await page.getByRole("button", { name: "Undo" }).click()
+  await expect.poll(async () => distance(await centerOf(undone), slot)).toBeLessThan(2)
+  await expect.poll(() => overlap(undone, other)).toBeLessThanOrEqual(0.5)
+})
+
+test("moves a domino dropped on the edge of the board clear of it", async ({ page }) => {
+  const placed = page.getByRole("button", { name: "Domino 2–1" })
+  const dropped = page.getByRole("button", { name: "Domino 3–1" })
+  const cell = page.getByRole("gridcell", { name: "Row 2, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, placed, [x + box.width / 2, y])
+  // Just off the board's bottom-right corner, grazing it.
+  const corner = (await page
+    .getByRole("gridcell", { name: "Row 2, column 2", exact: true })
+    .boundingBox())!
+  await dragTo(page, dropped, [corner.x + corner.width * 1.6, corner.y + corner.height * 1.2])
+  await expect
+    .poll(async () => Math.max(...(await Promise.all(cells(page).map(c => overlap(dropped, c))))))
+    .toBeLessThanOrEqual(0.5)
+  await expect.poll(() => overlap(dropped, placed)).toBeLessThanOrEqual(0.5)
+  // Nor does it hide the rule badge hanging off the corner.
+  await expect
+    .poll(() => overlap(dropped, page.getByRole("img", { name: "Broken constraint: =" })))
+    .toBeLessThanOrEqual(0.5)
+})
+
+/** The board's cells. */
+function cells(
+  /** The page. */
+  page: Page,
+) {
+  return ["1, column 1", "1, column 2", "2, column 1", "2, column 2"].map(name =>
+    page.getByRole("gridcell", { name: `Row ${name}`, exact: true }),
+  )
+}
+
 /** How much two elements overlap, in pixels: the smaller of the overlap's width and height. */
 async function overlap(
   /** One element. */
@@ -250,7 +300,8 @@ test("leaves out turning and moving dominoes off the board from undo", async ({ 
   const start = await centerOf(placedDomino)
   const undo = page.getByRole("button", { name: "Undo" })
   const viewport = page.viewportSize()!
-  const aside: [number, number] = [viewport.width / 2, viewport.height - 60]
+  // Far enough from the bottom that the domino, turned upright, isn't held back by the screen's edge.
+  const aside: [number, number] = [viewport.width / 2, viewport.height - 100]
   const slack = await snapSlack(page)
 
   await looseDomino.click()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { TRAY_SCALE } from "../constants"
+import { SNAP, TRAY_SCALE } from "../constants"
 import { tableLayout } from "../tableLayout"
 
 describe("tableLayout", () => {
@@ -31,5 +31,16 @@ describe("tableLayout", () => {
         expect(Math.abs(a[0] - b[0]) >= 2 * TRAY_SCALE || Math.abs(a[1] - b[1]) >= TRAY_SCALE).toBe(
           true,
         )
+  })
+
+  it("puts every slot on the grid loose dominoes snap to", () => {
+    for (const count of [7, 12, 15]) {
+      const { slots, grid } = tableLayout({ width: 360, height: 700, rows: 6, cols: 7, count })
+      for (const slot of slots)
+        for (const axis of [0, 1]) {
+          const steps = (slot[axis] - grid[axis]) / SNAP
+          expect(steps).toBeCloseTo(Math.round(steps), 6)
+        }
+    }
   })
 })
