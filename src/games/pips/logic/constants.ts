@@ -10,3 +10,6 @@ export const DIRECTIONS: Cell[] = [
 
 /** How big dominoes off the board are, relative to the board's cells. */
 export const TRAY_SCALE = 0.75
+
+/** Spacing of the grid loose dominoes snap to, in cells: a quarter of a loose domino's width. */
+export const SNAP = TRAY_SCALE / 4

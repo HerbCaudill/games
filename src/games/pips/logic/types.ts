@@ -18,3 +18,19 @@ export type Pieces = {
   /** Where each loose domino lies, in cell units from the board's corner; null when it is on the board or in its tray slot. */
   spots: (Point | null)[]
 }
+
+/** A domino off the board. */
+export type LooseDomino = {
+  /** Its center, in cell units from the board's corner. */
+  center: Point
+  /** Quarter turns clockwise. */
+  turn: number
+}
+
+/** An upright rectangle in cell units from the board's corner. */
+export type Rect = {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}

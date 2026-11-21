@@ -4,13 +4,12 @@ import type { Cell, PipsBoard } from "@/types"
 import { DominoTile } from "./DominoTile"
 import { dominoGeometry } from "./dominoGeometry"
 import { PipsGrid } from "./PipsGrid"
-import { boardCells } from "./logic/boardCells"
 import { directionOf } from "./logic/directionOf"
 import { halfRegions } from "./logic/halfRegions"
 import { TRAY_SCALE } from "./logic/constants"
-import { tableLayout } from "./logic/tableLayout"
 import { turnTo } from "./logic/turnTo"
 import type { Placements, Point } from "./logic/types"
+import type { Table } from "./useTable"
 
 /**
  * The board and the tray of dominoes. Dominoes off the board are drawn smaller and grow to the
@@ -18,79 +17,26 @@ import type { Placements, Point } from "./logic/types"
  */
 export function PipsTable(
   /** The component props. */
-  { board, placements, turns, spots, solved, cursor, selected, onTap, onDrop }: Props,
+  { board, table, placements, turns, spots, solved, cursor, selected, onTap, onDrop }: Props,
 ) {
-  const space = useRef<HTMLDivElement>(null)
-  const [room, setRoom] = useState({ width: 0, height: 0, left: 0, top: 0, contentTop: 0 })
   const [drag, setDrag] = useState<{ index: number; offset: Point }>()
   // A just-dropped domino, held where it was let go for one frame so only its transform animates to where it lands.
   const [landing, setLanding] = useState<{ index: number; from: Point }>()
   const pointer = useRef<{ index: number; id: number; start: Point; moved: boolean }>(undefined)
+  const { room, layout, fit } = table
+  const { size, board: origin, slots } = layout
 
   useLayoutEffect(() => {
     if (!landing) return
     // Flush the held position as the transition's starting point before letting go of it.
-    space.current!.getBoundingClientRect()
+    table.space?.getBoundingClientRect()
     setLanding(undefined)
-  }, [landing])
-
-  useLayoutEffect(() => {
-    const el = space.current!
-    const measure = () => {
-      const { left, top } = el.getBoundingClientRect()
-      const content = el.closest("main")
-      setRoom({
-        width: el.clientWidth,
-        // Scrolling moves the table, but must not change its scale.
-        height: window.innerHeight - top - (content?.scrollTop ?? 0) - BOTTOM_ROOM,
-        left,
-        top,
-        contentTop: content?.getBoundingClientRect().top ?? 0,
-      })
-    }
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    window.addEventListener("resize", measure)
-    window.addEventListener("scroll", measure, true)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener("resize", measure)
-      window.removeEventListener("scroll", measure, true)
-    }
-  }, [])
-
-  const cells = boardCells(board)
-  const layout = tableLayout({
-    ...room,
-    rows: Math.max(...cells.map(([r]) => r)) + 1,
-    cols: Math.max(...cells.map(([, c]) => c)) + 1,
-    count: board.dominoes.length,
-  })
-  const { size, board: origin, slots } = layout
-
-  /** Keep the whole domino inside the viewport, including after rotation or resize. */
-  const inBounds = ([x, y]: Point, turn: number): Point => {
-    const [hx, hy] = upright(turn) ? [0.5, 1] : [1, 0.5]
-    const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
-    return [
-      clamp(
-        x,
-        hx - (room.left + origin[0]) / size,
-        (window.innerWidth - room.left - origin[0]) / size - hx,
-      ),
-      clamp(
-        y,
-        hy + (room.contentTop - room.top - origin[1]) / size,
-        (window.innerHeight - room.top - origin[1]) / size - hy,
-      ),
-    ]
-  }
+  }, [landing, table.space])
 
   /** Where a domino's center is, in cell units from the board's corner. */
   const centerOf = (i: number): Point => {
     const pair = placements[i]
-    if (!pair) return inBounds(spots[i] ?? slots[i], turns[i] ?? 0)
+    if (!pair) return fit(spots[i] ?? slots[i], turns[i] ?? 0)
     const [a, b] = pair
     return [(a[1] + b[1]) / 2 + 0.5, (a[0] + b[0]) / 2 + 0.5]
   }
@@ -126,7 +72,7 @@ export function PipsTable(
     const from: Point = [x + offset[0] / size, y + offset[1] / size]
     const turn = placements[p.index] ? directionOf(placements[p.index]!) : (turns[p.index] ?? 0)
     setLanding({ index: p.index, from })
-    onDrop(p.index, inBounds(from, turn))
+    onDrop(p.index, fit(from, turn))
   }
 
   const cancel = () => {
@@ -135,7 +81,7 @@ export function PipsTable(
   }
 
   return (
-    <div ref={space} className="w-full">
+    <div ref={table.setSpace} className="w-full">
       {room.width > 0 && (
         <div className="relative" style={{ height: solved ? layout.boardHeight : layout.height }}>
           <PipsGrid
@@ -220,27 +166,18 @@ export function PipsTable(
   )
 }
 
-/** Whether a turn count leaves a domino standing upright. */
-function upright(
-  /** Quarter turns. */
-  turn: number,
-) {
-  return Math.abs(turn) % 2 === 1
-}
-
 // CONSTANTS
 
 /** How far a pointer can move, in pixels, and still count as a tap. */
 const TAP_SLOP = 6
-
-/** Space kept free below the table, in pixels. */
-const BOTTOM_ROOM = 16
 
 // TYPES
 
 type Props = {
   /** The board. */
   board: PipsBoard
+  /** The table's place on screen and its layout. */
+  table: Table
   /** Where each domino sits on the board. */
   placements: Placements
   /** Quarter turns clockwise for each domino. */

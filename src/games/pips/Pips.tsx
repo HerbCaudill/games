@@ -15,11 +15,14 @@ import { cellKey } from "./logic/cellKey"
 import { directionOf } from "./logic/directionOf"
 import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
+import { makeRoom } from "./logic/makeRoom"
 import { placeAt } from "./logic/placeAt"
 import { removeDomino } from "./logic/removeDomino"
 import { restorePieces } from "./logic/restorePieces"
+import { snapToGrid } from "./logic/snapToGrid"
 import { turnTo } from "./logic/turnTo"
-import { type Pieces, type Placements, type Point } from "./logic/types"
+import { type LooseDomino, type Pieces, type Placements, type Point } from "./logic/types"
+import { useTable } from "./useTable"
 
 /** Pips: place every domino so each region's rule holds. */
 export function Pips(
@@ -43,6 +46,7 @@ export function Pips(
     samePlacements(next.placements, placements)
       ? setProgress(p => ({ ...p, ...next }))
       : change(next)
+  const table = useTable(board)
   const [chosen, setSelected] = useState<number>()
   const [cursor, setCursor] = useState<Cell>(() => boardCells(board)[0])
   // The cursor and the picked domino only matter, and only show, while playing by keyboard.
@@ -62,25 +66,42 @@ export function Pips(
     return pair ? directionOf(pair) : mod4(turns[i] ?? 0)
   }
 
+  /** Where a domino lies off the board, or null when it's on the board. */
+  const looseAt = (i: number): LooseDomino | null => {
+    if (placements[i]) return null
+    const turn = turns[i] ?? 0
+    return { center: table.fit(spots[i] ?? table.layout.slots[i], turn), turn }
+  }
+
+  /** Push other loose dominoes out from under one that now lies at `center`, facing `turn`. */
+  const makeRoomFor = (i: number, center: Point, turn: number) =>
+    makeRoom(
+      board.dominoes.map((_, j) => (j === i ? { center, turn } : looseAt(j))),
+      i,
+      boardCells(board).map(([r, c]) => ({ left: c, top: r, right: c + 1, bottom: r + 1 })),
+      table.fit,
+    )
+
   /** Save new placements, turning each moved domino to match how it now lies. A domino on the board has no loose spot. */
-  const update = (next: Placements, loose?: { index: number; at: Point }) =>
+  const update = (next: Placements, loose = new Map<number, Point>()) =>
     save({
       placements: next,
       turns: next.map((pair, i) => {
         const turn = turns[i] ?? 0
         return pair ? turnTo(turn, directionOf(pair)) : turn
       }),
-      spots: next.map((pair, i) =>
-        i === loose?.index ? loose.at : pair ? null : (spots[i] ?? null),
-      ),
+      spots: next.map((pair, i) => loose.get(i) ?? (pair ? null : (spots[i] ?? null))),
     })
 
-  const turn = (i: number) =>
+  /** Turn a domino off the board a quarter clockwise in place, pushing aside any it now covers. */
+  const turn = (i: number) => {
+    const pushed = makeRoomFor(i, looseAt(i)!.center, (turns[i] ?? 0) + 1)
     save({
       placements,
-      spots,
+      spots: board.dominoes.map((_, j) => pushed.get(j) ?? spots[j] ?? null),
       turns: board.dominoes.map((_, j) => (turns[j] ?? 0) + (i === j ? 1 : 0)),
     })
+  }
 
   /** Put every domino back in its tray slot, facing its starting way. */
   const clear = () => {
@@ -98,11 +119,18 @@ export function Pips(
     if (result) update(result.placements)
   }
 
-  /** Put a dragged domino down: on the board in the nearest spot that fits, or loose where it was dropped. */
+  /**
+   * Put a dragged domino down: on the board in the nearest spot that fits, or loose on the snap
+   * grid where it was dropped, pushing aside any loose domino it lands on.
+   */
   const drop = (i: number, center: Point) => {
     const result = dropDomino(placements, i, center, facing(i), board)
     if (result.kind === "placed") update(result.placements)
-    else if (result.kind === "loose") update(removeDomino(placements, i), { index: i, at: center })
+    else if (result.kind === "loose") {
+      const turn = turns[i] ?? 0
+      const at = table.fit(snapToGrid(center), turn)
+      update(removeDomino(placements, i), makeRoomFor(i, at, turn).set(i, at))
+    }
   }
 
   /** Put the selected domino down at a cell, or pick up the domino already there. */
@@ -211,6 +239,7 @@ export function Pips(
       <div className="w-full" onPointerDown={() => setUsingKeyboard(false)}>
         <PipsTable
           board={board}
+          table={table}
           placements={placements}
           turns={turns}
           spots={spots}

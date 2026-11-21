@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
+import { TRAY_SCALE } from "../src/games/pips/logic/constants"
 import { mockApi } from "./mockApi"
 
 test.beforeEach(async ({ page }) => {
@@ -15,10 +16,12 @@ test("keeps a loose domino beyond the game container and lets it return to the b
   const domino = page.getByRole("button", { name: "Domino 2–1" })
   const aside: [number, number] = [1280, 400]
   await dragTo(page, domino, aside)
-  await expect.poll(async () => distance(await centerOf(domino), aside)).toBeLessThan(2)
+  const slack = await snapSlack(page)
+  await expect.poll(async () => distance(await centerOf(domino), aside)).toBeLessThan(slack)
   await expect(page.getByText(/Solved in/)).not.toBeVisible()
+  const dropped = await centerOf(domino)
   await page.reload()
-  await expect.poll(async () => distance(await centerOf(domino), aside)).toBeLessThan(2)
+  await expect.poll(async () => distance(await centerOf(domino), dropped)).toBeLessThan(2)
 
   const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
   const [x, y] = await centerOf(cell)
@@ -30,12 +33,13 @@ test("keeps a loose domino beyond the game container and lets it return to the b
   await expect(page.getByRole("img", { name: "Broken constraint: 5" })).toBeVisible()
 })
 
-test("leaves a dropped domino where it was let go instead of replaying the drag", async ({
+test("leaves a dropped domino where it was let go, give or take the snap grid, instead of replaying the drag", async ({
   page,
 }) => {
   const domino = page.getByRole("button", { name: "Domino 2–1" })
   const viewport = page.viewportSize()!
   const drop: [number, number] = [viewport.width / 2, viewport.height - 40]
+  const slack = await snapSlack(page)
   await dragTo(page, domino, drop)
   const path = await domino.evaluate(
     el =>
@@ -51,7 +55,17 @@ test("leaves a dropped domino where it was let go instead of replaying the drag"
         sample()
       }),
   )
-  expect(Math.max(...path.map(point => distance(point, drop)))).toBeLessThan(2)
+  expect(Math.max(...path.map(point => distance(point, drop)))).toBeLessThan(slack)
+})
+
+test("pushes a loose domino out from under one dropped on it", async ({ page }) => {
+  const dropped = page.getByRole("button", { name: "Domino 2–1" })
+  const other = page.getByRole("button", { name: "Domino 3–1" })
+  const [x, y] = await centerOf(other)
+  await dragTo(page, dropped, [x + 10, y + 5])
+  await expect.poll(() => overlap(dropped, other)).toBeLessThanOrEqual(0.5)
+  // The dropped domino keeps its place; the one under it moved.
+  expect(distance(await centerOf(dropped), [x + 10, y + 5])).toBeLessThan(await snapSlack(page))
 })
 
 test("keeps loose dominoes reachable at screen edges, after turning and after resizing", async ({
@@ -126,6 +140,46 @@ async function centerOf(
   return [box.x + box.width / 2, box.y + box.height / 2]
 }
 
+test("pushes a loose domino out of the way of one turned into it", async ({ page }) => {
+  const turned = page.getByRole("button", { name: "Domino 2–1" })
+  const other = page.getByRole("button", { name: "Domino 3–1" })
+  const [x, y] = await centerOf(other)
+  const { height } = (await other.boundingBox())!
+  await dragTo(page, turned, [x, y + height + 2])
+  await expect.poll(() => overlap(turned, other)).toBeLessThanOrEqual(0.5)
+  await turned.click()
+  await expect
+    .poll(async () => {
+      const box = (await turned.boundingBox())!
+      return box.height > box.width
+    })
+    .toBe(true)
+  await expect.poll(() => overlap(turned, other)).toBeLessThanOrEqual(0.5)
+})
+
+/** How much two elements overlap, in pixels: the smaller of the overlap's width and height. */
+async function overlap(
+  /** One element. */
+  one: Locator,
+  /** The other. */
+  other: Locator,
+) {
+  const [a, b] = [(await one.boundingBox())!, (await other.boundingBox())!]
+  const across = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)
+  const down = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)
+  return Math.min(across, down)
+}
+
+/** How far, in pixels, snapping can move a dropped domino: half a grid step each way. */
+async function snapSlack(
+  /** The page. */
+  page: Page,
+) {
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const step = ((await cell.boundingBox())!.width * TRAY_SCALE) / 4
+  return Math.hypot(step / 2, step / 2) + 1
+}
+
 /** Distance between viewport points. */
 function distance(
   /** The first point. */
@@ -197,6 +251,7 @@ test("leaves out turning and moving dominoes off the board from undo", async ({ 
   const undo = page.getByRole("button", { name: "Undo" })
   const viewport = page.viewportSize()!
   const aside: [number, number] = [viewport.width / 2, viewport.height - 60]
+  const slack = await snapSlack(page)
 
   await looseDomino.click()
   await dragTo(page, looseDomino, aside)
@@ -211,7 +266,7 @@ test("leaves out turning and moving dominoes off the board from undo", async ({ 
   await expect.poll(async () => distance(await centerOf(placedDomino), start)).toBeLessThan(2)
   await expect(undo).toBeDisabled()
   // The loose domino stays where it was dropped, turned twice.
-  await expect.poll(async () => distance(await centerOf(looseDomino), aside)).toBeLessThan(2)
+  await expect.poll(async () => distance(await centerOf(looseDomino), aside)).toBeLessThan(slack)
   const turned = (await looseDomino.boundingBox())!
   expect(turned.width).toBeGreaterThan(turned.height)
 })
