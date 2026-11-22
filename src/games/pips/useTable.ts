@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from "react"
 import type { PipsBoard } from "@/types"
 import { boardCells } from "./logic/boardCells"
 import { boardWalls } from "./logic/boardWalls"
+import { footprint } from "./logic/footprint"
 import { tableLayout, type Layout } from "./logic/tableLayout"
 import { trayOrder } from "./logic/trayOrder"
 import type { Point, Surface } from "./logic/types"
@@ -51,9 +52,9 @@ export function useTable(
   const order = trayOrder(board.dominoes)
   const homes = board.dominoes.map((_, i) => layout.slots[order.indexOf(i)])
 
-  /** Keep the whole domino inside the viewport, including after rotation or resize. */
+  /** Keep the whole of a loose domino inside the viewport, including after rotation or resize. */
   const fit = ([x, y]: Point, turn: number): Point => {
-    const [hx, hy] = Math.abs(turn) % 2 === 1 ? [0.5, 1] : [1, 0.5]
+    const { right: hx, bottom: hy } = footprint([0, 0], turn)
     const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
     return [
       clamp(

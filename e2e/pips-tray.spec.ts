@@ -47,6 +47,20 @@ test("clear puts every domino back in its first slot, facing its first way", asy
   expect(await readTray(page)).toEqual(fresh)
 })
 
+for (const short of [false, true])
+  test(`turning dominoes in the tray leaves the others where they are${short ? " on a short screen" : ""}`, async ({
+    page,
+  }) => {
+    if (short) await page.setViewportSize({ width: 360, height: 480 })
+    const fresh = await readCenters(page)
+    for (const { name } of fresh) {
+      await page.getByRole("button", { name: name!, exact: true }).click()
+      const now = await readCenters(page)
+      for (const [i, { x, y }] of now.entries())
+        expect(Math.hypot(x - fresh[i].x, y - fresh[i].y), `after turning ${name}`).toBeLessThan(1)
+    }
+  })
+
 test("the keyboard starts with the tray's first domino, smaller number on the cursor", async ({
   page,
   isMobile,
@@ -118,6 +132,20 @@ async function readTray(
         left: pips.filter(x => x < middle).length,
         right: pips.filter(x => x > middle).length,
       }
+    }),
+  )
+}
+
+/** Each domino's center, which turning doesn't move. */
+async function readCenters(
+  /** The page. */
+  page: Page,
+) {
+  await settled(page)
+  return dominoes(page).evaluateAll(elements =>
+    elements.map(element => {
+      const { x, y, width, height } = element.getBoundingClientRect()
+      return { name: element.getAttribute("aria-label"), x: x + width / 2, y: y + height / 2 }
     }),
   )
 }

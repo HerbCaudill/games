@@ -4,8 +4,9 @@ import type { Point } from "./types"
 /**
  * Size and place the board and the tray of dominoes in the available space. Tray dominoes are
  * drawn at `TRAY_SCALE` of the board's scale, and the cell size is the largest that fits both.
- * Slots run down columns of nearly equal length, from left to right, and each lies on the grid
- * loose dominoes snap to, so a domino put back lines up with the rest.
+ * Slots run down columns of nearly equal length, from left to right, far enough apart that any
+ * domino can turn without reaching another. Each lies on the grid loose dominoes snap to, so a
+ * domino put back lines up with the rest.
  */
 export function tableLayout(
   /** The space and what goes in it. */
@@ -29,13 +30,15 @@ export function tableLayout(
     const board: Point = [(width - cols * size) / 2, MARGIN * size]
     const trayTop = board[1] + (rows + MARGIN + TRAY_GAP) * size
     const trayRows = Math.ceil(count / perRow)
+    // A domino's length from one row to the next, so even two turned upright only touch.
+    const rowStep = 2 * tray
     // The fewest columns that need no more rows, centered in the space.
     const columns = Math.ceil(count / trayRows)
     const left = (width - columns * 2 * tray - (columns - 1) * gap) / 2
     const slots = Array.from({ length: columns }, (_, column) =>
       Array.from({ length: Math.ceil((count - column) / columns) }, (_, row): Point => {
         const x = left + column * (2 * tray + gap) + tray
-        const y = trayTop + row * (tray + gap) + tray / 2
+        const y = trayTop + row * rowStep + tray / 2
         // Slots are kept in cell units from the board's corner, like everything else on the table.
         return [(x - board[0]) / size, (y - board[1]) / size]
       }),
@@ -47,7 +50,8 @@ export function tableLayout(
       slots,
       grid: slots[0] ?? [0, 0],
       boardHeight,
-      height: trayTop + trayRows * tray + (trayRows - 1) * gap + MARGIN * size,
+      // Down to the foot of a domino turned upright in the last row.
+      height: trayTop + (trayRows - 1) * rowStep + tray / 2 + tray,
     }
   }
 }
@@ -66,7 +70,7 @@ const MARGIN = 0.5
 /** Space between the board and the tray, in cells. */
 const TRAY_GAP = 0.5
 
-/** Space between tray slots, in tray domino cells: one grid step, so slots fall on the grid. */
+/** Space between tray columns, in tray domino cells: one grid step, so slots fall on the grid. */
 const GAP = SNAP / TRAY_SCALE
 
 // TYPES

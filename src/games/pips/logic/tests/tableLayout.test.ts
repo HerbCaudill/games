@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { SNAP, TRAY_SCALE } from "../constants"
+import { BADGE_REACH, SNAP, TRAY_SCALE } from "../constants"
+import { footprint } from "../footprint"
+import { overlaps } from "../overlaps"
 import { tableLayout } from "../tableLayout"
 
 describe("tableLayout", () => {
@@ -24,13 +26,26 @@ describe("tableLayout", () => {
     expect(short.height).toBeLessThanOrEqual(600)
   })
 
-  it("keeps slots from overlapping", () => {
-    const { slots } = tableLayout({ width: 360, height: 700, rows: 6, cols: 7, count: 12 })
-    for (const [i, a] of slots.entries())
-      for (const b of slots.slice(i + 1))
-        expect(Math.abs(a[0] - b[0]) >= 2 * TRAY_SCALE || Math.abs(a[1] - b[1]) >= TRAY_SCALE).toBe(
-          true,
-        )
+  it("leaves room to turn any domino without reaching another, the board or past the bottom", () => {
+    for (const count of [2, 7, 12, 14, 16]) {
+      const rows = 6
+      const { slots, size, board, height } = tableLayout({
+        width: 360,
+        height: 600,
+        rows,
+        cols: 7,
+        count,
+      })
+      for (const [i, slot] of slots.entries())
+        for (const turn of [0, 1]) {
+          const turned = footprint(slot, turn)
+          expect(turned.top).toBeGreaterThanOrEqual(rows + BADGE_REACH)
+          expect(board[1] + turned.bottom * size).toBeLessThanOrEqual(height + 1e-6)
+          for (const other of slots.slice(i + 1))
+            for (const otherTurn of [0, 1])
+              expect(overlaps(turned, footprint(other, otherTurn))).toBe(false)
+        }
+    }
   })
 
   it("fills the tray down each column in turn, with no column more than one longer than another", () => {
