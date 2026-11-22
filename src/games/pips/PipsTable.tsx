@@ -124,7 +124,7 @@ export function PipsTable(
                   solved
                     ? "z-10"
                     : dragging
-                      ? "z-30 cursor-grabbing drop-shadow-lg"
+                      ? "z-40 cursor-grabbing drop-shadow-lg"
                       : "z-10 cursor-grab",
                   "duration-150 ease-out",
                   // Under the pointer, or held where it was let go, only its size eases.

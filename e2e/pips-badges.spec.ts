@@ -27,7 +27,9 @@ test("centers each diamond exactly on its region cell's bottom-right corner", as
   }
 })
 
-test("keeps a solid pure-red error diamond above placed and dragged dominoes", async ({ page }) => {
+test("keeps a solid pure-red error diamond above placed dominoes and below dragged ones", async ({
+  page,
+}) => {
   for (const [name, col, turns] of [
     ["Domino 2–1", 2, 3],
     ["Domino 3–1", 1, 1],
@@ -69,6 +71,6 @@ test("keeps a solid pure-red error diamond above placed and dragged dominoes", a
   await page.mouse.down()
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 8 })
   const dragged = await page.screenshot({ clip, animations: "disabled" })
-  expect(dragged.equals(placed)).toBe(true)
+  expect(dragged.equals(placed)).toBe(false)
   await page.mouse.up()
 })

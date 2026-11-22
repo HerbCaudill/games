@@ -13,7 +13,8 @@ import "./pips.css"
 
 /**
  * One layer of the board, drawn to scale over the board's cells. The base has shaded cells
- * and region fills; the overlay has outlines and the keyboard cursor; badges sit above play.
+ * and region fills; the overlay has outlines and the keyboard cursor; badges sit above
+ * every domino but the one being dragged.
  */
 export function PipsGrid(
   /** The component props. */
@@ -45,7 +46,7 @@ export function PipsGrid(
       className={cn(
         "pointer-events-none absolute",
         layer === "overlay" && "z-20",
-        layer === "badges" && "z-40",
+        layer === "badges" && "z-30",
       )}
       style={{
         left: origin[0] - PAD * scale,
