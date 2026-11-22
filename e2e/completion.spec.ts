@@ -142,7 +142,8 @@ async function solvePips(
 ) {
   for (const [col, name] of ["Domino 2–1", "Domino 3–1"].entries()) {
     const domino = page.getByRole("button", { name, exact: true })
-    await domino.click()
+    // It starts with the smaller number on the left; three taps put the larger on top.
+    for (let turn = 0; turn < 3; turn++) await domino.click()
     const top = (await page
       .getByRole("gridcell", { name: `Row 1, column ${col + 1}` })
       .boundingBox())!

@@ -175,6 +175,22 @@ test("pushes a loose domino aside when undo brings another back to where it lies
   await expect.poll(() => overlap(undone, other)).toBeLessThanOrEqual(0.5)
 })
 
+test("pushes a loose domino aside when the keyboard takes another off the board onto it", async ({
+  page,
+}) => {
+  const removed = page.getByRole("button", { name: "Domino 2–1" })
+  const other = page.getByRole("button", { name: "Domino 3–1" })
+  const slot = await centerOf(removed)
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, removed, [x + box.width / 2, y])
+  await dragTo(page, other, slot)
+  await page.keyboard.press("Backspace")
+  await expect.poll(async () => distance(await centerOf(removed), slot)).toBeLessThan(2)
+  await expect.poll(() => overlap(removed, other)).toBeLessThanOrEqual(0.5)
+})
+
 test("moves a domino dropped on the edge of the board clear of it", async ({ page }) => {
   const placed = page.getByRole("button", { name: "Domino 2–1" })
   const dropped = page.getByRole("button", { name: "Domino 3–1" })
@@ -293,6 +309,22 @@ test("clears the board, putting every domino back in the tray", async ({ page })
   await clear.click()
   await expect(page.getByRole("img", { name: "Broken constraint: 5" })).not.toBeVisible()
   await expect.poll(async () => distance(await centerOf(domino), start)).toBeLessThan(2)
+  await expect(clear).toBeDisabled()
+})
+
+test("clears a turn, even when nothing has moved", async ({ page }) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const clear = page.getByRole("button", { name: "Clear" })
+  await expect(clear).toBeDisabled()
+  await domino.click()
+  await expect(clear).toBeEnabled()
+  await clear.click()
+  await expect
+    .poll(async () => {
+      const box = (await domino.boundingBox())!
+      return box.width > box.height
+    })
+    .toBe(true)
   await expect(clear).toBeDisabled()
 })
 

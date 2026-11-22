@@ -23,7 +23,8 @@ test("region outlines lie on a placed domino's border, including its corners", a
       'button[aria-label="Domino 2–1"] svg > rect:last-of-type',
     )!
     const box = tile.getBoundingClientRect()
-    const tileScale = tile.getScreenCTM()!.a
+    // Negative when the domino lies turned half way round.
+    const tileScale = Math.abs(tile.getScreenCTM()!.a)
     const radius = tile.rx.baseVal.value * tileScale
     return elements.map((element, row) => {
       const path = element as SVGPathElement

@@ -9,8 +9,10 @@ export function useUndo<T>(
   key: string,
   /** The current value. */
   value: T,
-  /** Replace the value. */
+  /** Replace the value with a change. */
   set: (value: T) => void,
+  /** Go back or forward to a recorded value, when that takes more than setting it. */
+  restore: (value: T) => void = set,
 ) {
   const [histories, setHistories] = useState<Record<string, History<T>>>({})
   const { past, future } = histories[key] ?? { past: [], future: [] }
@@ -26,13 +28,13 @@ export function useUndo<T>(
     undo: () => {
       if (!past.length) return
       save({ past: past.slice(0, -1), future: [value, ...future] })
-      set(past[past.length - 1])
+      restore(past[past.length - 1])
     },
     /** Reapply the last undone change. */
     redo: () => {
       if (!future.length) return
       save({ past: [...past, value], future: future.slice(1) })
-      set(future[0])
+      restore(future[0])
     },
     canUndo: past.length > 0,
     canRedo: future.length > 0,

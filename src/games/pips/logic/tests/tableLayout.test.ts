@@ -33,6 +33,18 @@ describe("tableLayout", () => {
         )
   })
 
+  it("fills the tray down each column in turn, with no column more than one longer than another", () => {
+    for (const count of [5, 7, 13, 14, 16]) {
+      const { slots } = tableLayout({ width: 360, height: 700, rows: 6, cols: 7, count })
+      const inReadingDownOrder = [...slots].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+      expect(slots).toEqual(inReadingDownOrder)
+      const columns = [...new Set(slots.map(([x]) => x))]
+      const lengths = columns.map(x => slots.filter(slot => slot[0] === x).length)
+      expect(Math.max(...lengths) - Math.min(...lengths)).toBeLessThanOrEqual(1)
+      for (const x of columns) expect(slots.find(slot => slot[0] === x)![1]).toBe(slots[0][1])
+    }
+  })
+
   it("puts every slot on the grid loose dominoes snap to", () => {
     for (const count of [7, 12, 15]) {
       const { slots, grid } = tableLayout({ width: 360, height: 700, rows: 6, cols: 7, count })

@@ -226,7 +226,7 @@ test("solves a Pips board by turning and dragging dominoes", async ({ page }) =>
   await page.goto("/pips")
   const cell = (row: number, col: number) =>
     page.getByRole("gridcell", { name: `Row ${row}, column ${col}` })
-  // Each domino lies flat; one tap turns it so its first half is on top.
+  // Each domino lies flat, smaller number on the left; three taps put the larger on top.
   await placeDomino(page, "Domino 2–1", cell(1, 1), cell(2, 1))
   await placeDomino(page, "Domino 3–1", cell(1, 2), cell(2, 2))
   await expect(page.getByText(/Solved in/)).toBeVisible()
@@ -272,7 +272,7 @@ test("keeps progress after a reload", async ({ page }) => {
   await expect(page.getByRole("button", { name: "You have found 1 word" })).toHaveText("Moat")
 })
 
-/** Tap a Pips domino to turn it upright, then drag it onto two cells. */
+/** Tap a Pips domino until its larger number is on top, then drag it onto two cells. */
 async function placeDomino(
   /** The page. */
   page: Page,
@@ -284,7 +284,7 @@ async function placeDomino(
   bottom: Locator,
 ) {
   const domino = page.getByRole("button", { name })
-  await domino.click()
+  for (let turn = 0; turn < 3; turn++) await domino.click()
   const [a, b] = [center((await top.boundingBox())!), center((await bottom.boundingBox())!)]
   await dragTo(page, domino, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2])
 }

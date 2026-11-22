@@ -3,6 +3,7 @@ import type { PipsBoard } from "@/types"
 import { boardCells } from "./logic/boardCells"
 import { boardWalls } from "./logic/boardWalls"
 import { tableLayout, type Layout } from "./logic/tableLayout"
+import { trayOrder } from "./logic/trayOrder"
 import type { Point, Surface } from "./logic/types"
 
 /** Measure the space the table has on screen, and lay the board and tray out in it. */
@@ -47,6 +48,8 @@ export function useTable(
     count: board.dominoes.length,
   })
   const { size, board: origin } = layout
+  const order = trayOrder(board.dominoes)
+  const homes = board.dominoes.map((_, i) => layout.slots[order.indexOf(i)])
 
   /** Keep the whole domino inside the viewport, including after rotation or resize. */
   const fit = ([x, y]: Point, turn: number): Point => {
@@ -72,7 +75,7 @@ export function useTable(
     fit,
   }
 
-  return { space, setSpace, room, layout, fit, surface }
+  return { space, setSpace, room, layout, order, homes, fit, surface }
 }
 
 // CONSTANTS
@@ -106,6 +109,10 @@ export type Table = {
   room: Room
   /** Where the board and tray go. */
   layout: Layout
+  /** Domino indexes in the order they line up in the tray. */
+  order: number[]
+  /** Each domino's own tray slot, by domino index. */
+  homes: Point[]
   /** Bring a domino's center back inside the viewport, given its quarter turns. */
   fit: (center: Point, turn: number) => Point
   /** What loose dominoes have to fit around: the board, the snap grid and the screen. */

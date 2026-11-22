@@ -39,4 +39,18 @@ describe("useUndo", () => {
     act(() => result.current.setKey("a"))
     expect(result.current.canUndo).toBe(true)
   })
+
+  it("sets a change as given, and restores only for undo and redo", () => {
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState(0)
+      // A restore that can be told apart from a plain set.
+      return { value, ...useUndo("a", value, setValue, saved => setValue(saved + 100)) }
+    })
+    act(() => result.current.change(1))
+    expect(result.current.value).toBe(1)
+    act(() => result.current.undo())
+    expect(result.current.value).toBe(100)
+    act(() => result.current.redo())
+    expect(result.current.value).toBe(101)
+  })
 })

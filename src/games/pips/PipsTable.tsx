@@ -25,8 +25,8 @@ export function PipsTable(
   // A just-dropped domino, held where it was let go for one frame so only its translation animates to where it lands.
   const [landing, setLanding] = useState<{ index: number; from: Point }>()
   const pointer = useRef<{ index: number; id: number; start: Point; moved: boolean }>(undefined)
-  const { room, layout, fit } = table
-  const { size, board: origin, slots } = layout
+  const { room, layout, homes, fit } = table
+  const { size, board: origin } = layout
 
   useLayoutEffect(() => {
     if (!landing) return
@@ -38,7 +38,7 @@ export function PipsTable(
   /** Where a domino's center is, in cell units from the board's corner. */
   const centerOf = (i: number): Point => {
     const pair = placements[i]
-    if (!pair) return fit(spots[i] ?? slots[i], turns[i] ?? 0)
+    if (!pair) return fit(spots[i] ?? homes[i], turns[i])
     const [a, b] = pair
     return [(a[1] + b[1]) / 2 + 0.5, (a[0] + b[0]) / 2 + 0.5]
   }
@@ -76,7 +76,7 @@ export function PipsTable(
     setDrag(undefined)
     if (!p.moved) return onTap(p.index)
     const from = draggedTo(p.index, [event.clientX - p.start[0], event.clientY - p.start[1]])
-    const turn = placements[p.index] ? directionOf(placements[p.index]!) : (turns[p.index] ?? 0)
+    const turn = placements[p.index] ? directionOf(placements[p.index]!) : turns[p.index]
     setLanding({ index: p.index, from })
     onDrop(p.index, fit(from, turn))
   }
@@ -101,7 +101,7 @@ export function PipsTable(
           {board.dominoes.map((domino, i) => {
             const [x, y] = centerOf(i)
             const pair = placements[i]
-            const turn = pair ? turnTo(turns[i] ?? 0, directionOf(pair)) : (turns[i] ?? 0)
+            const turn = pair ? turnTo(turns[i], directionOf(pair)) : turns[i]
             const dragging = drag?.index === i
             const fullSize = dragging
               ? isOverBoard(fit(draggedTo(i, drag.offset), turn), turn, board)

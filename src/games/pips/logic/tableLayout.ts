@@ -4,7 +4,8 @@ import type { Point } from "./types"
 /**
  * Size and place the board and the tray of dominoes in the available space. Tray dominoes are
  * drawn at `TRAY_SCALE` of the board's scale, and the cell size is the largest that fits both.
- * Every slot lies on the grid loose dominoes snap to, so a domino put back lines up with the rest.
+ * Slots run down columns of nearly equal length, from left to right, and each lies on the grid
+ * loose dominoes snap to, so a domino put back lines up with the rest.
  */
 export function tableLayout(
   /** The space and what goes in it. */
@@ -27,21 +28,18 @@ export function tableLayout(
     const perRow = Math.max(1, Math.floor((width + gap) / (2 * tray + gap)))
     const board: Point = [(width - cols * size) / 2, MARGIN * size]
     const trayTop = board[1] + (rows + MARGIN + TRAY_GAP) * size
-    /** Where a row of slots starts, centered in the space. */
-    const rowStart = (inRow: number) => (width - inRow * 2 * tray - (inRow - 1) * gap) / 2
-    const firstStart = rowStart(Math.min(perRow, count))
-    const step = SNAP * size
-    const slots = Array.from({ length: count }, (_, i): Point => {
-      const row = Math.floor(i / perRow)
-      const inRow = Math.min(perRow, count - row * perRow)
-      // A shorter last row is centered as nearly as the grid allows.
-      const start = firstStart + Math.round((rowStart(inRow) - firstStart) / step) * step
-      const x = start + (i % perRow) * (2 * tray + gap) + tray
-      const y = trayTop + row * (tray + gap) + tray / 2
-      // Slots are kept in cell units from the board's corner, like everything else on the table.
-      return [(x - board[0]) / size, (y - board[1]) / size]
-    })
     const trayRows = Math.ceil(count / perRow)
+    // The fewest columns that need no more rows, centered in the space.
+    const columns = Math.ceil(count / trayRows)
+    const left = (width - columns * 2 * tray - (columns - 1) * gap) / 2
+    const slots = Array.from({ length: columns }, (_, column) =>
+      Array.from({ length: Math.ceil((count - column) / columns) }, (_, row): Point => {
+        const x = left + column * (2 * tray + gap) + tray
+        const y = trayTop + row * (tray + gap) + tray / 2
+        // Slots are kept in cell units from the board's corner, like everything else on the table.
+        return [(x - board[0]) / size, (y - board[1]) / size]
+      }),
+    ).flat()
     const boardHeight = board[1] + (rows + MARGIN) * size
     return {
       size,
@@ -93,7 +91,7 @@ export type Layout = {
   size: number
   /** Top-left corner of the board's first cell, in pixels. */
   board: Point
-  /** Centers of the tray slots, in cell units from the board's corner. */
+  /** Centers of the tray slots, down each column in turn, in cell units from the board's corner. */
   slots: Point[]
   /** A point on the grid loose dominoes snap to, in cell units from the board's corner. */
   grid: Point

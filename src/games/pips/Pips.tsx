@@ -15,12 +15,14 @@ import { cellKey } from "./logic/cellKey"
 import { directionOf } from "./logic/directionOf"
 import { dropDomino } from "./logic/dropDomino"
 import { isSolved } from "./logic/isSolved"
+import { leftHalf } from "./logic/leftHalf"
 import { makeRoom } from "./logic/makeRoom"
 import { placeAt } from "./logic/placeAt"
 import { removeDomino } from "./logic/removeDomino"
 import { restorePieces } from "./logic/restorePieces"
 import { restingSpot } from "./logic/restingSpot"
 import { spreadOut } from "./logic/spreadOut"
+import { startingTurn } from "./logic/startingTurn"
 import { turnTo } from "./logic/turnTo"
 import { type LooseDomino, type Pieces, type Placements, type Point } from "./logic/types"
 import { useTable } from "./useTable"
@@ -36,7 +38,8 @@ export function Pips(
     () => ({ placements: board.dominoes.map(() => null), turns: [], spots: [], elapsed: 0 }),
   )
   const { placements } = progress
-  const turns = progress.turns ?? []
+  const startingTurns = board.dominoes.map(startingTurn)
+  const turns = startingTurns.map((start, i) => progress.turns?.[i] ?? start)
   const spots = progress.spots ?? []
   const pieces: Pieces = { placements, turns, spots }
   const table = useTable(board)
@@ -44,8 +47,8 @@ export function Pips(
   /** Where a domino lies off the board, or null when it's on the board. */
   const looseIn = ({ placements, turns, spots }: Pieces, i: number): LooseDomino | null => {
     if (placements[i]) return null
-    const turn = turns[i] ?? 0
-    return { center: table.fit(spots[i] ?? table.layout.slots[i], turn), turn }
+    const turn = turns[i]
+    return { center: table.fit(spots[i] ?? table.homes[i], turn), turn }
   }
 
   /** Push loose dominoes out from under the ones that just moved, giving each pushed domino its new spot. */
@@ -64,7 +67,7 @@ export function Pips(
     if (!width) return
     const loose = board.dominoes.map((_, i) => looseIn(pieces, i))
     const pulled = loose.flatMap((domino, i) =>
-      domino && !samePoint(domino.center, spots[i] ?? table.layout.slots[i]) ? [i] : [],
+      domino && !samePoint(domino.center, spots[i] ?? table.homes[i]) ? [i] : [],
     )
     const moved = spreadOut(loose, pulled, table.surface)
     if (!moved.size) return
@@ -75,19 +78,21 @@ export function Pips(
     // Only a change of screen pulls dominoes in; moves make room for themselves.
   }, [width, height, left, top, contentTop])
 
-  const { change, undo, redo, canUndo, canRedo } = useUndo<Pieces>(puzzle.date, pieces, saved => {
-    const restored = restorePieces(pieces, saved)
-    // Dominoes that undo or redo takes off the board make room where they land.
-    const back = board.dominoes
+  /** Make room where dominoes that come off the board land. */
+  const settleReturned = (next: Pieces) => {
+    const returned = board.dominoes
       .map((_, i) => i)
-      .filter(i => placements[i] && !restored.placements[i])
-    setProgress(p => ({ ...p, ...settle(restored, back) }))
-  })
+      .filter(i => placements[i] && !next.placements[i])
+    return settle(next, returned)
+  }
+
+  const setPieces = (next: Pieces) => setProgress(p => ({ ...p, ...next }))
+  const { change, undo, redo, canUndo, canRedo } = useUndo(puzzle.date, pieces, setPieces, saved =>
+    setPieces(settleReturned(restorePieces(pieces, saved))),
+  )
   /** Save new pieces, as an undo step only when the board changes. */
   const save = (next: Pieces) =>
-    samePlacements(next.placements, placements)
-      ? setProgress(p => ({ ...p, ...next }))
-      : change(next)
+    samePlacements(next.placements, placements) ? setPieces(next) : change(next)
   const [chosen, setSelected] = useState<number>()
   const [cursor, setCursor] = useState<Cell>(() => boardCells(board)[0])
   // The cursor and the picked domino only matter, and only show, while playing by keyboard.
@@ -97,30 +102,29 @@ export function Pips(
   useGameStatus("pips", puzzle.date, solved ? "solved" : started ? "started" : "new")
   useTimer(!solved, () => setProgress(p => ({ ...p, elapsed: p.elapsed + 1 })))
 
-  const unplaced = board.dominoes.map((_, i) => i).filter(i => !placements[i])
+  const unplaced = table.order.filter(i => !placements[i])
   // Fall back to the first domino in the tray when nothing in it is chosen.
   const selected = chosen !== undefined && !placements[chosen] ? chosen : unplaced[0]
   const dominoAt = (cell: Cell) =>
     placements.findIndex(cells => cells?.some(c => cellKey(c) === cellKey(cell)))
   const facing = (i: number) => {
     const pair = placements[i]
-    return pair ? directionOf(pair) : mod4(turns[i] ?? 0)
+    return pair ? directionOf(pair) : mod4(turns[i])
   }
 
   /** Save new placements, turning each moved domino to match how it now lies. A domino on the board has no loose spot. */
   const update = (next: Placements) =>
-    save({
-      placements: next,
-      turns: next.map((pair, i) => {
-        const turn = turns[i] ?? 0
-        return pair ? turnTo(turn, directionOf(pair)) : turn
+    save(
+      settleReturned({
+        placements: next,
+        turns: next.map((pair, i) => (pair ? turnTo(turns[i], directionOf(pair)) : turns[i])),
+        spots: next.map((pair, i) => (pair ? null : (spots[i] ?? null))),
       }),
-      spots: next.map((pair, i) => (pair ? null : (spots[i] ?? null))),
-    })
+    )
 
   /** Turn a domino off the board a quarter clockwise in place, pushing aside any it now covers. */
   const turn = (i: number) => {
-    const turned = (turns[i] ?? 0) + 1
+    const turned = turns[i] + 1
     const from = looseIn(pieces, i)!.center
     // Turned to reach onto the board, it steps clear of it.
     const at = restingSpot(from, turned, table.surface)
@@ -130,7 +134,7 @@ export function Pips(
         {
           placements,
           spots: board.dominoes.map((_, j) => (moved && j === i ? at : (spots[j] ?? null))),
-          turns: board.dominoes.map((_, j) => (turns[j] ?? 0) + (i === j ? 1 : 0)),
+          turns: turns.map((t, j) => (i === j ? turned : t)),
         },
         [i],
       ),
@@ -139,17 +143,26 @@ export function Pips(
 
   /** Put every domino back in its tray slot, facing its starting way. */
   const clear = () => {
-    save({ placements: board.dominoes.map(() => null), turns: [], spots: [] })
+    save({
+      placements: board.dominoes.map(() => null),
+      // The nearest count that faces the starting way, so none spins the long way back.
+      turns: turns.map((t, i) => turnTo(t, startingTurns[i])),
+      spots: [],
+    })
     setSelected(undefined)
   }
-  const cleared = !placements.some(Boolean) && !spots.some(Boolean)
+  const cleared =
+    !placements.some(Boolean) &&
+    !spots.some(Boolean) &&
+    turns.every((t, i) => mod4(t) === startingTurns[i])
 
-  /** Turn a domino a quarter clockwise; on the board, it pivots on its first half to the next spot that fits. */
+  /** Turn a domino a quarter clockwise; on the board, it pivots on the half that starts on the left to the next spot that fits. */
   const rotate = (i: number) => {
     if (solved) return
     const pair = placements[i]
     if (!pair) return turn(i)
-    const result = placeAt(placements, i, pair[0], (directionOf(pair) + 1) % 4, board)
+    const pivot = pair[leftHalf(board.dominoes[i])]
+    const result = placeAt(placements, i, pivot, (directionOf(pair) + 1) % 4, board)
     if (result) update(result.placements)
   }
 
@@ -161,7 +174,7 @@ export function Pips(
     const result = dropDomino(placements, i, center, facing(i), board)
     if (result.kind === "placed") update(result.placements)
     else if (result.kind === "loose") {
-      const at = restingSpot(center, turns[i] ?? 0, table.surface)
+      const at = restingSpot(center, turns[i], table.surface)
       const next = removeDomino(placements, i)
       save(
         settle(
@@ -191,7 +204,8 @@ export function Pips(
     if (!result) return
     update(result.placements)
     const rest = unplaced.filter(i => i !== selected)
-    setSelected(rest.find(i => i > selected) ?? rest[0])
+    // On to the one that followed it in the tray.
+    setSelected(rest[unplaced.indexOf(selected)] ?? rest[0])
   }
 
   const cycle = (step: number) => {
@@ -333,7 +347,7 @@ function mod4(
 type PipsProgress = {
   /** Where each domino sits. */
   placements: Placements
-  /** Quarter turns clockwise for each domino; missing in progress saved before dominoes could turn. */
+  /** Quarter turns clockwise for each domino; empty or missing until it first changes, meaning its starting turn. */
   turns?: number[]
   /** Where each loose domino lies, in cell units from the board's corner; null when it is in its tray slot. */
   spots?: (Point | null)[]
