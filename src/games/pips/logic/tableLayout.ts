@@ -1,4 +1,4 @@
-import { SNAP, TRAY_SCALE } from "./constants"
+import { BADGE_REACH, SNAP, TRAY_SCALE } from "./constants"
 import type { Point } from "./types"
 
 /**
@@ -14,7 +14,7 @@ export function tableLayout(
 ): Layout {
   let size = MAX_SIZE
   for (; size > MIN_SIZE; size--) {
-    if ((cols + 2 * MARGIN) * size > width) continue
+    if ((cols + 2 * BADGE_REACH) * size > width) continue
     if (arrange(size).height <= height) break
   }
   return arrange(size)
@@ -27,8 +27,8 @@ export function tableLayout(
     const tray = TRAY_SCALE * size
     const gap = GAP * tray
     const perRow = Math.max(1, Math.floor((width + gap) / (2 * tray + gap)))
-    const board: Point = [(width - cols * size) / 2, MARGIN * size]
-    const trayTop = board[1] + (rows + MARGIN + TRAY_GAP) * size
+    const board: Point = [(width - cols * size) / 2, BOARD_TOP * size]
+    const trayTop = board[1] + (rows + TRAY_GAP) * size
     const trayRows = Math.ceil(count / perRow)
     // A domino's length from one row to the next, so even two turned upright only touch.
     const rowStep = 2 * tray
@@ -43,7 +43,7 @@ export function tableLayout(
         return [(x - board[0]) / size, (y - board[1]) / size]
       }),
     ).flat()
-    const boardHeight = board[1] + (rows + MARGIN) * size
+    const boardHeight = board[1] + (rows + BADGE_REACH) * size
     return {
       size,
       board,
@@ -64,11 +64,11 @@ const MAX_SIZE = 60
 /** Smallest cell size, in pixels. */
 const MIN_SIZE = 24
 
-/** Room around the board for rule badges, in cells. */
-const MARGIN = 0.5
+/** Room above the board, in cells. Badges hang only off its bottom-right corners, so it needs little. */
+const BOARD_TOP = 0.25
 
-/** Space between the board and the tray, in cells. */
-const TRAY_GAP = 0.5
+/** Space between the board and the tray, in cells: room for a top-row domino to turn upright clear of the badges. */
+const TRAY_GAP = 0.75
 
 /** Space between tray columns, in tray domino cells: one grid step, so slots fall on the grid. */
 const GAP = SNAP / TRAY_SCALE

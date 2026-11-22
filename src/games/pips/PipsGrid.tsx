@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import type { Cell, PipsBoard, PipsRegion } from "@/types"
 import { dominoGeometry } from "./dominoGeometry"
 import { badgeCorner } from "./logic/badgeCorner"
+import { BADGE_REACH } from "./logic/constants"
 import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
@@ -223,8 +224,8 @@ const U = dominoGeometry.unit
 /** Region outline width, in SVG units. */
 const REGION_STROKE_WIDTH = 0.45
 
-/** Room around the board for badges that hang off its edge. */
-const PAD = 4.5
+/** Room around the board for badges that hang off its edge, and no more, so it can reach the screen's edges without scrolling. */
+const PAD = BADGE_REACH * U
 
 /** The rounded 4.2-unit diamond, reaching about `BADGE_REACH` cells from its center. */
 const BADGE_PATH =

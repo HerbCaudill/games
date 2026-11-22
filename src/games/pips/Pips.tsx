@@ -260,7 +260,7 @@ export function Pips(
   )
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 p-4 sm:pt-6">
+    <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-1 py-4 sm:pt-6">
       {toolbar &&
         createPortal(
           <div className="ml-auto flex items-center">
