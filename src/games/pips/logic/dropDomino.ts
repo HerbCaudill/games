@@ -1,5 +1,6 @@
 import { boardCells } from "./boardCells"
 import { DIRECTIONS } from "./constants"
+import { isOverBoard } from "./isOverBoard"
 import { place } from "./place"
 import type { Placements, Point } from "./types"
 import type { Cell, PipsBoard } from "@/types"
@@ -21,16 +22,8 @@ export function dropDomino(
   /** The board. */
   board: PipsBoard,
 ): Drop {
+  if (!isOverBoard(center, direction, board)) return { kind: "loose" }
   const cells = boardCells(board)
-  const [down, across] = DIRECTIONS[direction]
-  // Half the domino's width and height.
-  const [hx, hy] = [0.5 + Math.abs(across) / 2, 0.5 + Math.abs(down) / 2]
-  const overlap = cells.reduce((sum, [r, c]) => {
-    const x = Math.min(c + 1, center[0] + hx) - Math.max(c, center[0] - hx)
-    const y = Math.min(r + 1, center[1] + hy) - Math.max(r, center[1] - hy)
-    return sum + Math.max(0, x) * Math.max(0, y)
-  }, 0)
-  if (overlap < MIN_OVERLAP) return { kind: "loose" }
 
   // Its own direction first, then the others clockwise from it.
   for (let turn = 0; turn < DIRECTIONS.length; turn++) {
@@ -50,11 +43,6 @@ export function dropDomino(
   }
   return { kind: "blocked" }
 }
-
-// CONSTANTS
-
-/** How much of the board, in cells, a domino has to cover to count as dropped on it. */
-const MIN_OVERLAP = 0.15
 
 // TYPES
 

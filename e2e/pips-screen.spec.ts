@@ -296,18 +296,39 @@ test("clears the board, putting every domino back in the tray", async ({ page })
   await expect(clear).toBeDisabled()
 })
 
-test("shows tray dominoes smaller than board cells, growing to full size once picked up", async ({
-  page,
-}) => {
+test("draws a dragged domino full size only over the board", async ({ page }) => {
   const domino = page.getByRole("button", { name: "Domino 2–1" })
   const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
-  const cellWidth = (await cell.boundingBox())!.width
-  expect((await domino.boundingBox())!.width).toBeLessThan(1.8 * cellWidth)
+  const box = (await cell.boundingBox())!
+  const full = 2 * box.width
+  const small = TRAY_SCALE * full
+  const width = async () => (await domino.boundingBox())!.width
+  const overBoard: [number, number] = [box.x + box.width, box.y + box.height / 2]
+  const offBoard: [number, number] = [
+    page.viewportSize()!.width / 2,
+    page.viewportSize()!.height - 40,
+  ]
+
   await page.mouse.move(...(await centerOf(domino)))
   await page.mouse.down()
-  await page.mouse.move(20, 300, { steps: 8 })
-  await expect.poll(async () => (await domino.boundingBox())!.width).toBeCloseTo(2 * cellWidth, 0)
+  await page.mouse.move(...offBoard, { steps: 8 })
+  // Let any change of size finish, so a domino on its way to full size can't pass as small.
+  await domino.evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)))
+  await expect.poll(width).toBeCloseTo(small, 0)
+  await page.mouse.move(...overBoard, { steps: 8 })
+  await expect.poll(width).toBeCloseTo(full, 0)
+  await page.mouse.move(...offBoard, { steps: 8 })
+  await expect.poll(width).toBeCloseTo(small, 0)
+  await page.mouse.move(...overBoard, { steps: 8 })
   await page.mouse.up()
+  await expect.poll(width).toBeCloseTo(full, 0)
+
+  // Picked up off the board, it shrinks again.
+  await page.mouse.down()
+  await page.mouse.move(...offBoard, { steps: 8 })
+  await expect.poll(width).toBeCloseTo(small, 0)
+  await page.mouse.up()
+  await expect.poll(width).toBeCloseTo(small, 0)
 })
 
 test("undoes and redoes moves", async ({ page }) => {

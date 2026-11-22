@@ -98,6 +98,11 @@ describe("dropDomino", () => {
     expect(dropDomino(empty, 0, [2.9, 1.6], 0, board)).toEqual({ kind: "loose" })
   })
 
+  it("leaves a loose-sized domino dropped snugly beside the board where it lies", () => {
+    expect(dropDomino(empty, 0, [2.75, 1], 0, board)).toEqual({ kind: "loose" })
+    expect(dropDomino(empty, 0, [1, 2.375], 0, board)).toEqual({ kind: "loose" })
+  })
+
   it("says when a domino dropped on the board has nowhere to go", () => {
     const full: Placements = [
       [

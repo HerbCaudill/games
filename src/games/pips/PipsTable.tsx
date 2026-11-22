@@ -6,21 +6,23 @@ import { dominoGeometry } from "./dominoGeometry"
 import { PipsGrid } from "./PipsGrid"
 import { directionOf } from "./logic/directionOf"
 import { halfRegions } from "./logic/halfRegions"
+import { isOverBoard } from "./logic/isOverBoard"
 import { TRAY_SCALE } from "./logic/constants"
 import { turnTo } from "./logic/turnTo"
 import type { Placements, Point } from "./logic/types"
 import type { Table } from "./useTable"
 
 /**
- * The board and the tray of dominoes. Dominoes off the board are drawn smaller and grow to the
- * board's scale once picked up. Drag a domino anywhere to move it; tap it to turn it.
+ * The board and the tray of dominoes. Dominoes off the board are drawn smaller, and one being
+ * dragged grows to the board's scale while it's over the board. Drag a domino anywhere to move it;
+ * tap it to turn it.
  */
 export function PipsTable(
   /** The component props. */
   { board, table, placements, turns, spots, solved, cursor, selected, onTap, onDrop }: Props,
 ) {
   const [drag, setDrag] = useState<{ index: number; offset: Point }>()
-  // A just-dropped domino, held where it was let go for one frame so only its transform animates to where it lands.
+  // A just-dropped domino, held where it was let go for one frame so only its translation animates to where it lands.
   const [landing, setLanding] = useState<{ index: number; from: Point }>()
   const pointer = useRef<{ index: number; id: number; start: Point; moved: boolean }>(undefined)
   const { room, layout, fit } = table
@@ -39,6 +41,12 @@ export function PipsTable(
     if (!pair) return fit(spots[i] ?? slots[i], turns[i] ?? 0)
     const [a, b] = pair
     return [(a[1] + b[1]) / 2 + 0.5, (a[0] + b[0]) / 2 + 0.5]
+  }
+
+  /** Where a domino's center has been dragged to. */
+  const draggedTo = (i: number, [dx, dy]: Point): Point => {
+    const [x, y] = centerOf(i)
+    return [x + dx / size, y + dy / size]
   }
 
   const down = (event: PointerEvent, index: number) => {
@@ -67,9 +75,7 @@ export function PipsTable(
     pointer.current = undefined
     setDrag(undefined)
     if (!p.moved) return onTap(p.index)
-    const [x, y] = centerOf(p.index)
-    const offset = [event.clientX - p.start[0], event.clientY - p.start[1]]
-    const from: Point = [x + offset[0] / size, y + offset[1] / size]
+    const from = draggedTo(p.index, [event.clientX - p.start[0], event.clientY - p.start[1]])
     const turn = placements[p.index] ? directionOf(placements[p.index]!) : (turns[p.index] ?? 0)
     setLanding({ index: p.index, from })
     onDrop(p.index, fit(from, turn))
@@ -97,7 +103,9 @@ export function PipsTable(
             const pair = placements[i]
             const turn = pair ? turnTo(turns[i] ?? 0, directionOf(pair)) : (turns[i] ?? 0)
             const dragging = drag?.index === i
-            const scale = pair || dragging ? 1 : TRAY_SCALE
+            const fullSize = dragging
+              ? isOverBoard(fit(draggedTo(i, drag.offset), turn), turn, board)
+              : !!pair
             const held = landing?.index === i
             const [dx, dy] = dragging
               ? drag.offset
@@ -118,7 +126,11 @@ export function PipsTable(
                     : dragging
                       ? "z-30 cursor-grabbing drop-shadow-lg"
                       : "z-10 cursor-grab",
-                  !dragging && !held && "transition-[left,top,transform] duration-150 ease-out",
+                  "duration-150 ease-out",
+                  // Under the pointer, or held where it was let go, only its size eases.
+                  dragging || held
+                    ? "transition-[scale]"
+                    : "transition-[left,top,translate,rotate,scale]",
                   i === selected && "ring-3 ring-(--game-pips)",
                 )}
                 style={{
@@ -129,7 +141,10 @@ export function PipsTable(
                   // Round the button like the domino inside it, so the selection ring follows its corners.
                   borderRadius:
                     ((dominoGeometry.radius + dominoGeometry.inset) / dominoGeometry.unit) * size,
-                  transform: `translate(${dx}px, ${dy}px) rotate(${turn * 90}deg) scale(${scale})`,
+                  // Separate properties, so size can ease while position follows the pointer.
+                  translate: `${dx}px ${dy}px`,
+                  rotate: `${turn * 90}deg`,
+                  scale: fullSize ? 1 : TRAY_SCALE,
                 }}
                 onPointerDown={event => down(event, i)}
                 onPointerMove={move}
