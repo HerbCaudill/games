@@ -39,6 +39,22 @@
   }
 }
 
+/* Spreads like a flood but stays, since it is the screen's own background. */
+.completion-flood-close {
+  animation-name: completion-flood-close;
+}
+
+@keyframes completion-flood-close {
+  0% {
+    transform: scale(0);
+    animation-timing-function: cubic-bezier(0.35, 0.1, 0.25, 1);
+  }
+  40%,
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* A white ring that ripples out from the board as the flood starts. */
 .completion-echo {
   position: absolute;

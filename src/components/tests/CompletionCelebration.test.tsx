@@ -8,7 +8,7 @@ it("celebrates when a game is completed, leaving the words to the game", () => {
   const { container } = render(<CompletionCelebration />)
   expect(container).toBeEmptyDOMElement()
   act(() => {
-    window.dispatchEvent(new CustomEvent("game-completed", { detail: "crossword" }))
+    window.dispatchEvent(new CustomEvent("game-completed", { detail: { game: "crossword" } }))
   })
   expect(container).not.toBeEmptyDOMElement()
 })

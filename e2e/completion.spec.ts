@@ -24,6 +24,26 @@ for (const game of ["crossword", "pips", "spelling-bee", "connections", "letter-
   })
 }
 
+test("celebrates a Connections reverse rainbow with a flood in each group's color", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/connections?date=2026-11-16")
+  for (const group of [
+    ["SAW", "AXE", "AWL", "FILE"],
+    ["CAT", "DOG", "FISH", "BIRD"],
+    ["RED", "BLUE", "GREEN", "PINK"],
+    ["APPLE", "PEAR", "PLUM", "FIG"],
+  ]) {
+    for (const word of group) await page.getByRole("button", { name: word, exact: true }).click()
+    await page.getByRole("button", { name: "Submit", exact: true }).click()
+  }
+  await expect(
+    page.getByRole("status").filter({ hasText: /^Solved in .* · Perfect reverse rainbow$/ }),
+  ).toBeVisible()
+  await expect(page.locator("[data-celebration-part='flood']")).toHaveCount(4)
+})
+
 test("floods out from the middle of the board and bursts from the solved message", async ({
   page,
   isMobile,

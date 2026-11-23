@@ -12,11 +12,13 @@ export function useGameStatus(
   date: string,
   /** The puzzle's current status. */
   status: GameStatus,
+  /** Colors for a fancier rainbow celebration of this solve, in the order they spread. */
+  rainbow?: string[],
 ) {
   useEffect(() => {
     writeStored(statusKey(game, date), status)
   }, [game, date, status])
-  useCelebration(game, `${game}:${date}`, status === "solved")
+  useCelebration(game, `${game}:${date}`, status === "solved", rainbow)
 }
 
 // TYPES

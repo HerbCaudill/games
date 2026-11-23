@@ -12,12 +12,26 @@ export function useCelebration(
   key: string,
   /** Whether it is done. */
   done: boolean,
+  /** Colors for a fancier rainbow celebration instead of the game's own color, in the order they spread. */
+  rainbow?: string[],
 ) {
   const previous = useRef({ key, done })
   useEffect(() => {
     const before = previous.current
     previous.current = { key, done }
     if (before.key === key && !before.done && done)
-      window.dispatchEvent(new CustomEvent<GameId>("game-completed", { detail: game }))
-  }, [game, key, done])
+      window.dispatchEvent(
+        new CustomEvent<CelebrationDetail>("game-completed", { detail: { game, rainbow } }),
+      )
+  }, [game, key, done, rainbow])
+}
+
+// TYPES
+
+/** What the shared celebration plays for. */
+export type CelebrationDetail = {
+  /** The game that was completed. */
+  game: GameId
+  /** Colors for a rainbow celebration, in the order they spread; absent for the game's own color. */
+  rainbow?: string[]
 }

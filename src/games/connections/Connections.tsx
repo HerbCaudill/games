@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useState, type CSSProperties } from "react"
 import { flushSync } from "react-dom"
 import { SolvedMessage } from "@/components/SolvedMessage"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import type { ConnectionsGroup, ConnectionsPuzzle } from "@/types"
 import { initialState } from "./logic/initialState"
 import { isOver } from "./logic/isOver"
+import { isReverseRainbow } from "./logic/isReverseRainbow"
 import { MAX_MISTAKES } from "./logic/constants"
 import { mergeSync } from "./logic/mergeSync"
 import { remainingWords } from "./logic/remainingWords"
@@ -47,11 +48,13 @@ export function Connections(
   const toast = useToast()
   const over = isOver(state, puzzle)
   const won = state.solved.length === puzzle.groups.length
+  const reverseRainbow = isReverseRainbow(state.solved, puzzle)
   const elapsed = useElapsed(`time:connections:${puzzle.date}`, !over)
   useGameStatus(
     "connections",
     puzzle.date,
     won ? "solved" : over ? "failed" : state.guesses.length ? "started" : "new",
+    reverseRainbow ? REVERSE_RAINBOW : undefined,
   )
 
   const words = remainingWords(state, puzzle)
@@ -179,8 +182,13 @@ export function Connections(
 
       {/* A container, so a solved group's band can be exactly one square tile tall. */}
       <div className="@container grid gap-2" data-board>
-        {shownGroups.map(i => (
-          <SolvedGroup key={i} group={puzzle.groups[i]} missed={!state.solved.includes(i)} />
+        {shownGroups.map((i, place) => (
+          <SolvedGroup
+            key={i}
+            group={puzzle.groups[i]}
+            missed={!state.solved.includes(i)}
+            place={place}
+          />
         ))}
         {!over && (
           <div
@@ -218,7 +226,7 @@ export function Connections(
                 className="pointer-events-none absolute inset-x-0 top-0 opacity-0"
                 aria-hidden="true"
               >
-                <SolvedGroup group={merging} missed={false} />
+                <SolvedGroup group={merging} missed={false} place={shownGroups.length} />
               </div>
             )}
           </div>
@@ -268,14 +276,7 @@ export function Connections(
 
       {won ? (
         <div className="flex justify-center">
-          <SolvedMessage
-            seconds={elapsed}
-            detail={
-              state.mistakes === 0
-                ? "Perfect"
-                : `${state.mistakes} ${state.mistakes === 1 ? "mistake" : "mistakes"}`
-            }
-          />
+          <SolvedMessage seconds={elapsed} detail={solvedDetail(state.mistakes, reverseRainbow)} />
         </div>
       ) : (
         over && <p className="text-center font-semibold">Better luck next time</p>
@@ -285,14 +286,17 @@ export function Connections(
 }
 
 /** A solved or revealed group, colored by difficulty. */
-function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boolean }) {
+function SolvedGroup(
+  /** The component props. */
+  { group, missed, place }: SolvedGroupProps,
+) {
   return (
     <div
       className={cn(
-        "text-(--group-foreground) flex h-[calc((100cqw-1.5rem)/4)] flex-col items-center justify-center rounded-lg px-2 text-center",
+        "connections-band text-(--group-foreground) flex h-[calc((100cqw-1.5rem)/4)] flex-col items-center justify-center rounded-lg px-2 text-center",
         missed && "opacity-75",
       )}
-      style={{ background: `var(--group-${group.level})` }}
+      style={{ background: `var(--group-${group.level})`, "--place": place } as CSSProperties}
     >
       <span className="text-sm font-bold uppercase sm:text-base">{group.title}</span>
       <span className="text-xs font-medium uppercase sm:text-sm">{group.words.join(", ")}</span>
@@ -300,7 +304,22 @@ function SolvedGroup({ group, missed }: { group: ConnectionsGroup; missed: boole
   )
 }
 
+/** How a win went, for the solved message: its mistakes, and whether it was a reverse rainbow. */
+function solvedDetail(
+  /** Wrong guesses. */
+  mistakes: number,
+  /** Whether the groups were found from purple down to yellow. */
+  reverseRainbow: boolean,
+) {
+  if (mistakes === 0) return reverseRainbow ? "Perfect reverse rainbow" : "Perfect"
+  const count = `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"}`
+  return reverseRainbow ? `Reverse rainbow · ${count}` : count
+}
+
 // CONSTANTS
+
+/** The groups' colors from purple down to yellow, for a reverse rainbow's celebration. */
+const REVERSE_RAINBOW = [3, 2, 1, 0].map(level => `var(--group-${level})`)
 
 /** How long each selected tile's hop takes when a guess is submitted, in milliseconds. */
 const HOP_MS = 270
@@ -316,6 +335,15 @@ const BAND_MS = 270
 
 /** How long a wrong guess's tiles shake. */
 const SHAKE_MS = 480
+
+type SolvedGroupProps = {
+  /** The group. */
+  group: ConnectionsGroup
+  /** Whether the player missed it and it is only being revealed. */
+  missed: boolean
+  /** Its place among the bands, from the top, so a reverse rainbow's bands hop in turn. */
+  place: number
+}
 
 type Props = {
   /** The puzzle. */
