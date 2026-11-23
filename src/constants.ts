@@ -16,6 +16,7 @@ export const GAMES: GameInfo[] = [
     id: "spelling-bee",
     name: "Spelling Bee",
     color: "var(--game-spelling-bee)",
+    releaseHour: 3,
   },
   {
     id: "connections",
@@ -26,6 +27,7 @@ export const GAMES: GameInfo[] = [
     id: "letter-boxed",
     name: "Letter Boxed",
     color: "var(--game-letter-boxed)",
+    releaseHour: 3,
   },
 ]
 
@@ -42,4 +44,6 @@ export type GameInfo = {
   name: string
   /** Tile color on the home menu, as a CSS value. */
   color: string
+  /** Hour in New York when each day's puzzle comes out, for games whose puzzle isn't out by midnight. */
+  releaseHour?: number
 }

@@ -5,25 +5,32 @@ import { GridProgress } from "@/games/crossword/GridProgress"
 import { StarBadge } from "@/games/crossword/StarBadge"
 import { HiveProgress } from "@/games/spelling-bee/HiveProgress"
 import { formatDuration } from "@/lib/formatDuration"
-import { navigate } from "@/lib/navigate"
+import { cn } from "@/lib/utils"
 import { GameGlyph } from "./GameGlyph"
 import type { HomeProgress, HomeTile as Tile } from "./readHomeTile"
 
-/** A game's tile on the home menu: its name, the time spent, and a picture of progress. */
+/** A game's tile on the home menu: its name, the time spent, and a picture of progress; or, before its puzzle is out, how long until it is. */
 export function HomeTile(
   /** The component props. */
-  { game, href, shortcut, tile }: Props,
+  { game, href, shortcut, tile, wait, shaking, onOpen, onShakeEnd }: Props,
 ) {
   const { status, elapsed, progress } = tile
   const time = elapsed === undefined ? "" : formatDuration(elapsed)
+  const locked = wait > 0
   return (
     <a
       href={href}
+      aria-disabled={locked || undefined}
       onClick={event => {
         event.preventDefault()
-        navigate(href)
+        onOpen()
       }}
-      className="text-foreground grid min-h-38 grid-cols-[1fr_auto] gap-4 rounded-[20px] py-5 pr-5 pl-[22px] transition-[filter] outline-none hover:brightness-95"
+      onAnimationEnd={onShakeEnd}
+      className={cn(
+        "text-foreground grid min-h-38 grid-cols-[1fr_auto] gap-4 rounded-[20px] py-5 pr-5 pl-[22px] transition-[filter] outline-none",
+        locked ? "cursor-default" : "hover:brightness-95",
+        shaking && "motion-safe:animate-shake",
+      )}
       style={{ background: game.color }}
     >
       <span className="flex min-w-0 flex-col justify-between">
@@ -34,19 +41,25 @@ export function HomeTile(
           </kbd>
         </span>
         <span className="flex items-center gap-1.5 text-sm font-medium tabular-nums opacity-75">
-          {status === "solved" && (
+          {locked && (
+            <>
+              <IconClock className="size-4" aria-hidden="true" />
+              Available in {formatWait(wait)}
+            </>
+          )}
+          {!locked && status === "solved" && (
             <>
               <IconCheck className="size-4" stroke={2.5} aria-hidden="true" />
               {time ? `Solved in ${time}` : "Solved"}
             </>
           )}
-          {status === "failed" && (
+          {!locked && status === "failed" && (
             <>
               <IconX className="size-4" stroke={2.5} aria-hidden="true" />
               Out of guesses
             </>
           )}
-          {status === "started" && (
+          {!locked && status === "started" && (
             <>
               <span className="sr-only">In progress</span>
               {time && (
@@ -95,6 +108,27 @@ function ProgressPicture(
   }
 }
 
+/** How long until a puzzle comes out, rounded up to the minute, such as "1 hour 54 minutes". */
+function formatWait(
+  /** Milliseconds to wait. */
+  wait: number,
+) {
+  const minutes = Math.ceil(wait / 60_000)
+  const hours = Math.floor(minutes / 60)
+  return [plural(hours, "hour"), plural(minutes % 60, "minute")].filter(Boolean).join(" ")
+}
+
+/** A count and its unit, such as "2 hours", or nothing for zero. */
+function plural(
+  /** How many. */
+  count: number,
+  /** The unit, singular. */
+  unit: string,
+) {
+  if (!count) return ""
+  return `${count} ${unit}${count === 1 ? "" : "s"}`
+}
+
 /** Words under the picture of progress. */
 function label(
   /** The progress shown. */
@@ -126,4 +160,12 @@ type Props = {
   shortcut: number
   /** What to show about the puzzle. */
   tile: Tile
+  /** Milliseconds until the puzzle comes out, or 0 once it's out. */
+  wait: number
+  /** Whether the tile is shaking no. */
+  shaking: boolean
+  /** Called when the tile is clicked. */
+  onOpen: () => void
+  /** Called when the tile stops shaking. */
+  onShakeEnd: () => void
 }

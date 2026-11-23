@@ -1,6 +1,10 @@
-import { GAMES } from "@/constants"
+import { useState } from "react"
+import { GAMES, type GameInfo } from "@/constants"
 import { useKeydown } from "@/lib/useKeydown"
 import { navigate } from "@/lib/navigate"
+import { newYorkTime } from "@/lib/newYorkTime"
+import { useEverySecond } from "@/lib/useEverySecond"
+import type { GameId } from "@/types"
 import { HomeTile } from "./HomeTile"
 import { readHomeTile } from "./readHomeTile"
 import { ShortcutsButton } from "./ShortcutsButton"
@@ -11,11 +15,24 @@ export function Home(
   { date, isToday }: Props,
 ) {
   const query = isToday ? "" : `?date=${date}`
+  const now = Date.now()
+  const waits = GAMES.map(game => waitFor(game, date, now))
+  useEverySecond(waits.some(wait => wait > 0))
+  // The game whose tile is shaking no, because its puzzle isn't out yet.
+  const [shaking, setShaking] = useState<GameId>()
+
+  /** Open a game, or shake its tile if its puzzle isn't out yet. */
+  const open = (index: number) => {
+    const game = GAMES[index]
+    if (waits[index] > 0) setShaking(game.id)
+    else navigate(`/${game.id}${query}`)
+  }
+
   useKeydown(event => {
-    const game = GAMES[Number(event.key) - 1]
-    if (!game) return
+    const index = Number(event.key) - 1
+    if (!GAMES[index]) return
     event.preventDefault()
-    navigate(`/${game.id}${query}`)
+    open(index)
   })
 
   return (
@@ -34,6 +51,10 @@ export function Home(
                 href={`/${game.id}${query}`}
                 shortcut={i + 1}
                 tile={readHomeTile(game.id, date)}
+                wait={waits[i]}
+                shaking={shaking === game.id}
+                onOpen={() => open(i)}
+                onShakeEnd={() => setShaking(undefined)}
               />
             </li>
           ))}
@@ -41,6 +62,19 @@ export function Home(
       </main>
     </div>
   )
+}
+
+/** Milliseconds until a game's puzzle for a date comes out, or 0 once it's out. */
+function waitFor(
+  /** The game. */
+  game: GameInfo,
+  /** Puzzle date as YYYY-MM-DD. */
+  date: string,
+  /** The current time, in milliseconds since 1970. */
+  now: number,
+) {
+  if (game.releaseHour === undefined) return 0
+  return Math.max(0, newYorkTime(date, game.releaseHour) - now)
 }
 
 type Props = {
