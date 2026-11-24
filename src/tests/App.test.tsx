@@ -8,6 +8,7 @@ beforeEach(() => localStorage.clear())
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 describe("App", () => {
@@ -28,6 +29,9 @@ describe("App", () => {
   })
 
   it("starts writing today's Spelling Bee hints as soon as it loads", async () => {
+    // Noon in New York, after the day's Spelling Bee is out.
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-11-24T17:00:00Z"))
     const today = nytToday()
     const hints = { date: today, hints: { moat: "Castle ring" } }
     const fetch = vi.fn(async () => Response.json(hints))

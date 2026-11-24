@@ -1,13 +1,10 @@
-import { useEffect } from "react"
 import { GameScreen } from "./components/GameScreen"
 import { Home } from "./components/Home"
 import { CompletionCelebration } from "./components/CompletionCelebration"
 import { Welcome } from "./components/Welcome"
 import { GAMES } from "./constants"
-import { hintsRequest } from "./games/spelling-bee/hintsRequest"
+import { usePrefetchHints } from "./games/spelling-bee/usePrefetchHints"
 import { nytToday } from "./lib/nytToday"
-import { readStored } from "./lib/readStored"
-import { requestApi } from "./lib/requestApi"
 import { usePersistentState } from "./lib/usePersistentState"
 import { useRoute } from "./lib/useRoute"
 
@@ -21,7 +18,7 @@ export function App(
   const date = params.get("date") ?? today
   const game = GAMES.find(g => path === `/${g.id}`)
   const [token, setToken] = usePersistentState("nyt-token", () => "")
-  usePrefetchHints(today, token)
+  usePrefetchHints(token)
   if (!token) return <Welcome onToken={setToken} />
   return (
     <>
@@ -39,21 +36,6 @@ export function App(
       <CompletionCelebration />
     </>
   )
-}
-
-/** Have Claude start writing a day's Spelling Bee hints as soon as the app opens, so they're ready when the hints panel is. */
-function usePrefetchHints(
-  /** Puzzle date as YYYY-MM-DD. */
-  date: string,
-  /** The NYT-S cookie value saved on this device, if any. */
-  token: string,
-) {
-  useEffect(() => {
-    const { path, storageKey } = hintsRequest(date)
-    if (!token || readStored(storageKey)) return
-    // The hints panel shows any failure when it opens and asks again.
-    requestApi(path, token, storageKey).catch(() => {})
-  }, [date, token])
 }
 
 type Props = Record<string, never>
