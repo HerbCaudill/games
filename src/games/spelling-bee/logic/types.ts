@@ -1,7 +1,12 @@
 /** The outcome of a guess. */
 export type GuessResult =
   | { ok: true; word: string; score: number; pangram: boolean }
-  | { ok: false; message: string }
+  | {
+      ok: false
+      message: string
+      /** The word counts but is already found, so it isn't a mistake. */
+      repeat?: true
+    }
 
 /** A player's standing. */
 export type Rank = {

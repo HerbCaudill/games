@@ -41,14 +41,15 @@ export function SpellingBee(
     merge: (f, remote) => mergeSync(f, remote, puzzle),
   })
   const [guess, setGuess] = useState("")
-  // A word that wasn't accepted shakes for a moment before it clears.
-  const [rejected, setRejected] = useState(false)
+  // A word that wasn't accepted moves for a moment before it clears: a shake for a mistake, a nod
+  // for a word already found.
+  const [rejected, setRejected] = useState<"shake" | "nod">()
   useEffect(() => {
     if (!rejected) return
     const timer = setTimeout(() => {
       setGuess("")
-      setRejected(false)
-    }, SHAKE_MS)
+      setRejected(undefined)
+    }, REJECT_MS)
     return () => clearTimeout(timer)
   }, [rejected])
   const [outer, setOuter] = useState(puzzle.outer)
@@ -69,23 +70,23 @@ export function SpellingBee(
   useCelebration("spelling-bee", `queen-bee:${puzzle.date}`, score === rank.max)
 
   const letters = new Set([puzzle.center, ...puzzle.outer])
-  // Typing over a shaking word starts a new one.
+  // Typing over a rejected word starts a new one.
   const add = (letter: string) => {
-    setRejected(false)
+    setRejected(undefined)
     setGuess(g => {
       const word = rejected ? "" : g
       return word.length < 19 ? word + letter.toLowerCase() : word
     })
   }
   const remove = () => {
-    setRejected(false)
+    setRejected(undefined)
     setGuess(g => (rejected ? "" : g.slice(0, -1)))
   }
   const submit = () => {
     if (!guess || rejected) return
     const result = checkGuess(guess, puzzle, found)
     if (!result.ok) {
-      setRejected(true)
+      setRejected(result.repeat ? "nod" : "shake")
       return toast.show(result.message)
     }
     setGuess("")
@@ -183,9 +184,10 @@ export function SpellingBee(
         <div
           className={cn(
             "flex h-12 items-center text-3xl font-bold tracking-wide uppercase",
-            rejected && "motion-safe:animate-shake",
+            rejected === "shake" && "motion-safe:animate-shake",
+            rejected === "nod" && "motion-safe:animate-nod",
           )}
-          style={{ animationDuration: `${SHAKE_MS}ms` }}
+          style={{ animationDuration: `${REJECT_MS}ms` }}
           aria-live="polite"
           aria-label="Current word"
         >
@@ -239,8 +241,8 @@ export function SpellingBee(
 
 // CONSTANTS
 
-/** How long a word that wasn't accepted shakes before it clears. */
-const SHAKE_MS = 500
+/** How long a word that wasn't accepted shakes or nods before it clears. */
+const REJECT_MS = 500
 
 // TYPES
 

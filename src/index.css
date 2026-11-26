@@ -41,6 +41,28 @@
     }
   }
 
+  /* A word that counts but was already found: a quick double nod, like a "yes, but…". */
+  --animate-nod: nod 0.5s ease-in-out;
+  /* Spelling Bee sets its own duration to match how long it waits before clearing the word. */
+  @keyframes nod {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(0.35rem);
+    }
+    45% {
+      transform: translateY(-0.1rem);
+    }
+    65% {
+      transform: translateY(0.2rem);
+    }
+    85% {
+      transform: translateY(0);
+    }
+  }
+
   /* Points a word earned: they rise past the message and fade, on their own clock. */
   --animate-points-rise: points-rise 1.4s ease-out forwards;
   @keyframes points-rise {

@@ -46,7 +46,14 @@ describe("checkGuess", () => {
     expect(checkGuess("boom", puzzle, [])).toEqual({ ok: false, message: "Missing center letter" })
     expect(checkGuess("taxi", puzzle, [])).toEqual({ ok: false, message: "Bad letters" })
     expect(checkGuess("moth", puzzle, [])).toEqual({ ok: false, message: "Not in word list" })
-    expect(checkGuess("moat", puzzle, ["moat"])).toEqual({ ok: false, message: "Already found" })
+  })
+
+  it("marks a word already found as a repeat, so it isn't treated as a mistake", () => {
+    expect(checkGuess("moat", puzzle, ["moat"])).toEqual({
+      ok: false,
+      message: "Already found",
+      repeat: true,
+    })
   })
 })
 

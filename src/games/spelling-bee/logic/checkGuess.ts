@@ -17,6 +17,6 @@ export function checkGuess(
   if ([...word].some(letter => !letters.has(letter))) return { ok: false, message: "Bad letters" }
   if (!word.includes(puzzle.center)) return { ok: false, message: "Missing center letter" }
   if (!puzzle.answers.includes(word)) return { ok: false, message: "Not in word list" }
-  if (found.includes(word)) return { ok: false, message: "Already found" }
+  if (found.includes(word)) return { ok: false, message: "Already found", repeat: true }
   return { ok: true, word, score: scoreWord(word, puzzle), pangram: puzzle.pangrams.includes(word) }
 }

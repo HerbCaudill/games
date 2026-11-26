@@ -192,6 +192,47 @@ test("rejects a Spelling Bee word without the center letter, shaking it before c
     .toBeLessThanOrEqual(word.y)
 })
 
+test("nods a Spelling Bee word already found instead of shaking it, then clears it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(
+      new Date(),
+    )
+    localStorage.setItem(`progress:spelling-bee:${date}`, JSON.stringify(["moat"]))
+  })
+  await page.goto("/spelling-bee")
+  for (const letter of "moat")
+    await page
+      .getByRole("button", { name: letter.toUpperCase(), exact: true })
+      .dispatchEvent("pointerdown")
+  await page.getByRole("button", { name: "Enter" }).click()
+  await expect(page.getByRole("status")).toHaveText("Already found")
+  const current = page.getByLabel("Current word")
+  await expect(current).toHaveText("moat")
+  const points = await current
+    .locator("span")
+    .first()
+    .evaluate(
+      el =>
+        new Promise<{ left: number; top: number }[]>(resolve => {
+          const points: { left: number; top: number }[] = []
+          const start = performance.now()
+          const sample = () => {
+            const { left, top } = el.getBoundingClientRect()
+            points.push({ left, top })
+            if (performance.now() - start < 200) requestAnimationFrame(sample)
+            else resolve(points)
+          }
+          sample()
+        }),
+    )
+  const range = (values: number[]) => Math.max(...values) - Math.min(...values)
+  expect(range(points.map(p => p.top))).toBeGreaterThan(2)
+  expect(range(points.map(p => p.left))).toBeLessThan(1)
+  await expect(current).toHaveText("")
+})
+
 test("solves a Connections group and loses after four mistakes", async ({ page }) => {
   await page.goto("/connections")
   for (const word of ["APPLE", "PEAR", "PLUM", "FIG"])
