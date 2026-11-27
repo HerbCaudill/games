@@ -8,10 +8,20 @@ afterEach(cleanup)
 it("keeps each half's region color out of the other half", () => {
   const { container } = render(<DominoTile domino={[4, 0]} turn={1} regions={[0, 1]} />)
   const half = (region: number) =>
-    [...container.querySelectorAll("rect")].find(rect =>
-      rect.style.fill.includes(regionColors.fill(region)),
+    [...container.querySelectorAll("rect")].find(
+      rect => rect.style.fill === normalized(regionColors.fill(region)),
     )!
   const [first, second] = [half(0), half(1)]
   const end = Number(first.getAttribute("x")) + Number(first.getAttribute("width"))
   expect(end).toBeLessThanOrEqual(Number(second.getAttribute("x")))
 })
+
+/** A fill color as the DOM writes it back, so it compares with a rendered element's. */
+function normalized(
+  /** The fill color. */
+  fill: string,
+) {
+  const { style } = document.createElement("div")
+  style.fill = fill
+  return style.fill
+}

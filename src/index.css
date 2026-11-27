@@ -167,6 +167,8 @@
   --crossword-star: #ebcc4c;
   --crossword-star-inner: #c19533;
   --game-pips: #d3a6ce;
+  /* Behind the Pips board, dark enough that a region's tint over it reads dimmer than over a domino. */
+  --pips-board: #d3c6b4;
   /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
   --game-spelling-bee: oklch(0.87 0.17 90);
   /* Behind complete rows of the Spelling Bee word grid and two-letter list, and lighter behind complete grid columns. */

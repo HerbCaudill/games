@@ -1,7 +1,11 @@
 /** Colors for each constraint region, by region index. */
 export const regionColors = {
-  /** The region's fill, which also tints the domino halves placed on it. */
-  fill: (i: number) => `color-mix(in oklch, ${hue(i)} 45%, var(--card))`,
+  /**
+   * The region's translucent tint, which also tints the domino halves placed on it. Over the
+   * board's dark backdrop it reads dim; over a domino's white face it reads light, so a blank
+   * half stands out from an empty cell.
+   */
+  fill: (i: number) => `color-mix(in oklch, ${hue(i)} 45%, transparent)`,
   /** The region's outline color. */
   stroke: (i: number) => `oklch(from ${hue(i)} calc(l - 0.16) calc(c + 0.04) h)`,
   /** The pip color for a domino half on the region. */

@@ -61,10 +61,10 @@ export function PipsGrid(
     >
       {layer === "base" ? (
         <>
-          {/* Every board cell shares one shade, so the open spots read as one shape. */}
+          {/* Every board cell shares one dark shade, so the open spots read as one shape and sit below the dominoes. */}
           <path
             d={roundedPath(outline(cells, 0), 1.6)}
-            className="fill-muted stroke-muted"
+            className="fill-(--pips-board) stroke-(--pips-board)"
             strokeWidth="0.8"
           />
           {regions.map(({ i, shape }) => (
