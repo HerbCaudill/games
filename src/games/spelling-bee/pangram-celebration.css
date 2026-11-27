@@ -1,0 +1,135 @@
+/*
+ * When the first word is a pangram, the hive spells it out. Each cell lights up gold at its own
+ * --light-at, set from where its letter first comes in the word, 110ms apart. Once all seven are
+ * lit (by about 900ms), the hive pulses and honeycomb sparkles burst out; at 1300ms the glow fades,
+ * ending at 1900ms, which Hive.tsx waits for.
+ */
+
+.pangram-glow {
+  fill: var(--game-spelling-bee);
+  pointer-events: none;
+  animation:
+    pangram-light 260ms var(--light-at) both,
+    pangram-fade 600ms 1300ms forwards;
+}
+
+/* Letters go dark on the gold, which matters in dark mode. */
+.pangram-ink {
+  animation:
+    pangram-ink 260ms var(--light-at) both,
+    pangram-ink-fade 600ms 1300ms forwards;
+}
+
+.pangram-burst {
+  pointer-events: none;
+}
+
+.pangram-ring,
+.pangram-sparkle {
+  opacity: 0;
+}
+
+.pangram-ring {
+  fill: none;
+  stroke: var(--game-spelling-bee);
+  stroke-width: 0.08;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pangram-glow {
+    animation-name: pangram-light-pop, pangram-fade;
+  }
+  .pangram-pulse {
+    animation: pangram-pulse 400ms 800ms cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .pangram-ring {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    animation: pangram-ring 800ms 800ms ease-out;
+  }
+  .pangram-sparkle {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    animation: pangram-sparkle 900ms 800ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+}
+
+@keyframes pangram-light {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Grows out from the middle of the cell, flashing pale, and overshoots before settling. */
+@keyframes pangram-light-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+    fill: color-mix(in oklab, var(--game-spelling-bee), white 60%);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.14);
+    fill: color-mix(in oklab, var(--game-spelling-bee), white 40%);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    fill: var(--game-spelling-bee);
+  }
+}
+
+@keyframes pangram-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pangram-ink {
+  to {
+    fill: black;
+  }
+}
+
+@keyframes pangram-ink-fade {
+  from {
+    fill: black;
+  }
+}
+
+@keyframes pangram-pulse {
+  40% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pangram-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes pangram-sparkle {
+  0% {
+    transform: translate(var(--from-x), var(--from-y)) scale(0.4) rotate(0deg);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--to-x), var(--to-y)) scale(1) rotate(60deg);
+    opacity: 0;
+  }
+}

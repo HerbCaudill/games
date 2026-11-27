@@ -65,6 +65,9 @@ export function SpellingBee(
   // Counts each new rank reached by playing, so it gets its own small celebration.
   const [rankUp, setRankUp] = useState<number>()
   const endRankUp = useCallback(() => setRankUp(undefined), [])
+  // A pangram found as the very first word lights up the hive.
+  const [pangramFirst, setPangramFirst] = useState<string>()
+  const endPangramFirst = useCallback(() => setPangramFirst(undefined), [])
   const elapsed = useElapsed(`time:spelling-bee:${puzzle.date}`, !solved)
   useGameStatus("spelling-bee", puzzle.date, solved ? "solved" : found.length ? "started" : "new")
   useCelebration("spelling-bee", `queen-bee:${puzzle.date}`, score === rank.max)
@@ -90,16 +93,20 @@ export function SpellingBee(
       return toast.show(result.message)
     }
     setGuess("")
+    const first = result.pangram && found.length === 0
+    if (first) setPangramFirst(result.word)
     setFound(f => [...f, result.word])
     if (rankFor(score + result.score, puzzle).name !== rank.name) setRankUp(n => (n ?? 0) + 1)
     toast.show(
-      result.pangram
-        ? "Pangram!"
-        : result.score === 1
-          ? "Good!"
-          : result.word.length < 7
-            ? "Nice!"
-            : "Awesome!",
+      first
+        ? "Pangram first!"
+        : result.pangram
+          ? "Pangram!"
+          : result.score === 1
+            ? "Good!"
+            : result.word.length < 7
+              ? "Nice!"
+              : "Awesome!",
       { success: true, points: result.score },
     )
   }
@@ -208,7 +215,13 @@ export function SpellingBee(
           <span className="animate-blink ml-0.5 h-9 w-0.5 bg-(--game-spelling-bee)" />
         </div>
         <div className="mt-6">
-          <Hive center={puzzle.center} outer={outer} onLetter={add} />
+          <Hive
+            center={puzzle.center}
+            outer={outer}
+            onLetter={add}
+            pangram={pangramFirst}
+            onPangramDone={endPangramFirst}
+          />
         </div>
         <div className="mt-5 flex gap-3">
           <Button variant="outline" className="h-12 rounded-full px-6 text-base" onClick={remove}>

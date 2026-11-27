@@ -152,6 +152,56 @@ test("celebrates each Spelling Bee rank reached around its name, but not on load
   await expect(burst).toHaveCount(0)
 })
 
+test("lights up the hive when the first Spelling Bee word is a pangram", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/spelling-bee")
+  const enter = async (word: string) => {
+    for (const letter of word)
+      await page
+        .getByRole("button", { name: letter.toUpperCase(), exact: true })
+        .dispatchEvent("pointerdown")
+    await page.getByRole("button", { name: "Enter" }).click()
+  }
+  const celebration = page.locator("[data-pangram-celebration]")
+  await enter("bathroom")
+  await expect(page.getByText("Pangram first!", { exact: true })).toBeVisible()
+  await expect(celebration).toHaveCount(1)
+  // Every cell lights up, one after another in the order the word uses their letters.
+  const lit = page.locator("[data-pangram-glow]")
+  await expect(lit).toHaveCount(7)
+  const delays = await lit.evaluateAll(cells =>
+    cells.map(cell => [
+      cell.closest("[role=button]")!.getAttribute("aria-label"),
+      parseFloat(getComputedStyle(cell).animationDelay),
+    ]),
+  )
+  expect(delays.sort((a, b) => Number(a[1]) - Number(b[1])).map(([letter]) => letter)).toEqual([
+    ..."BATHROM",
+  ])
+  await expect(celebration).toHaveCount(0)
+})
+
+test("doesn't light up the hive for a Spelling Bee pangram found after another word", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.addInitScript(() => {
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(
+      new Date(),
+    )
+    localStorage.setItem(`progress:spelling-bee:${date}`, JSON.stringify(["moat"]))
+  })
+  await page.goto("/spelling-bee")
+  for (const letter of "bathroom")
+    await page
+      .getByRole("button", { name: letter.toUpperCase(), exact: true })
+      .dispatchEvent("pointerdown")
+  await page.getByRole("button", { name: "Enter" }).click()
+  await expect(page.getByText("Pangram!", { exact: true })).toBeVisible()
+  await page.waitForTimeout(300)
+  await expect(page.locator("[data-pangram-celebration]")).toHaveCount(0)
+})
+
 test("rejects a Spelling Bee word without the center letter, shaking it before clearing it", async ({
   page,
 }) => {
