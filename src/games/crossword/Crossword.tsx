@@ -286,7 +286,7 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
         type="button"
         tabIndex={-1}
         aria-label="Previous clue"
-        className="px-2"
+        className={ARROW_CLASSES}
         onClick={onPrevious}
       >
         <IconChevronLeft className="size-5" />
@@ -299,7 +299,13 @@ function ClueBar({ text, onPrevious, onNext, onToggle }: ClueBarProps) {
       >
         <span className="line-clamp-3">{text}</span>
       </button>
-      <button type="button" tabIndex={-1} aria-label="Next clue" className="px-2" onClick={onNext}>
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Next clue"
+        className={ARROW_CLASSES}
+        onClick={onNext}
+      >
         <IconChevronRight className="size-5" />
       </button>
     </div>
@@ -315,6 +321,9 @@ function isoWeekday(
 }
 
 // CONSTANTS
+
+/** The clue bar's arrows are wide, so a thumb aiming for one doesn't land on the clue and switch direction. */
+const ARROW_CLASSES = "flex w-14 shrink-0 items-center justify-center"
 
 /** Herb's xword-stats app, which charts his crossword solve times. */
 const XWORD_STATS_URL = "https://xword-stats-2.vercel.app"

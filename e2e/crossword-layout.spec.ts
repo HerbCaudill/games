@@ -15,3 +15,12 @@ test("puts the clue directly above the keyboard on touch screens", async ({ page
   expect(key.y).toBeGreaterThan(clue.y + clue.height)
   expect(key.y - (clue.y + clue.height)).toBeLessThan(40)
 })
+
+test("gives the clue arrows a hit area wide enough for a thumb", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Desktop moves between clues with the keyboard")
+  await page.goto("/crossword")
+  for (const name of ["Previous clue", "Next clue"]) {
+    const arrow = (await page.getByRole("button", { name }).boundingBox())!
+    expect(arrow.width).toBeGreaterThanOrEqual(48)
+  }
+})
