@@ -30,7 +30,7 @@ export function GridPanel(
               {grid.lengths.map((length, i) => (
                 <th
                   key={length}
-                  className={cn("px-1 pb-1 text-left text-xs font-normal", shade(false, i))}
+                  className={cn("px-1 pt-1.5 pb-1 text-left text-xs font-normal", shade(false, i))}
                 >
                   {length}
                 </th>
