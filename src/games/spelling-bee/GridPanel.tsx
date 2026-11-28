@@ -11,13 +11,14 @@ export function GridPanel(
   { puzzle, token, found }: Props,
 ) {
   const grid = wordGrid(puzzle.answers, found)
-  /** The shade behind a grid cell: its row's when the row is complete, else its column's when that is. */
-  const shade = (rowComplete: boolean, column?: number) =>
-    rowComplete
-      ? "bg-(--spelling-bee-complete-row)"
-      : column !== undefined &&
-        grid.completeLengths[column] &&
-        "bg-(--spelling-bee-complete-column)"
+  /** Shade a grid cell once for a complete row and once for a complete column, multiplied where they cross. */
+  const shade = (rowComplete: boolean, column?: number) => {
+    const columnComplete = column !== undefined && grid.completeLengths[column]
+    return cn(
+      (rowComplete || columnComplete) && "bg-(--spelling-bee-complete)",
+      rowComplete && columnComplete && CROSSING_SHADE,
+    )
+  }
   return (
     <div className="flex flex-col gap-6">
       <section>
@@ -75,7 +76,7 @@ export function GridPanel(
               key={group.letter}
               className={cn(
                 "flex flex-wrap gap-x-4 gap-y-1 border-t px-1.5 py-1.5",
-                group.complete && "bg-(--spelling-bee-complete-row)",
+                group.complete && "bg-(--spelling-bee-complete)",
               )}
             >
               {group.prefixes.map(({ prefix, ...count }) => (
@@ -175,6 +176,14 @@ function Heading(
     </h3>
   )
 }
+
+// CONSTANTS
+
+/** A second layer of the complete shade over the first, multiplied with it. */
+const CROSSING_SHADE =
+  "bg-[linear-gradient(var(--spelling-bee-complete),var(--spelling-bee-complete))] bg-blend-multiply"
+
+// TYPES
 
 type Props = {
   /** The puzzle. */

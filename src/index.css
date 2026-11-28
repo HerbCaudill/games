@@ -171,9 +171,8 @@
   --pips-board: #d3c6b4;
   /* Spelling Bee Buddy's --brand-yellow, also used for its header. */
   --game-spelling-bee: oklch(0.87 0.17 90);
-  /* Behind complete rows of the Spelling Bee word grid and two-letter list, and lighter behind complete grid columns. Gray, so the yellow dots stand out. */
-  --spelling-bee-complete-row: oklch(0.93 0 0);
-  --spelling-bee-complete-column: oklch(0.97 0 0);
+  /* Behind complete rows and columns of the Spelling Bee word grid and complete rows of its two-letter list; darker where a complete row and column cross. Gray, so the yellow dots stand out. */
+  --spelling-bee-complete: oklch(0.95 0 0);
   /* The lit cells of the home menu's Spelling Bee hive. */
   --spelling-bee-hive: oklch(0.7 0.16 70);
   --game-connections: #b4a0ff;
