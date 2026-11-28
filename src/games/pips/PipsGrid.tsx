@@ -8,6 +8,7 @@ import { boardCells } from "./logic/boardCells"
 import { cellKey } from "./logic/cellKey"
 import { outline } from "./logic/outline"
 import { regionStatus } from "./logic/regionStatus"
+import { roundedPath } from "./logic/roundedPath"
 import { regionColors } from "./regionColors"
 import { type Placements, type Point } from "./logic/types"
 import "./pips.css"
@@ -26,6 +27,7 @@ export function PipsGrid(
   const cols = Math.max(...cells.map(([, c]) => c)) + 1
   const scale = size / U
   // Outlines trace the domino borders exactly, so on a covered region the dashes lie on the border.
+  // An inner corner wraps the outer corner of the cell in its notch, a gap of two insets away, so the two curves share a center.
   const regions = board.regions.flatMap((region, i) =>
     region.type === "empty"
       ? []
@@ -35,7 +37,9 @@ export function PipsGrid(
             i,
             shape: roundedPath(
               outline(region.cells, dominoGeometry.inset / U),
+              U,
               dominoGeometry.radius,
+              dominoGeometry.radius + 2 * dominoGeometry.inset,
             ),
           },
         ],
@@ -63,7 +67,7 @@ export function PipsGrid(
         <>
           {/* Every board cell shares one dark shade, so the open spots read as one shape and sit below the dominoes. */}
           <path
-            d={roundedPath(outline(cells, 0), 1.6)}
+            d={roundedPath(outline(cells, 0), U, 1.6)}
             className="fill-(--pips-board) stroke-(--pips-board)"
             strokeWidth="0.8"
           />
@@ -122,46 +126,6 @@ export function PipsGrid(
       )}
     </svg>
   )
-}
-
-/** An SVG path through outline loops given in cell units, with rounded corners. */
-function roundedPath(
-  /** The loops. */
-  loops: Point[][],
-  /** Corner radius. */
-  radius: number,
-) {
-  return loops
-    .map(
-      loop =>
-        loop
-          .map((p, i) => {
-            const prev = loop[(i + loop.length - 1) % loop.length]
-            const next = loop[(i + 1) % loop.length]
-            const [x, y] = [p[0] * U, p[1] * U]
-            const into = toward(p, prev, radius)
-            const out = toward(p, next, radius)
-            const sweep = into[0] * out[1] - into[1] * out[0] < 0 ? 1 : 0
-            return `${i ? "L" : "M"}${x + into[0]},${y + into[1]}A${radius},${radius} 0 0 ${sweep} ${x + out[0]},${y + out[1]}`
-          })
-          .join("") + "Z",
-    )
-    .join("")
-}
-
-/** A step from one corner toward another, no longer than `radius` or half the way there. */
-function toward(
-  /** Start corner, in cell units. */
-  from: Point,
-  /** End corner, in cell units. */
-  to: Point,
-  /** Longest step. */
-  radius: number,
-): Point {
-  const [dx, dy] = [(to[0] - from[0]) * U, (to[1] - from[1]) * U]
-  const length = Math.hypot(dx, dy)
-  const step = Math.min(radius, length / 2) / length
-  return [dx * step, dy * step]
 }
 
 /** The rule label at a region's last cell. */
