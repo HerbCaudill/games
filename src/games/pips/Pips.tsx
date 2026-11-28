@@ -78,17 +78,21 @@ export function Pips(
     // Only a change of screen pulls dominoes in; moves make room for themselves.
   }, [width, height, left, top, contentTop])
 
-  /** Make room where dominoes that come off the board land. */
+  /** Bring dominoes that come off the board to rest clear of it, and make room where they land. */
   const settleReturned = (next: Pieces) => {
     const returned = board.dominoes
       .map((_, i) => i)
       .filter(i => placements[i] && !next.placements[i])
-    return settle(next, returned)
+    // One that faces a new way where it used to lie may now reach onto the board.
+    const spots = next.spots.map((spot, i) =>
+      spot && returned.includes(i) ? restingSpot(spot, next.turns[i], table.surface) : spot,
+    )
+    return settle({ ...next, spots }, returned)
   }
 
   const setPieces = (next: Pieces) => setProgress(p => ({ ...p, ...next }))
   const { change, undo, redo, canUndo, canRedo } = useUndo(puzzle.date, pieces, setPieces, saved =>
-    setPieces(settleReturned(restorePieces(pieces, saved))),
+    setPieces(settleReturned(restorePieces(pieces, saved, startingTurns))),
   )
   /** Save new pieces, as an undo step only when the board changes. */
   const save = (next: Pieces) =>

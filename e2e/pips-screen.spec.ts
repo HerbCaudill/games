@@ -134,6 +134,15 @@ async function dragTo(
 }
 
 /** The center of a visible game element. */
+/** Whether a domino stands taller than it is wide. */
+async function isUpright(
+  /** The domino. */
+  domino: Locator,
+) {
+  const box = (await domino.boundingBox())!
+  return box.height > box.width
+}
+
 async function centerOf(
   /** The element. */
   element: Locator,
@@ -173,6 +182,24 @@ test("pushes a loose domino aside when undo brings another back to where it lies
   await page.getByRole("button", { name: "Undo" }).click()
   await expect.poll(async () => distance(await centerOf(undone), slot)).toBeLessThan(2)
   await expect.poll(() => overlap(undone, other)).toBeLessThanOrEqual(0.5)
+})
+
+test("brings a domino that undo takes off the board back flat, smaller number on the left", async ({
+  page,
+}) => {
+  const domino = page.getByRole("button", { name: "Domino 2–1" })
+  const slot = await centerOf(domino)
+  // Stood upright and put on the board down the first column.
+  await domino.click()
+  await expect.poll(() => isUpright(domino)).toBe(true)
+  const cell = page.getByRole("gridcell", { name: "Row 1, column 1", exact: true })
+  const [x, y] = await centerOf(cell)
+  const box = (await cell.boundingBox())!
+  await dragTo(page, domino, [x, y + box.height / 2])
+  await expect(page.getByRole("button", { name: "Undo" })).toBeEnabled()
+  await page.getByRole("button", { name: "Undo" }).click()
+  await expect.poll(async () => distance(await centerOf(domino), slot)).toBeLessThan(2)
+  await expect.poll(() => isUpright(domino)).toBe(false)
 })
 
 test("pushes a loose domino aside when the keyboard takes another off the board onto it", async ({
