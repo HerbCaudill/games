@@ -1,5 +1,5 @@
 import { IconChevronLeft } from "@tabler/icons-react"
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import type { GameInfo } from "@/constants"
 import { Connections } from "@/games/connections/Connections"
 import { Crossword } from "@/games/crossword/Crossword"
@@ -22,7 +22,15 @@ export function GameScreen(
   const [toolbar, setToolbar] = useState<HTMLElement | null>(null)
   return (
     <div className="app-shell" data-game={game.id}>
-      <header className="app-header">
+      <header
+        className="app-header app-header-game"
+        style={
+          {
+            "--header-background": game.color,
+            ...(game.reversed && { "--foreground": "#ffffff" }),
+          } as CSSProperties
+        }
+      >
         <Button
           variant="ghost"
           size="icon"

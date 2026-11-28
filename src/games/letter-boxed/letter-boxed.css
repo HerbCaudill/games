@@ -1,11 +1,6 @@
-/* Letter Boxed plays on pink, header included. */
-.app-shell[data-game="letter-boxed"],
-.app-shell[data-game="letter-boxed"] .app-header {
+/* Letter Boxed plays on pink, under a header in its own color like every game's. */
+.app-shell[data-game="letter-boxed"] {
   background: var(--letter-boxed-background);
-}
-
-.app-shell[data-game="letter-boxed"] .app-header {
-  border-color: rgb(0 0 0 / 0.15);
 }
 
 .letter-boxed-button {

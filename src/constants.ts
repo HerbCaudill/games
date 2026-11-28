@@ -6,6 +6,7 @@ export const GAMES: GameInfo[] = [
     id: "crossword",
     name: "Crossword",
     color: "var(--crossword-tile)",
+    reversed: true,
   },
   {
     id: "pips",
@@ -42,8 +43,10 @@ export type GameInfo = {
   id: GameId
   /** Display name. */
   name: string
-  /** Tile color on the home menu, as a CSS value. */
+  /** Tile color on the home menu and the game's header, as a CSS value. */
   color: string
+  /** Whether the color is dark enough to need light icons on it. */
+  reversed?: boolean
   /** Hour in New York when each day's puzzle comes out, for games whose puzzle isn't out by midnight. */
   releaseHour?: number
 }
