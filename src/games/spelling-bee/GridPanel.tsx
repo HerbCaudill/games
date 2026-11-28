@@ -1,3 +1,4 @@
+import { IconCircleCheckFilled } from "@tabler/icons-react"
 import { useApi } from "@/lib/useApi"
 import { cn } from "@/lib/utils"
 import type { SpellingBeePuzzle, SpellingBeeStats } from "@/types"
@@ -125,6 +126,15 @@ function PlayerStats(
                   key={word}
                   className="flex h-7 items-center gap-2 border-b text-sm last:border-b-0"
                 >
+                  <span className="flex w-4 shrink-0">
+                    {isFound && (
+                      <IconCircleCheckFilled
+                        className="size-4 text-(--game-spelling-bee)"
+                        role="img"
+                        aria-label="Found"
+                      />
+                    )}
+                  </span>
                   <span className={cn("w-24 shrink-0", !isFound && "text-muted-foreground")}>
                     {isFound ? (
                       word[0].toUpperCase() + word.slice(1)
